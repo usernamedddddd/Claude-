@@ -1,0 +1,51 @@
+# Copy to config.yaml and tune. Any key you leave out uses the default in memebot/config.py.
+chain: solana
+poll_seconds: 30
+max_candidates_per_cycle: 30
+state_file: state.json
+
+entry:                          # a token must pass ALL of these to be bought
+  min_liquidity_usd: 20000
+  max_liquidity_usd: 2000000
+  min_market_cap_usd: 50000
+  max_market_cap_usd: 20000000
+  min_age_minutes: 15
+  max_age_minutes: 1440
+  min_volume_h1_usd: 25000
+  min_txns_m5: 20
+  min_buy_sell_ratio_m5: 1.2
+  min_price_change_h1_pct: 5
+  max_price_change_m5_pct: 25
+  allowed_quote_symbols: [SOL, WSOL, USDC]
+
+safety:                         # RugCheck screening
+  enabled: true
+  max_risk_score: 1000
+  reject_on_danger: true
+  reject_if_unavailable: true
+
+exit:
+  stop_loss_pct: 25
+  take_profit_tiers:            # fractions are of the ORIGINAL position
+    - {gain_pct: 50, fraction: 0.5}
+    - {gain_pct: 150, fraction: 0.25}
+  trailing_activation_pct: 30
+  trailing_stop_pct: 20
+  max_hold_minutes: 240
+  liquidity_drop_exit_pct: 50
+
+risk:
+  position_size_sol: 0.1
+  max_open_positions: 3
+  max_total_exposure_sol: 0.5
+  daily_loss_limit_sol: 0.3
+  reentry_cooldown_minutes: 360
+  blacklist: []
+
+execution:
+  mode: paper                   # set to "live" AND pass --live to trade real funds
+  slippage_bps: 300
+  paper_fee_pct: 1.0
+  rpc_url: https://api.mainnet-beta.solana.com   # use a private RPC (Helius, QuickNode...) for live
+  jupiter_base_url: https://lite-api.jup.ag/swap/v1
+  priority_fee_lamports: auto
