@@ -34,3 +34,11 @@ No trades: earnings fall before every 21–45 DTE expiry (earliest is Nov 9) on 
 | NU | Nov 12 (pm) | Nov 13 |
 
 Open positions: none · Realized premium: $0 · Collateral needed: $0
+
+### 2026-10-20 (Tue) 10:22 ET
+
+Prices: F 12.16 · SOFI 14.71 · T 23.58 · PFE 29.99 · NU 15.16
+
+No trades: all five still have earnings before every eligible expiry (T reports tomorrow, Oct 21 am).
+
+Open positions: none · Realized premium: $0 · Collateral needed: $0
