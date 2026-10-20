@@ -1,20 +1,20 @@
 --!strict
--- Lobby UI from the Figma "Lobby v2" frame (reference style): announcement strip, STORE /
--- TOWERS menu tiles, Goo counter, Settings tile, the big green PLAY button (moves you onto the
--- queue pad), queue status chip, the numbered loadout of your towers, the level/XP bar, and the
--- Towers shop / Store popups.
+-- Lobby UI from the Figma "Lobby v2" frame (reference style): announcement strip, SHOP /
+-- BADGES menu tiles (windows in ShopUI / BadgesUI), Goo counter, Settings tile, the big green
+-- PLAY button (moves you onto the queue pad), queue status chip, the numbered loadout of your
+-- towers and the level/XP bar.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.Data.Config)
-local Products = require(Shared.Data.Products)
 local TowerData = require(Shared.Data.TowerData)
 local Remotes = require(Shared.Net.Remotes)
 
-local Monetization = require(script.Parent.Monetization)
+local BadgesUI = require(script.Parent.BadgesUI)
 local Motion = require(script.Parent.Motion)
 local SettingsPanel = require(script.Parent.SettingsPanel)
+local ShopUI = require(script.Parent.ShopUI)
 local Sound = require(script.Parent.Sound)
 local Store = require(script.Parent.Store)
 local UI = require(script.Parent.UI)
@@ -73,7 +73,7 @@ function LobbyUI.start()
 		Parent = root,
 	})
 
-	---------------------------------------------------------------- popups
+	---------------------------------------------------------------- windows (Shop / Badges)
 	local scrim = UI.new("TextButton", {
 		Name = "Scrim",
 		AutoButtonColor = false,
@@ -85,192 +85,58 @@ function LobbyUI.start()
 		ZIndex = 1,
 		Parent = root,
 	})
-	local function popup(name: string, title: string, icon: string, accent: Color3): (any, Frame)
-		local m = UI.panel({
-			Name = name,
-			Size = UDim2.fromOffset(920, 780),
-			Position = UDim2.fromScale(0.5, 0.5),
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			accent = accent,
-			strokeWidth = 6,
-			radius = 28,
-			Visible = false,
-			Parent = root,
-		})
-		UI.icon(icon, { Size = UDim2.fromOffset(64, 64), Position = UDim2.fromOffset(28, 18), Parent = m.face })
-		UI.text({
-			Text = title,
-			font = "label",
-			size = 48,
-			Position = UDim2.new(0, 104, 0, 50),
-			AnchorPoint = Vector2.new(0, 0.5),
-			Parent = m.face,
-		})
-		UI.button({
-			Name = "Close",
-			icon = "close",
-			style = "red",
-			Size = UDim2.fromOffset(60, 60),
-			Position = UDim2.new(1, -28, 0, 20),
-			AnchorPoint = Vector2.new(1, 0),
-			iconSize = 34,
-			Parent = m.face,
-		}, function()
-			m.holder.Visible = false
-			scrim.Visible = false
-		end)
-		local grid = UI.new("Frame", {
-			Name = "Grid",
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, -56, 1, -124),
-			Position = UDim2.fromOffset(28, 104),
-			Parent = m.face,
-		})
-		UI.new("UIGridLayout", {
-			CellSize = UDim2.fromOffset(268, 304),
-			CellPadding = UDim2.fromOffset(20, 24),
-			SortOrder = Enum.SortOrder.LayoutOrder,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			Parent = grid,
-		})
-		return m, grid
-	end
-
-	local towerModal, towerGrid = popup("Towers", "Towers", "towers", V.Cyan)
-	type Card = { action: TextButton, holder: GuiObject, ring: UIStroke }
-	local cards: { [string]: Card } = {}
-	for _, def in sortedDefs() do
-		local card = UI.panel({
-			Name = def.id,
-			accent = V.SlotRing,
-			strokeWidth = 4,
-			radius = 20,
-			lip = 0,
-			LayoutOrder = def.order,
-			Size = UDim2.fromOffset(268, 304),
-			Parent = towerGrid,
-		})
-		UI.icon(def.icon, {
-			Size = UDim2.fromOffset(104, 104),
-			Position = UDim2.new(0.5, 0, 0, 14),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = card.face,
-		})
-		UI.text({
-			Text = def.displayName,
-			size = 28,
-			Position = UDim2.new(0.5, 0, 0, 128),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = card.face,
-		})
-		UI.text({
-			Text = def.description,
-			size = 15,
-			color = Color3.fromHex("#E2DCEE"),
-			stroke = false,
-			TextWrapped = true,
-			Size = UDim2.new(1, -28, 0, 48),
-			Position = UDim2.fromOffset(14, 168),
-			Parent = card.face,
-		})
-		local action = UI.button({
-			Name = "Action",
-			Text = "Unlock",
-			style = "green",
-			Size = UDim2.new(1, -28, 0, 56),
-			Position = UDim2.new(0, 14, 1, -70),
-			textSize = 18,
-			Parent = card.face,
-		}, function()
-			local profile = Store.profile
-			if profile and not profile.unlocked[def.id] then
-				if profile.goo >= def.unlockGoo then
-					Remotes.get("UnlockTower"):FireServer(def.id)
-				else
-					Sound.play("error")
-					Motion.shake(card.holder, 6, 3)
-				end
-			end
-		end)
-		cards[def.id] = { action = action, holder = card.holder, ring = card.stroke }
-	end
-
-	local storeModal, storeGrid = popup("Store", "Store", "store", V.Red)
-	local order = 0
-	for key, product in Products do
-		order += 1
-		local card = UI.panel({
-			Name = key,
-			accent = V.Gold,
-			strokeWidth = 4,
-			radius = 20,
-			lip = 0,
-			LayoutOrder = order,
-			Size = UDim2.fromOffset(268, 304),
-			Parent = storeGrid,
-		})
-		UI.icon(if product.kind == "gamepass" then "star" else "goo", {
-			Size = UDim2.fromOffset(90, 90),
-			Position = UDim2.new(0.5, 0, 0, 18),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = card.face,
-		})
-		UI.text({
-			Text = product.displayName,
-			size = 26,
-			Position = UDim2.new(0.5, 0, 0, 118),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = card.face,
-		})
-		UI.text({
-			Text = product.description,
-			size = 16,
-			color = Color3.fromHex("#E2DCEE"),
-			stroke = false,
-			TextWrapped = true,
-			Size = UDim2.new(1, -28, 0, 58),
-			Position = UDim2.fromOffset(14, 158),
-			Parent = card.face,
-		})
-		UI.button({
-			Name = "Buy",
-			Text = "Buy",
-			icon = "coin",
-			style = "gold",
-			Size = UDim2.new(1, -28, 0, 56),
-			Position = UDim2.new(0, 14, 1, -70),
-			Parent = card.face,
-		}, function()
-			Monetization.promptPurchase(key, function()
-				Store.notified:Fire(`Thanks! {product.displayName} granted.`, "success")
-			end)
-		end)
-	end
-
-	local function open(m: any)
-		towerModal.holder.Visible = false
-		storeModal.holder.Visible = false
-		scrim.Visible = true
-		Motion.popIn(m.holder, 0.7, 0.35)
-	end
-	scrim.Activated:Connect(function()
-		towerModal.holder.Visible = false
-		storeModal.holder.Visible = false
+	local windows: { GuiObject } = {}
+	local function closeAll()
+		for _, w in windows do
+			w.Visible = false
+		end
 		scrim.Visible = false
-	end)
+	end
+	local function open(w: GuiObject, onOpen: () -> ())
+		local wasOpen = w.Visible
+		closeAll()
+		if wasOpen then
+			return -- the menu tile toggles
+		end
+		onOpen()
+		scrim.Visible = true
+		scrim.BackgroundTransparency = 1
+		Motion.tween(scrim, 0.2, { BackgroundTransparency = 0.45 })
+		Motion.popIn(w, 0.7, 0.35)
+	end
+	scrim.Activated:Connect(closeAll)
+	local shop = ShopUI.build(root, closeAll)
+	local badges = BadgesUI.build(root, closeAll)
+	table.insert(windows, shop.holder)
+	table.insert(windows, badges.holder)
 
 	UI.menuTile(
-		{ Name = "StoreButton", Text = "Store", icon = "store", accent = V.Red, LayoutOrder = 1, Parent = menu },
+		{ Name = "ShopButton", Text = "Shop", icon = "store", accent = V.Gold, LayoutOrder = 1, Parent = menu },
 		function()
-			open(storeModal)
+			open(shop.holder, shop.onOpen)
 		end
 	)
-	UI.menuTile(
-		{ Name = "TowersButton", Text = "Towers", icon = "towers", accent = V.Cyan, LayoutOrder = 2, Parent = menu },
+	local badgesTile = UI.menuTile(
+		{ Name = "BadgesButton", Text = "Badges", icon = "medal", accent = V.Red, LayoutOrder = 2, Parent = menu },
 		function()
-			open(towerModal)
+			open(badges.holder, badges.onOpen)
 		end
 	)
+	-- Red count bubble on the Badges tile while rewards are waiting to be claimed.
+	local claimBubble = UI.new("Frame", {
+		Name = "ClaimCount",
+		BackgroundColor3 = V.Badge,
+		Size = UDim2.fromOffset(38, 38),
+		Position = UDim2.new(1, 10, 0, -12),
+		AnchorPoint = Vector2.new(1, 0),
+		Visible = false,
+		ZIndex = 5,
+		Parent = badgesTile,
+	})
+	UI.corner(claimBubble, 999)
+	UI.stroke(claimBubble, 3, Color3.new(1, 1, 1))
+	local claimCount =
+		UI.text({ Text = "0", size = 20, Size = UDim2.fromScale(1, 1), ZIndex = 6, Parent = claimBubble })
 
 	---------------------------------------------------------------- top-right
 	UI.squareTile({
@@ -468,28 +334,21 @@ function LobbyUI.start()
 			)
 		end
 
-		for id, card in cards do
-			local def = TowerData[id]
-			local owned = profile.unlocked[id] == true
-			local wasOwned = card.action:GetAttribute("Owned")
-			if owned then
-				UI.setButtonText(card.action, "Owned")
-				UI.setButtonStyle(card.action, "gray")
-				card.ring.Color = V.Green
-				if wasOwned == false then
-					Motion.punch(card.holder, 1.08)
-				end
-			elseif profile.goo >= def.unlockGoo then
-				UI.setButtonText(card.action, `Unlock · {def.unlockGoo} Goo`)
-				UI.setButtonStyle(card.action, "green")
-				card.ring.Color = V.SlotRing
-			else
-				UI.setButtonText(card.action, `Need {def.unlockGoo} Goo`)
-				UI.setButtonStyle(card.action, "gray")
-				card.ring.Color = V.SlotRing
+		local claimable = 0
+		for _, claimed in profile.badges do
+			if claimed == false then
+				claimable += 1
 			end
-			card.action:SetAttribute("Owned", owned)
+		end
+		local hadBubble = claimBubble.Visible
+		claimBubble.Visible = claimable > 0
+		claimCount.Text = tostring(claimable)
+		if claimable > 0 and not hadBubble then
+			Motion.popIn(claimBubble, 0.3, 0.35)
+		end
 
+		for id, def in TowerData do
+			local owned = profile.unlocked[id] == true
 			local slot = loadSlots[id]
 			slot.icon.Visible = owned
 			slot.lock.Visible = not owned

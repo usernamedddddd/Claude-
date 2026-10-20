@@ -14,6 +14,7 @@ local SlimeData = require(script.Parent.SlimeData)
 
 export type DamageType = SlimeData.DamageType
 export type AttackKind = "projectile" | "nova"
+export type Rarity = "Common" | "Rare" | "Epic" | "Legendary" | "Mythic"
 export type TargetMode = "First" | "Last" | "Strong" | "Close"
 
 export type AttackSpec = {
@@ -79,6 +80,7 @@ export type TowerDef = {
 	color: { number },
 	icon: string,
 	order: number,
+	rarity: Rarity, -- shop display only (card colour); never affects stats
 	base: TowerStats,
 	paths: { A: UpgradePath, B: UpgradePath },
 }
@@ -130,6 +132,7 @@ local TowerData: { [string]: TowerDef } = {
 		color = { 92, 200, 110 },
 		icon = "frog",
 		order = 1,
+		rarity = "Common",
 		base = stats({
 			attacks = {
 				attack({ range = 12, cooldown = 0.9, damage = 1, pierce = 2, damageType = "sharp", visual = "dart" }),
@@ -195,6 +198,7 @@ local TowerData: { [string]: TowerDef } = {
 		color = { 240, 110, 80 },
 		icon = "crab",
 		order = 2,
+		rarity = "Epic",
 		base = stats({
 			attacks = {
 				attack({
@@ -268,6 +272,7 @@ local TowerData: { [string]: TowerDef } = {
 		color = { 150, 220, 255 },
 		icon = "penguin",
 		order = 3,
+		rarity = "Rare",
 		base = stats({
 			attacks = {
 				attack({
@@ -342,6 +347,7 @@ local TowerData: { [string]: TowerDef } = {
 		color = { 70, 160, 120 },
 		icon = "turtle",
 		order = 4,
+		rarity = "Common",
 		base = stats({
 			attacks = {
 				attack({
@@ -415,6 +421,7 @@ local TowerData: { [string]: TowerDef } = {
 		color = { 255, 200, 40 },
 		icon = "bee",
 		order = 5,
+		rarity = "Mythic",
 		base = stats({ income = 80 }),
 		paths = {
 			A = {
@@ -476,6 +483,7 @@ local TowerData: { [string]: TowerDef } = {
 		color = { 150, 110, 230 },
 		icon = "owl",
 		order = 6,
+		rarity = "Legendary",
 		base = stats({
 			attacks = {
 				attack({ range = 13, cooldown = 1.1, damage = 1, pierce = 3, damageType = "magic", visual = "orb" }),

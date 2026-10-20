@@ -18,6 +18,18 @@ local Remotes = require(Shared.Net.Remotes)
 local Config = require(Shared.Data.Config)
 local TowerData = require(Shared.Data.TowerData)
 
+export type Stats = {
+	matches: number,
+	wins: number,
+	bestRound: number,
+	totalPops: number,
+	bossPops: number,
+	towersPlaced: number,
+	upgradesBought: number,
+	fullTeamMatches: number,
+	perfectWins: number,
+}
+
 export type Profile = {
 	version: number,
 	goo: number,
@@ -25,7 +37,9 @@ export type Profile = {
 	unlocked: { [string]: boolean },
 	passes: { [string]: boolean },
 	receipts: { string }, -- recent dev product receipt ids (dedupe)
-	stats: { matches: number, wins: number, bestRound: number },
+	stats: Stats,
+	badges: { [string]: boolean }, -- present = earned; true = reward claimed
+	equippedBadge: string, -- "" = none
 }
 
 type Record = {
@@ -41,7 +55,7 @@ type Session = {
 	lastSave: number,
 }
 
-local CURRENT_VERSION = 1
+local CURRENT_VERSION = 2
 local STORE_NAME = "PlayerProfiles_v1"
 local AUTOSAVE_SECONDS = 60
 local LOCK_STALE_SECONDS = AUTOSAVE_SECONDS * 2.5
@@ -55,11 +69,32 @@ local DataService = {}
 
 local sessions: { [Player]: Session } = {}
 local loadedCallbacks: { (Player, Profile) -> () } = {}
+local changedCallbacks: { (Player, Profile) -> () } = {}
 local store: DataStore? = nil
 
 local MIGRATIONS: { [number]: (any) -> any } = {
-	-- [1] = function(data) ... return data end, -- v1 -> v2
+	-- v1 -> v2: lifetime stats for badges, badge records, equipped badge.
+	[1] = function(data)
+		data.stats = data.stats or {}
+		data.badges = data.badges or {}
+		data.equippedBadge = data.equippedBadge or ""
+		return data
+	end,
 }
+
+local function defaultStats(): Stats
+	return {
+		matches = 0,
+		wins = 0,
+		bestRound = 0,
+		totalPops = 0,
+		bossPops = 0,
+		towersPlaced = 0,
+		upgradesBought = 0,
+		fullTeamMatches = 0,
+		perfectWins = 0,
+	}
+end
 
 local function defaultProfile(): Profile
 	local unlocked: { [string]: boolean } = {}
@@ -75,7 +110,9 @@ local function defaultProfile(): Profile
 		unlocked = unlocked,
 		passes = {},
 		receipts = {},
-		stats = { matches = 0, wins = 0, bestRound = 0 },
+		stats = defaultStats(),
+		badges = {},
+		equippedBadge = "",
 	}
 end
 
@@ -93,6 +130,11 @@ local function migrate(data: any): Profile
 	for k, v in defaults :: any do
 		if data[k] == nil then
 			data[k] = v
+		end
+	end
+	for k, v in defaultStats() :: any do
+		if data.stats[k] == nil then
+			data.stats[k] = v
 		end
 	end
 	return data
@@ -144,6 +186,8 @@ local function pushToClient(player: Player, profile: Profile)
 			unlocked = profile.unlocked,
 			passes = profile.passes,
 			stats = profile.stats,
+			badges = profile.badges,
+			equippedBadge = profile.equippedBadge,
 		})
 	end
 end
@@ -278,6 +322,10 @@ local function onPlayerRemoving(player: Player)
 	end
 end
 
+-- Exposed for tests: upgrades any saved shape to the current version.
+DataService.migrate = migrate
+DataService.defaultProfile = defaultProfile
+
 function DataService.get(player: Player): Profile?
 	local session = sessions[player]
 	return if session then session.profile else nil
@@ -292,7 +340,15 @@ function DataService.update(player: Player, mutator: (Profile) -> ()): boolean
 	mutator(session.profile)
 	session.dirty = true
 	pushToClient(player, session.profile)
+	for _, callback in changedCallbacks do
+		callback(player, session.profile)
+	end
 	return true
+end
+
+-- Runs synchronously after every DataService.update (BadgeService re-checks badges here).
+function DataService.onChanged(callback: (Player, Profile) -> ())
+	table.insert(changedCallbacks, callback)
 end
 
 function DataService.onLoaded(callback: (Player, Profile) -> ())

@@ -343,6 +343,26 @@ function scenarios.solo()
 	check(result and result[1].goo == 40 * 2 + 60, "win pays 140 Goo")
 	local profile = Runtime.lastRemote("ProfileData", ana)
 	check(profile and profile[1].goo == 140 and profile[1].stats.wins == 1, "profile updated with Goo and a win")
+	local stats = profile and profile[1].stats or {}
+	check(stats.towersPlaced >= 3 and stats.upgradesBought >= 3, "towers placed / upgrades bought are tracked")
+	check(stats.totalPops > 100 and stats.bossPops >= 1, "pops and boss pops are tracked")
+	check(stats.bestRound == 40 and stats.perfectWins == 0, "best round recorded; leaks rule out Untouchable")
+	local earned = profile and profile[1].badges or {}
+	check(
+		earned.FirstSteps == false
+			and earned.Champion == false
+			and earned.BossBuster == false
+			and earned.Halfway == false,
+		"match badges earned (unclaimed)"
+	)
+	check(earned.Veteran == nil and earned.TeamPlayer == nil, "badges not met stay locked")
+	local notes = {}
+	for _, r in Runtime.remoteLog do
+		if r.name == "Notify" and r.player == ana then
+			table.insert(notes, r.args[1])
+		end
+	end
+	check(string.find(table.concat(notes, "|"), "Badge earned: Champion", 1, true) ~= nil, "badge earned toast sent")
 	local resultsCard = findDescendant(Runtime.findGui(ctx, "Results"), "Results")
 	check(resultsCard and resultsCard.Visible, "results card is shown")
 	Runtime.advance(2)
@@ -586,7 +606,7 @@ function scenarios.lobby()
 			data = {
 				version = 1,
 				goo = 500,
-				xp = 0,
+				xp = 2000,
 				unlocked = { DartFrog = true },
 				passes = {},
 				receipts = {},
@@ -607,32 +627,88 @@ function scenarios.lobby()
 	local hal = Runtime.addPlayer("Hal", { userId = 302 })
 	Runtime.advance(2)
 
-	-- Unlock a tower with Goo through the lobby UI.
+	-- v1 save migrated to v2; level 5 (2000 XP) earns the Level 5 badge on load.
+	local profile = Runtime.lastRemote("ProfileData", gil)[1]
+	check(profile.stats.totalPops == 0 and profile.equippedBadge == "", "v1 profile migrates to v2")
+	check(profile.badges.Level5 == false, "Level 5 badge earned on load")
+
+	-- Badges window: claimable dot, claim pays once, equip shows a head tag.
 	local lobbyGui = Runtime.findGui(gilCtx, "Lobby")
 	check(lobbyGui ~= nil, "lobby UI exists")
-	local towersButton = findDescendant(lobbyGui, "TowersButton", "GuiButton")
-	Runtime.click(gilCtx, towersButton)
-	local towersPanel = findDescendant(lobbyGui, "Towers")
-	check(towersPanel and towersPanel.Visible, "Towers shop opens")
-	local unlockButtons = {}
-	for _, d in towersPanel:GetDescendants() do
-		if d:IsA("TextLabel") and d.Name == "Label" and string.sub(d.Text, 1, 6) == "UNLOCK" then
-			table.insert(unlockButtons, d.Parent)
-		end
-	end
-	check(#unlockButtons == 5, "with 500 Goo all five locked towers show Unlock")
-	fire(gilCtx, "UnlockTower", "CannonCrab")
-	Runtime.advance(0.5)
-	local profile = Runtime.lastRemote("ProfileData", gil)[1]
-	check(profile.unlocked.CannonCrab == true and profile.goo == 350, "Cannon Crab unlocked for 150 Goo")
-	fire(gilCtx, "UnlockTower", "BankBee")
+	local bubble = findDescendant(lobbyGui, "ClaimCount")
+	check(bubble and bubble.Visible, "Badges tile shows a claim bubble")
+	Runtime.click(gilCtx, findDescendant(lobbyGui, "BadgesButton", "GuiButton"))
+	local badgesWindow = findDescendant(lobbyGui, "Badges", "Frame")
+	check(badgesWindow and badgesWindow.Visible, "Badges window opens")
+	local tile = findDescendant(badgesWindow, "Level5", "GuiButton")
+	check(tile and findDescendant(tile, "Claimable").Visible, "Level 5 tile shows the claim dot")
+	local lockedTile = findDescendant(badgesWindow, "Champion", "GuiButton")
+	check(lockedTile and findDescendant(lockedTile, "Question") ~= nil, "locked badges show ?")
+	local claimButton = findDescendant(badgesWindow, "Claim", "GuiButton")
+	check(claimButton and claimButton.Visible, "detail strip opens on the claimable badge")
+	Runtime.click(gilCtx, claimButton)
 	Runtime.advance(0.5)
 	profile = Runtime.lastRemote("ProfileData", gil)[1]
-	check(profile.unlocked.BankBee == true and profile.goo == 50, "Bank Bee unlocked for 300 Goo")
+	check(profile.badges.Level5 == true and profile.goo == 550, "claim pays 50 Goo")
+	fire(gilCtx, "ClaimBadge", "Level5")
+	fire(gilCtx, "ClaimBadge", "Champion")
+	fire(gilCtx, "ClaimBadge", { "junk" })
+	Runtime.advance(0.5)
+	profile = Runtime.lastRemote("ProfileData", gil)[1]
+	check(profile.goo == 550, "double claims, locked and junk claims pay nothing")
+	check(not bubble.Visible, "claim bubble hides when nothing is left")
+
+	local character = roblox.Instance.new("Model")
+	local head = roblox.Instance.new("Part")
+	head.Name = "Head"
+	head.Parent = character
+	character.Parent = ws
+	gil.Character = character
+	fire(gilCtx, "EquipBadge", "Champion")
+	Runtime.advance(0.5)
+	check(Runtime.lastRemote("ProfileData", gil)[1].equippedBadge == "", "can't equip a locked badge")
+	Runtime.click(gilCtx, findDescendant(badgesWindow, "Equip", "GuiButton"))
+	Runtime.advance(0.5)
+	check(Runtime.lastRemote("ProfileData", gil)[1].equippedBadge == "Level5", "equip from the window")
+	local tag = head:FindFirstChild("BadgeTag")
+	check(tag and tag.Label.Text == "LEVEL 5", "equipped badge shows over the head")
+	check(findButtonWithText(badgesWindow, "UNEQUIP", true) ~= nil, "button flips to Unequip")
+	Runtime.click(gilCtx, findDescendant(badgesWindow, "Close", "GuiButton"))
+	check(not badgesWindow.Visible, "Badges window closes")
+
+	-- Shop: rarity cards, featured = cheapest unowned, buy from the featured card.
+	Runtime.click(gilCtx, findDescendant(lobbyGui, "ShopButton", "GuiButton"))
+	local shop = findDescendant(lobbyGui, "Shop", "Frame")
+	check(shop and shop.Visible, "Shop opens")
+	local unowned = 0
+	for _, card in findDescendant(shop, "Grid"):GetChildren() do
+		if card:IsA("GuiButton") and findDescendant(card, "Label").Text ~= "Owned" then
+			unowned += 1
+		end
+	end
+	check(unowned == 5, "five locked towers show a Goo price")
+	check(findDescendant(shop, "Rarity").Text == "COMMON", "cards show rarity")
+	check(findDescendant(shop, "TowerName").Text == "Spike Turtle", "featured tower is the cheapest unowned")
+	check(#findDescendant(shop, "Rows"):GetChildren() >= 5, "Goo & Passes lists every product")
+	Runtime.click(gilCtx, findDescendant(findDescendant(shop, "Featured"), "Buy", "GuiButton"))
+	Runtime.advance(0.5)
+	profile = Runtime.lastRemote("ProfileData", gil)[1]
+	check(profile.unlocked.SpikeTurtle == true and profile.goo == 470, "featured Buy unlocks Spike Turtle for 80")
+	check(findDescendant(shop, "TowerName").Text == "Ice Penguin", "spotlight moves to the next cheapest")
+	Runtime.click(gilCtx, findDescendant(shop, "CannonCrab", "GuiButton"))
+	check(findDescendant(shop, "TowerName").Text == "Cannon Crab", "clicking a card features it")
+	Runtime.click(gilCtx, findDescendant(findDescendant(shop, "Featured"), "Buy", "GuiButton"))
+	Runtime.advance(0.5)
+	profile = Runtime.lastRemote("ProfileData", gil)[1]
+	check(profile.unlocked.CannonCrab == true and profile.goo == 320, "Cannon Crab unlocked for 150 Goo")
 	fire(gilCtx, "UnlockTower", "WizardOwl")
 	Runtime.advance(0.5)
 	profile = Runtime.lastRemote("ProfileData", gil)[1]
-	check(profile.unlocked.WizardOwl == nil and profile.goo == 50, "can't unlock without enough Goo")
+	check(profile.unlocked.WizardOwl == true and profile.goo == 120, "Wizard Owl unlocked for 200 Goo")
+	fire(gilCtx, "UnlockTower", "BankBee")
+	Runtime.advance(0.5)
+	profile = Runtime.lastRemote("ProfileData", gil)[1]
+	check(profile.unlocked.BankBee == nil and profile.goo == 120, "can't unlock without enough Goo")
 
 	-- Stub purchase in a live server: refused as "coming soon", nothing granted.
 	fire(gilCtx, "PurchaseRequest", "DoubleGoo")

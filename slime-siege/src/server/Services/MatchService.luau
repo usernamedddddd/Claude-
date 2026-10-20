@@ -13,6 +13,7 @@ local Config = require(Shared.Data.Config)
 local MapData = require(Shared.Data.MapData)
 local TowerData = require(Shared.Data.TowerData)
 local Rounds = require(Shared.Data.Rounds)
+local SlimeData = require(Shared.Data.SlimeData)
 local Engine = require(Shared.Sim.Engine)
 local Targeting = require(Shared.Sim.Targeting)
 local Upgrades = require(Shared.Sim.Upgrades)
@@ -48,10 +49,41 @@ local matchStarted = false
 local partyDeadline = 0 -- only set when the lobby sent party info (teleport data)
 local expectedParty: { [number]: boolean }? = nil
 
+-- Lifetime stats earned this match but not yet written to the profile (badges read them).
+type Pending = { totalPops: number, bossPops: number, towersPlaced: number, upgradesBought: number }
+local pendingStats: { [number]: Pending } = {}
+
 local remotes: { [string]: RemoteEvent } = {}
 
 local function notify(player: Player, message: string, kind: string?)
 	remotes.Notify:FireClient(player, message, kind or "error")
+end
+
+local function pending(key: number): Pending
+	local p = pendingStats[key]
+	if not p then
+		p = { totalPops = 0, bossPops = 0, towersPlaced = 0, upgradesBought = 0 }
+		pendingStats[key] = p
+	end
+	return p
+end
+
+-- Writes pending counters (and the best round so far) into each player's profile.
+local function flushStats(bestRound: number)
+	for key, player in participants do
+		local p = pendingStats[key]
+		pendingStats[key] = nil
+		DataService.update(player, function(profile)
+			local s = profile.stats
+			if p then
+				s.totalPops += p.totalPops
+				s.bossPops += p.bossPops
+				s.towersPlaced += p.towersPlaced
+				s.upgradesBought += p.upgradesBought
+			end
+			s.bestRound = math.max(s.bestRound, bestRound)
+		end)
+	end
 end
 
 local function speedMultiplier(): number
@@ -139,6 +171,7 @@ local function onPlaceTower(player: Player, rawId: unknown, rawX: unknown, rawZ:
 		return
 	end
 	createTowerModel(tower, player)
+	pending(player.UserId).towersPlaced += 1
 	refreshAllTowerModels() -- camo auras can change other towers
 	Analytics.track("tower_placed", { userId = player.UserId, towerId = towerId, round = state.round })
 end
@@ -158,6 +191,7 @@ local function onUpgradeTower(player: Player, rawUid: unknown, rawPath: unknown)
 		return
 	end
 	local tower = state.towerByUid[uid]
+	pending(player.UserId).upgradesBought += 1
 	refreshAllTowerModels()
 	Analytics.track("tower_upgraded", {
 		userId = player.UserId,
@@ -307,6 +341,10 @@ local function endMatch(won: boolean)
 	end
 	matchOver = true
 	local roundReached = state.round
+	-- A loss happens mid-round, so only completed rounds count toward bestRound there.
+	flushStats(if won then roundReached else roundReached - 1)
+	local fullTeam = state.playerCount >= Config.MAX_PLAYERS
+	local perfect = won and state.stats.leaks == 0
 	Analytics.track(if won then "match_win" else "match_lose", { round = roundReached, players = state.playerCount })
 	for key in state.players do
 		local player = participants[key]
@@ -319,7 +357,12 @@ local function endMatch(won: boolean)
 				if won then
 					profile.stats.wins += 1
 				end
-				profile.stats.bestRound = math.max(profile.stats.bestRound, roundReached)
+				if fullTeam then
+					profile.stats.fullTeamMatches += 1
+				end
+				if perfect then
+					profile.stats.perfectWins += 1
+				end
 			end)
 			remotes.MatchResult:FireClient(player, {
 				won = won,
@@ -352,7 +395,18 @@ local function handleEvents()
 	local events = Engine.drainEvents(state)
 	for _, ev in events do
 		local t = ev.t
-		if t == "roundEnd" then
+		if t == "pop" then
+			local owner = ev.owner
+			if owner ~= 0 and participants[owner] then
+				local p = pending(owner)
+				p.totalPops += 1
+				local def = SlimeData[ev.slime]
+				if def and def.isBoss then
+					p.bossPops += 1
+				end
+			end
+		elseif t == "roundEnd" then
+			flushStats(ev.round)
 			Analytics.track("round_complete", { round = ev.round, livesLeft = state.lives })
 			countdown = Config.INTERMISSION_SECONDS
 		elseif t == "won" then
@@ -477,6 +531,7 @@ local function onPlayerAdded(player: Player)
 end
 
 local function onPlayerRemoving(player: Player)
+	pendingStats[player.UserId] = nil -- stats flush every round end; a leaver loses at most one round
 	readyPlayers[player] = nil
 	participants[player.UserId] = nil
 	skipVotes[player.UserId] = nil
@@ -498,6 +553,7 @@ local function newState()
 	table.clear(speedVotes)
 	table.clear(netEvents)
 	table.clear(extraCashGranted)
+	table.clear(pendingStats)
 	table.insert(netEvents, { t = "clear" })
 end
 

@@ -747,6 +747,17 @@ local function newTeleportService()
 	return ts
 end
 
+Runtime.badgeAwards = {} :: { any }
+local function newBadgeService()
+	local bs = { Name = "BadgeService" }
+	function bs.AwardBadge(_, userId, badgeId)
+		assert(current and current.isServer, "AwardBadge is server-only")
+		table.insert(Runtime.badgeAwards, { userId = userId, badgeId = badgeId })
+		return true
+	end
+	return bs
+end
+
 local function newMarketplaceService()
 	local ms = {
 		Name = "MarketplaceService",
@@ -1086,6 +1097,7 @@ function Runtime.boot(opts: Options)
 	services.DataStoreService = newDataStoreService()
 	services.TeleportService = newTeleportService()
 	services.MarketplaceService = newMarketplaceService()
+	services.BadgeService = newBadgeService()
 	services.TweenService = newTweenService()
 	services.UserInputService = newUserInputService()
 	services.ContextActionService = newContextActionService()
@@ -1117,6 +1129,7 @@ function Runtime.addPlayer(name: string, opts: { teleportData: any?, userId: num
 		ClassName = "Player",
 		Parent = services.Players,
 		Character = nil,
+		CharacterAdded = Signal.new("CharacterAdded"),
 		kicked = nil,
 	}
 	local playerGui = Instance.new("Folder")

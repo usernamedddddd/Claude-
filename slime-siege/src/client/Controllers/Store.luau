@@ -31,7 +31,9 @@ export type ProfileView = {
 	level: number,
 	unlocked: { [string]: boolean },
 	passes: { [string]: boolean },
-	stats: { matches: number, wins: number, bestRound: number },
+	stats: { [string]: number },
+	badges: { [string]: boolean },
+	equippedBadge: string,
 }
 
 local Store = {}

@@ -19,6 +19,8 @@ Remotes.EVENTS = {
 	"QuickPlay", -- ()  lobby only: move my character onto the queue pad
 	"PurchaseRequest", -- (productKey: string)
 	"ClientReady", -- ()  client finished loading; server sends a full enemy sync
+	"ClaimBadge", -- (badgeId: string)  pay out an earned badge's Goo reward
+	"EquipBadge", -- (badgeId: string)  "" unequips
 	-- server -> client
 	"Snapshot", -- (packet: buffer)
 	"MatchState", -- (state: table)

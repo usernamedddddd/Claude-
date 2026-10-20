@@ -12,6 +12,8 @@ export type EventName =
 	| "match_lose"
 	| "tower_placed"
 	| "tower_upgraded"
+	| "badge_earned"
+	| "badge_claimed"
 	| "purchase_prompted"
 	| "session_start"
 	| "session_end"

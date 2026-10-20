@@ -66,7 +66,28 @@ Theme.V2 = {
 	PathA = hex("#FF6FB5"),
 	PathB = hex("#35C8FF"),
 	Badge = hex("#FF2E4D"),
+	Window = hex("#0E0C14"), -- shop / badges window body
+	WindowInner = hex("#17141F"),
+	Locked = hex("#2A2536"),
 }
+
+-- Badge medallion colours (BadgeData tint keys).
+Theme.BadgeTint = {
+	gold = hex("#FFC83D"),
+	blue = hex("#3E8BFF"),
+	red = hex("#FF4D6A"),
+	green = hex("#3BE36B"),
+	purple = hex("#B05CFF"),
+} :: { [string]: Color3 }
+
+-- Shop card colours by tower rarity (Figma RarityCard).
+Theme.Rarity = {
+	Common = hex("#3BE36B"),
+	Rare = hex("#3E8BFF"),
+	Epic = hex("#B05CFF"),
+	Legendary = hex("#FFC83D"),
+	Mythic = hex("#FF3B4E"),
+} :: { [string]: Color3 }
 
 -- Labels: heavy uppercase Montserrat. Numbers and titles: Fredoka One.
 Theme.LabelFont = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Heavy)
@@ -117,6 +138,8 @@ Theme.Icons = {
 	turtle = { image = "", glyph = "🐢" },
 	bee = { image = "", glyph = "🐝" },
 	owl = { image = "", glyph = "🦉" },
+	medal = { image = "", glyph = "🏅" },
+	question = { image = "", glyph = "?" },
 } :: { [string]: Icon }
 
 -- Optional meshes made with art/blender/*.py. Leave ids empty to use the built-in primitives.

@@ -14,6 +14,7 @@ local Remotes = require(Shared.Net.Remotes)
 
 local Services = script.Parent:WaitForChild("Services")
 local Analytics = require(Services.Analytics)
+local BadgeService = require(Services.BadgeService)
 local DataService = require(Services.DataService)
 local MonetizationService = require(Services.MonetizationService)
 local DebugService = require(Services.DebugService)
@@ -52,6 +53,7 @@ end)
 
 DataService.start()
 MonetizationService.start()
+BadgeService.start()
 
 if mode == "match" then
 	local MatchService = require(Services.MatchService)
