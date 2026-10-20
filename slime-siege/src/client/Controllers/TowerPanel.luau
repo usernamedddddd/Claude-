@@ -122,18 +122,19 @@ function TowerPanel.start()
 			Position = UDim2.fromOffset(12, 44),
 			Parent = cf,
 		})
-		UI.list(pipRow, Enum.FillDirection.Horizontal, 6, Enum.HorizontalAlignment.Left)
+		UI.list(pipRow, Enum.FillDirection.Horizontal, 5, Enum.HorizontalAlignment.Left)
 		local pips = {}
-		for t = 1, 3 do
+		for t = 1, Upgrades.MAX_TIER do
 			local pip = UI.new("Frame", {
 				Name = "Pip" .. t,
 				BackgroundColor3 = PIP_OFF,
-				Size = UDim2.fromOffset(56, 12),
+				Size = UDim2.new(1 / Upgrades.MAX_TIER, -5, 0, 12),
 				LayoutOrder = t,
 				Parent = pipRow,
 			})
 			UI.corner(pip, 999)
-			UI.stroke(pip, 2)
+			-- The last tier is the path's ULTIMATE: gold ring (Figma "Tier 5 (Ultimate)").
+			UI.stroke(pip, 2, if t == Upgrades.MAX_TIER then V.Gold else nil)
 			table.insert(pips, pip)
 		end
 		local caption = UI.text({
@@ -301,6 +302,10 @@ function TowerPanel.start()
 			local nextTier = Upgrades.nextTier(def, tiers, pathKey)
 			if nextTier then
 				ui.caption.Visible = true
+				UI.setText(
+					ui.caption,
+					if tiers[pathKey] + 1 == Upgrades.MAX_TIER then "Ultimate upgrade" else "Next upgrade"
+				)
 				ui.lockIcon.Visible = false
 				ui.name.Position = UDim2.fromOffset(12, 90)
 				UI.setText(ui.name, nextTier.name)
@@ -317,7 +322,7 @@ function TowerPanel.start()
 				UI.setText(ui.name, if maxed then "Maxed!" else "Locked")
 				ui.desc.Text = if maxed
 					then "This path is fully upgraded."
-					else "The other path is past tier 1. Only one path can go above tier 1."
+					else `The other path is past tier {Upgrades.MAX_OTHER_TIER}. Only one path can go above tier {Upgrades.MAX_OTHER_TIER}.`
 				UI.setButtonText(ui.button, if maxed then "Max" else "Locked")
 				UI.setButtonStyle(ui.button, "gray")
 				ui.button.Visible = mine

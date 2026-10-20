@@ -155,6 +155,7 @@ function ShopUI.build(parent: Instance, onClose: () -> ()): Window
 			then "goo"
 			elseif product.key == "DoubleGoo" then "star"
 			elseif product.key == "ExtraCash" then "coin"
+			elseif product.key == "FastForward" then "fast"
 			else "trophy"
 		UI.icon(iconKey, {
 			Size = UDim2.fromOffset(54, 54),

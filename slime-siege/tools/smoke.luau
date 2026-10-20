@@ -109,6 +109,10 @@ local function findButtonWithText(root: any, needle: string, exact: boolean?): a
 	return nil
 end
 
+local function badgesOf(profileMsg: any): any
+	return profileMsg and profileMsg[1].badges or {}
+end
+
 local function matchState(player: any): any
 	local args = Runtime.lastRemote("MatchState", player)
 	return args and args[1]
@@ -281,9 +285,18 @@ function scenarios.solo()
 	fire(ctx, "VoteSkip")
 	Runtime.advance(0.5)
 	check(matchState(ana).round == 2, "solo skip vote starts the next round")
+	-- 2x Speed is a game pass: no pass, no fast-forward; the tile opens the purchase instead.
 	fire(ctx, "VoteSpeed")
 	Runtime.advance(0.5)
-	check(matchState(ana).speed == 2, "solo fast-forward vote sets 2x")
+	check(matchState(ana).speed == 1, "2x vote without the pass is ignored")
+	local hudGui = Runtime.findGui(ctx, "HUD")
+	local speedTile = findDescendant(hudGui, "SpeedButton", "GuiButton")
+	local speedBadge = findDescendant(speedTile, "BadgeText")
+	check(speedBadge and speedBadge.Text == "R$" and speedBadge.Parent.Visible, "2x tile shows R$ without the pass")
+	Runtime.click(ctx, speedTile)
+	Runtime.advance(1)
+	check(Runtime.lastRemote("ProfileData", ana)[1].passes.FastForward == true, "2x tile buys the pass (Studio grant)")
+	check(matchState(ana).speed == 2, "after buying, the vote goes through: 2x")
 
 	-- Debug: plenty of lives and cash, then play the first boss round.
 	local debugRemote = Runtime.game():GetService("ReplicatedStorage").Remotes:FindFirstChild("Debug")
@@ -303,7 +316,32 @@ function scenarios.solo()
 			end
 		end
 	end
+	Runtime.advance(1.5)
+	-- Take one owl to its tier-5 ULTIMATE on path B (crosspath allows tier 2 on A).
+	local ultimateOwl = nil
+	for _, model in towersFolder():GetChildren() do
+		if model:GetAttribute("TowerId") == "WizardOwl" and not ultimateOwl then
+			ultimateOwl = model
+		end
+	end
+	for _, path in { "B", "B", "A", "A" } do
+		fire(ctx, "UpgradeTower", ultimateOwl:GetAttribute("Uid"), path)
+	end
 	Runtime.advance(0.5)
+	check(
+		ultimateOwl:GetAttribute("TierB") == 5 and ultimateOwl:GetAttribute("TierA") == 2,
+		"owl upgraded to B5 (ultimate) with A2"
+	)
+	fire(ctx, "UpgradeTower", ultimateOwl:GetAttribute("Uid"), "A")
+	Runtime.advance(0.5)
+	check(ultimateOwl:GetAttribute("TierA") == 2, "crosspath blocks A3 next to B5")
+	local ultimatePips = 0
+	for _, pip in ultimateOwl.Pips:GetChildren() do
+		if pip.Size.X > 0.6 then
+			ultimatePips += 1
+		end
+	end
+	check(ultimatePips == 1, "the ultimate shows a big gold pip on the model")
 	fire(ctx, "Debug", "round", 20)
 	Runtime.advance(0.5)
 	fire(ctx, "VoteSkip")
@@ -346,7 +384,8 @@ function scenarios.solo()
 	local stats = profile and profile[1].stats or {}
 	check(stats.towersPlaced >= 3 and stats.upgradesBought >= 3, "towers placed / upgrades bought are tracked")
 	check(stats.totalPops > 100 and stats.bossPops >= 1, "pops and boss pops are tracked")
-	check(stats.bestRound == 40 and stats.perfectWins == 0, "best round recorded; leaks rule out Untouchable")
+	check(stats.bestRound == 40, "best round recorded")
+	check((stats.perfectWins == 1) == (badgesOf(profile).Untouchable == false), "Untouchable follows perfect wins")
 	local earned = profile and profile[1].badges or {}
 	check(
 		earned.FirstSteps == false
@@ -483,13 +522,19 @@ function scenarios.coop()
 	fire(ctxs[3], "VoteSkip")
 	Runtime.advance(0.5)
 	check(matchState(players[1]).round == 1, "3 of 4 skip votes start the round")
-	fire(ctxs[1], "VoteSpeed")
-	fire(ctxs[2], "VoteSpeed")
+	-- 2x Speed pass: P1, P2 and P4 own it; P3 doesn't, so P3's vote doesn't count.
+	for _, i in { 1, 2, 4 } do
+		fire(ctxs[i], "PurchaseRequest", "FastForward")
+	end
 	Runtime.advance(0.5)
-	check(matchState(players[1]).speed == 1, "2 of 4 speed votes keep 1x")
+	check(matchState(players[1]).speedOwners == 3, "three pass owners in the match")
+	fire(ctxs[3], "VoteSpeed")
+	fire(ctxs[1], "VoteSpeed")
+	Runtime.advance(0.5)
+	check(matchState(players[1]).speed == 1, "1 of 3 owner votes (plus a non-owner) keep 1x")
 	fire(ctxs[4], "VoteSpeed")
 	Runtime.advance(0.5)
-	check(matchState(players[1]).speed == 2, "3 of 4 speed votes give 2x")
+	check(matchState(players[1]).speed == 2, "2 of 3 owner votes give 2x")
 
 	-- Teammate sees P1's tower read-only in the panel.
 	Runtime.clickWorld(ctxs[3], -34, 19)
@@ -503,7 +548,7 @@ function scenarios.coop()
 	Runtime.removePlayer(players[4])
 	Runtime.advance(1)
 	check(matchState(players[1]).playerCount == 3, "player count drops when someone leaves")
-	check(matchState(players[1]).speed == 2, "after P4 leaves, 2 of 3 speed votes still hold 2x")
+	check(matchState(players[1]).speed == 1, "after P4 leaves, 1 of 2 owner votes drops back to 1x")
 	local roundOver = waitFor(90, function()
 		return matchState(players[1]).phase == "intermission"
 	end)

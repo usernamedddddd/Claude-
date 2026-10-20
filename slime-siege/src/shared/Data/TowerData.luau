@@ -8,7 +8,8 @@
 --   tower      = { field = n }    adds n to a tower-level field (income, auras, ...)
 --   towerSet   = { field = v }    overwrites a tower-level field
 --   addAttack  = AttackSpec       adds a secondary attack with its own cooldown
--- Crosspath rule (see Sim/Upgrades): up to tier 3 on one path and tier 1 on the other.
+-- Five tiers per path; tier 5 is the path's ULTIMATE.
+-- Crosspath rule (see Sim/Upgrades): up to tier 5 on one path and tier 2 on the other.
 
 local SlimeData = require(script.Parent.SlimeData)
 
@@ -160,6 +161,18 @@ local TowerData: { [string]: TowerDef } = {
 						description = "Attacks nearly 3x faster with extra pierce.",
 						mods = { attackMul = { cooldown = 0.35 }, attack = { pierce = 2 } },
 					},
+					{
+						name = "Dart Storm",
+						cost = 1500,
+						description = "Throws 3 more darts with +2 pierce.",
+						mods = { attack = { projectiles = 3, pierce = 2 } },
+					},
+					{
+						name = "Frog Monsoon",
+						cost = 3300,
+						description = "ULTIMATE: a storm of darts. 2x attack speed, +2 damage, 2 more darts, +4 pierce.",
+						mods = { attack = { damage = 2, projectiles = 2, pierce = 4 }, attackMul = { cooldown = 0.5 } },
+					},
 				},
 			},
 			B = {
@@ -182,6 +195,22 @@ local TowerData: { [string]: TowerDef } = {
 						cost = 585,
 						description = "Huge range, 5 damage per dart, double damage to bosses.",
 						mods = { attack = { range = 20, damage = 3 }, attackSet = { bossMultiplier = 2 } },
+					},
+					{
+						name = "Deadeye",
+						cost = 1290,
+						description = "+4 damage per dart, triple damage to bosses.",
+						mods = { attack = { damage = 4 }, attackSet = { bossMultiplier = 3 } },
+					},
+					{
+						name = "Legendary Sniper",
+						cost = 2840,
+						description = "ULTIMATE: +10 damage, 2x attack speed, darts pierce 3 more, 5x damage to bosses.",
+						mods = {
+							attack = { damage = 10, pierce = 3 },
+							attackMul = { cooldown = 0.5 },
+							attackSet = { bossMultiplier = 5 },
+						},
 					},
 				},
 			},
@@ -234,6 +263,18 @@ local TowerData: { [string]: TowerDef } = {
 						description = "Massive blasts: +3 damage, +2 splash.",
 						mods = { attack = { damage = 3, splash = 2, pierce = 20 } },
 					},
+					{
+						name = "Bomb Barrage",
+						cost = 3190,
+						description = "Fires 2 more bombs, each with 4 more mini-bombs.",
+						mods = { attack = { projectiles = 2, clusters = 4 } },
+					},
+					{
+						name = "Doomsday Crab",
+						cost = 7020,
+						description = "ULTIMATE: +6 damage, +3 splash, huge pierce, fires 40% faster.",
+						mods = { attack = { damage = 6, splash = 3, pierce = 40 }, attackMul = { cooldown = 0.6 } },
+					},
 				},
 			},
 			B = {
@@ -256,6 +297,18 @@ local TowerData: { [string]: TowerDef } = {
 						cost = 1210,
 						description = "+2 damage and 6x damage to bosses.",
 						mods = { attack = { damage = 2 }, attackSet = { bossMultiplier = 6 } },
+					},
+					{
+						name = "Shockwave Shells",
+						cost = 2660,
+						description = "Stuns 0.6s longer, fires 30% faster, +4 range.",
+						mods = { attack = { stun = 0.6, range = 4 }, attackMul = { cooldown = 0.7 } },
+					},
+					{
+						name = "Titan Mortar",
+						cost = 5850,
+						description = "ULTIMATE: +8 damage, +10 range and 10x damage to bosses.",
+						mods = { attack = { damage = 8, range = 10 }, attackSet = { bossMultiplier = 10 } },
 					},
 				},
 			},
@@ -309,6 +362,18 @@ local TowerData: { [string]: TowerDef } = {
 						description = "+5 range, pulses 40% faster, +2 damage.",
 						mods = { attack = { range = 5, damage = 2, pierce = 40 }, attackMul = { cooldown = 0.6 } },
 					},
+					{
+						name = "Glacier",
+						cost = 2130,
+						description = "+3 damage, freeze 1s longer, +3 range.",
+						mods = { attack = { damage = 3, freeze = 1, range = 3, pierce = 40 } },
+					},
+					{
+						name = "Absolute Zero",
+						cost = 4690,
+						description = "ULTIMATE: +12 range, +4 damage, pulses 40% faster.",
+						mods = { attack = { range = 12, damage = 4, pierce = 80 }, attackMul = { cooldown = 0.6 } },
+					},
 				},
 			},
 			B = {
@@ -331,6 +396,32 @@ local TowerData: { [string]: TowerDef } = {
 						cost = 870,
 						description = "Aura slows to 35% speed (even bosses), freeze +1s.",
 						mods = { attack = { freeze = 1 }, towerSet = { slowFactor = 0.35, slowBosses = true } },
+					},
+					{
+						name = "Ice Shards",
+						cost = 1910,
+						description = "Also fires 3 ice shards at once.",
+						mods = {
+							addAttack = attack({
+								range = 14,
+								cooldown = 0.6,
+								damage = 2,
+								pierce = 3,
+								projectiles = 3,
+								damageType = "cold",
+								visual = "orb",
+							}),
+						},
+					},
+					{
+						name = "Frozen Heart",
+						cost = 4200,
+						description = "ULTIMATE: aura slows to 20% speed and reaches further; frozen slimes stay brittle longer.",
+						mods = {
+							attack = { brittle = 3, freeze = 1 },
+							tower = { slowAura = 4 },
+							towerSet = { slowFactor = 0.2 },
+						},
 					},
 				},
 			},
@@ -383,6 +474,18 @@ local TowerData: { [string]: TowerDef } = {
 						description = "+4 range, +2 damage, many more blades.",
 						mods = { attack = { range = 4, damage = 2, pierce = 12 } },
 					},
+					{
+						name = "Blade Cyclone",
+						cost = 1690,
+						description = "16 more blades, spins 30% faster.",
+						mods = { attack = { pierce = 16 }, attackMul = { cooldown = 0.7 } },
+					},
+					{
+						name = "Maelstrom Shell",
+						cost = 3720,
+						description = "ULTIMATE: +5 range, +4 damage, 30 more blades, spins 40% faster.",
+						mods = { attack = { range = 5, damage = 4, pierce = 30 }, attackMul = { cooldown = 0.6 } },
+					},
 				},
 			},
 			B = {
@@ -405,6 +508,30 @@ local TowerData: { [string]: TowerDef } = {
 						cost = 725,
 						description = "+3 damage and 30% faster spin.",
 						mods = { attack = { damage = 3 }, attackMul = { cooldown = 0.7 } },
+					},
+					{
+						name = "Lava Blades",
+						cost = 1600,
+						description = "+3 damage, and hit slimes turn brittle for 2s.",
+						mods = { attack = { damage = 3, brittle = 2 } },
+					},
+					{
+						name = "Volcano Shell",
+						cost = 3520,
+						description = "ULTIMATE: also erupts lava bombs at 2 slimes every 1.5s.",
+						mods = {
+							addAttack = attack({
+								range = 14,
+								cooldown = 1.5,
+								damage = 6,
+								pierce = 30,
+								splash = 5,
+								projectiles = 2,
+								bossMultiplier = 3,
+								damageType = "fire",
+								visual = "firewall",
+							}),
+						},
 					},
 				},
 			},
@@ -445,6 +572,18 @@ local TowerData: { [string]: TowerDef } = {
 						description = "+$400 per round, interest cap $1000.",
 						mods = { tower = { income = 400 }, towerSet = { interestCap = 1000 } },
 					},
+					{
+						name = "Golden Comb",
+						cost = 4260,
+						description = "+$700 per round, 8% interest, interest cap $2000.",
+						mods = { tower = { income = 700 }, towerSet = { interestRate = 0.08, interestCap = 2000 } },
+					},
+					{
+						name = "Honey Empire",
+						cost = 9370,
+						description = "ULTIMATE: +$1600 per round, interest cap $5000.",
+						mods = { tower = { income = 1600 }, towerSet = { interestCap = 5000 } },
+					},
 				},
 			},
 			B = {
@@ -467,6 +606,18 @@ local TowerData: { [string]: TowerDef } = {
 						cost = 1695,
 						description = "+$350 income and +$150 more team bonus.",
 						mods = { tower = { income = 350, teamBonus = 150 } },
+					},
+					{
+						name = "Queen's Court",
+						cost = 3730,
+						description = "+$300 income and +$250 more team bonus.",
+						mods = { tower = { income = 300, teamBonus = 250 } },
+					},
+					{
+						name = "Hive Mind",
+						cost = 8200,
+						description = "ULTIMATE: +$700 income and +$600 more team bonus for everyone.",
+						mods = { tower = { income = 700, teamBonus = 600 } },
 					},
 				},
 			},
@@ -530,6 +681,28 @@ local TowerData: { [string]: TowerDef } = {
 							}),
 						},
 					},
+					{
+						name = "Inferno Orbs",
+						cost = 2660,
+						description = "Fire bolts explode: +3 damage, +3 splash, +3 pierce.",
+						mods = { attack = { damage = 3, splash = 3, pierce = 3 } },
+					},
+					{
+						name = "Sun God",
+						cost = 5850,
+						description = "ULTIMATE: calls down a sun that scorches every slime nearby each second.",
+						mods = {
+							addAttack = attack({
+								range = 20,
+								cooldown = 1,
+								damage = 8,
+								pierce = 60,
+								splash = 8,
+								damageType = "fire",
+								visual = "firewall",
+							}),
+						},
+					},
 				},
 			},
 			B = {
@@ -552,6 +725,21 @@ local TowerData: { [string]: TowerDef } = {
 						cost = 1065,
 						description = "+2 damage, double speed, longer chains, +5 range.",
 						mods = { attack = { damage = 2, chain = 4, range = 5 }, attackMul = { cooldown = 0.5 } },
+					},
+					{
+						name = "Storm Weaver",
+						cost = 2340,
+						description = "Orbs jump to 6 more slimes, +2 damage.",
+						mods = { attack = { chain = 6, damage = 2 } },
+					},
+					{
+						name = "Grand Archmage",
+						cost = 5150,
+						description = "ULTIMATE: 3 more orbs, 6 more chain jumps, +4 damage, triple damage to bosses.",
+						mods = {
+							attack = { projectiles = 3, chain = 6, damage = 4 },
+							attackSet = { bossMultiplier = 3 },
+						},
 					},
 				},
 			},

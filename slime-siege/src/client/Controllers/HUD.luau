@@ -16,6 +16,7 @@ local SlimeData = require(Shared.Data.SlimeData)
 local TowerData = require(Shared.Data.TowerData)
 local Remotes = require(Shared.Net.Remotes)
 
+local Monetization = require(script.Parent.Monetization)
 local Motion = require(script.Parent.Motion)
 local Placement = require(script.Parent.Placement)
 local SettingsPanel = require(script.Parent.SettingsPanel)
@@ -70,6 +71,13 @@ local function describeRound(round: number): string
 	end
 	local text = table.concat(names, " + ") .. " slimes incoming!"
 	return if camo then text .. " Some are camo!" else text
+end
+
+-- 2x Speed is the "FastForward" game pass (Figma "2x Speed tile states").
+local function ownsFastForward(): boolean
+	local profile = Store.profile
+	local me = Store.me()
+	return (profile ~= nil and profile.passes.FastForward == true) or (me ~= nil and me.fastPass == true)
 end
 
 local function isBossRound(round: number): boolean
@@ -169,7 +177,15 @@ function HUD.start()
 		LayoutOrder = 2,
 		Parent = controls,
 	}, function()
-		Remotes.get("VoteSpeed"):FireServer()
+		if ownsFastForward() then
+			Remotes.get("VoteSpeed"):FireServer()
+		else
+			-- No pass: open the purchase prompt; once granted, cast the vote right away.
+			Monetization.promptPurchase("FastForward", function()
+				Store.notified:Fire("2x Speed unlocked!", "success")
+				Remotes.get("VoteSpeed"):FireServer()
+			end)
+		end
 	end)
 	UI.squareTile({
 		Name = "SettingsButton",
@@ -586,8 +602,14 @@ function HUD.start()
 		end
 		skipRing.Color = if me and me.skip then V.Gold else V.Green
 		UI.setText(speed.label, `{match.speed}x Speed`)
-		speed.badge.Visible = match.playerCount > 1
-		UI.setText(speed.badgeLabel, `{match.speedVotes}/{match.playerCount}`)
+		if ownsFastForward() then
+			local owners = match.speedOwners or 1
+			speed.badge.Visible = owners > 1
+			UI.setText(speed.badgeLabel, `{match.speedVotes}/{owners}`)
+		else
+			speed.badge.Visible = true
+			UI.setText(speed.badgeLabel, "R$")
+		end
 		speedRing.Color = if me and me.fast then V.Gold else V.Blue
 
 		bossChip.Visible = waiting and isBossRound(match.round + 1)

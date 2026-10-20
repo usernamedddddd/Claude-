@@ -7,18 +7,19 @@ local TowerData = require(script.Parent.Parent.Data.TowerData)
 export type PathKey = "A" | "B"
 export type Tiers = { A: number, B: number }
 
-local MAX_TIER = 3
-local MAX_OTHER_TIER = 1
+local MAX_TIER = 5
+local MAX_OTHER_TIER = 2
 
 local Upgrades = {}
 
 Upgrades.MAX_TIER = MAX_TIER
+Upgrades.MAX_OTHER_TIER = MAX_OTHER_TIER
 
 function Upgrades.otherPath(path: PathKey): PathKey
 	return if path == "A" then "B" else "A"
 end
 
--- Crosspath rule: up to tier 3 on one path and tier 1 on the other.
+-- Crosspath rule: up to tier 5 on one path and tier 2 on the other.
 function Upgrades.canUpgrade(tiers: Tiers, path: PathKey): (boolean, string?)
 	local current = tiers[path]
 	local other = tiers[Upgrades.otherPath(path)]
@@ -27,7 +28,7 @@ function Upgrades.canUpgrade(tiers: Tiers, path: PathKey): (boolean, string?)
 	end
 	local nextTier = current + 1
 	if nextTier > MAX_OTHER_TIER and other > MAX_OTHER_TIER then
-		return false, "Other path is above tier 1"
+		return false, `Other path is above tier {MAX_OTHER_TIER}`
 	end
 	return true, nil
 end

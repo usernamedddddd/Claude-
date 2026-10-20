@@ -46,6 +46,16 @@ local Products: { [string]: Product } = {
 		order = 5,
 		badge = "PASS",
 	},
+	FastForward = {
+		key = "FastForward",
+		kind = "gamepass",
+		id = 0,
+		displayName = "2x Speed",
+		description = "Fast-forward matches to 2x speed (pass owners vote on it).",
+		priceRobux = 149,
+		order = 6,
+		badge = "PASS",
+	},
 	GooSmall = {
 		key = "GooSmall",
 		kind = "devproduct",

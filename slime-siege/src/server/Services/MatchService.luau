@@ -86,10 +86,24 @@ local function flushStats(bestRound: number)
 	end
 end
 
+-- 2x speed is the "FastForward" game pass: only owners vote, and it turns on when a majority
+-- of the owners in the match want it (players without the pass can't block or force it).
+local function speedOwners(): ({ [number]: boolean }, number)
+	local owners: { [number]: boolean } = {}
+	local count = 0
+	for key in state.players do
+		local player = participants[key]
+		if player and DataService.hasPass(player, "FastForward") then
+			owners[key] = true
+			count += 1
+		end
+	end
+	return owners, count
+end
+
 local function speedMultiplier(): number
-	return if Votes.hasMajority(Votes.count(speedVotes, state.players), state.playerCount)
-		then Config.FAST_FORWARD_MULTIPLIER
-		else 1
+	local owners, count = speedOwners()
+	return if Votes.hasMajority(Votes.count(speedVotes, owners), count) then Config.FAST_FORWARD_MULTIPLIER else 1
 end
 
 ---------------------------------------------------------------------------
@@ -247,6 +261,10 @@ local function onVoteSpeed(player: Player)
 	if not Guard.allow(player, "VoteSpeed", 3, 4) or not state.players[player.UserId] then
 		return
 	end
+	if not DataService.hasPass(player, "FastForward") then
+		notify(player, "2x Speed is a game pass. Get it in the Shop!", "info")
+		return
+	end
 	speedVotes[player.UserId] = not speedVotes[player.UserId]
 end
 
@@ -272,6 +290,7 @@ local function sendFullSync(player: Player)
 end
 
 local function sendMatchState()
+	local owners, ownerCount = speedOwners()
 	local list = {}
 	for key, ps in state.players do
 		local player = participants[key]
@@ -281,7 +300,8 @@ local function sendMatchState()
 			cash = ps.cash,
 			pops = ps.pops,
 			skip = skipVotes[key] == true,
-			fast = speedVotes[key] == true,
+			fast = speedVotes[key] == true and owners[key] == true,
+			fastPass = owners[key] == true,
 		})
 	end
 	table.sort(list, function(a, b)
@@ -305,7 +325,8 @@ local function sendMatchState()
 		waitingForParty = not matchStarted and os.clock() < partyDeadline,
 		speed = speed,
 		skipVotes = Votes.count(skipVotes, state.players),
-		speedVotes = Votes.count(speedVotes, state.players),
+		speedVotes = Votes.count(speedVotes, owners),
+		speedOwners = ownerCount,
 		playerCount = state.playerCount,
 		players = list,
 	})

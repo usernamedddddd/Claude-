@@ -199,14 +199,18 @@ function TowerModels.setTierPips(model: Model, tierA: number, tierB: number)
 		for i = 1, tiers do
 			local pip = Instance.new("Part")
 			pip.Shape = Enum.PartType.Ball
-			pip.Size = Vector3.one * 0.45
+			local ultimate = i >= 5
+			pip.Size = Vector3.one * (if ultimate then 0.7 else 0.45)
 			pip.Material = Enum.Material.Neon
-			pip.Color = if path == 1 then Color3.fromRGB(255, 120, 200) else Color3.fromRGB(110, 200, 255)
+			pip.Color = if ultimate
+				then Color3.fromRGB(255, 200, 61)
+				elseif path == 1 then Color3.fromRGB(255, 120, 200)
+				else Color3.fromRGB(110, 200, 255)
 			pip.Anchored = true
 			pip.CanCollide = false
 			pip.CanTouch = false
 			pip.CanQuery = false
-			local x = (if path == 1 then -1 else 1) * (0.5 + (i - 1) * 0.55)
+			local x = (if path == 1 then -1 else 1) * (0.5 + (i - 1) * 0.5)
 			pip.CFrame = pivot * CFrame.new(x, 5, 0)
 			pip.Parent = folder
 		end

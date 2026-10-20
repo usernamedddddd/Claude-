@@ -9,7 +9,15 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared.Net.Remotes)
 local Signal = require(Shared.Util.Signal)
 
-export type PlayerView = { userId: number, name: string, cash: number, pops: number, skip: boolean, fast: boolean }
+export type PlayerView = {
+	userId: number,
+	name: string,
+	cash: number,
+	pops: number,
+	skip: boolean,
+	fast: boolean,
+	fastPass: boolean, -- owns the 2x Speed game pass
+}
 export type MatchView = {
 	lives: number,
 	round: number,
@@ -22,6 +30,7 @@ export type MatchView = {
 	speed: number,
 	skipVotes: number,
 	speedVotes: number,
+	speedOwners: number,
 	playerCount: number,
 	players: { PlayerView },
 }
