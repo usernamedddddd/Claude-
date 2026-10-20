@@ -45,7 +45,7 @@ local snapshotTimer = 0
 local stateTimer = 0
 local matchOver = false
 local matchStarted = false
-local partyDeadline = math.huge
+local partyDeadline = 0 -- only set when the lobby sent party info (teleport data)
 local expectedParty: { [number]: boolean }? = nil
 
 local remotes: { [string]: RemoteEvent } = {}

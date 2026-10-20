@@ -6,3 +6,4 @@ sourcemap.json
 *.rbxlx
 *.rbxl.lock
 .tools/
+build/

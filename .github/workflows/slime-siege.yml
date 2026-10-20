@@ -45,5 +45,8 @@ jobs:
       - name: Unit tests + simulator acceptance (TestEZ specs)
         run: lune run tools/test
 
+      - name: Emulated playtests (real scripts, mocked engine)
+        run: lune run tools/smoke
+
       - name: Build place file
         run: rojo build default.project.json -o SlimeSiege.rbxl

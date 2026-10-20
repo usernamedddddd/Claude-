@@ -108,7 +108,18 @@ local function decoration(parent: Instance, blocker: MapData.Blocker, index: num
 	model.Parent = parent
 end
 
+-- Studio templates ship a Baseplate and SpawnLocation that would z-fight with our ground.
+local function removeTemplateParts()
+	for _, name in { "Baseplate", "SpawnLocation" } do
+		local part = Workspace:FindFirstChild(name)
+		if part and part:IsA("BasePart") then
+			part:Destroy()
+		end
+	end
+end
+
 function MapBuilder.buildMatchMap(): Model
+	removeTemplateParts()
 	local existing = Workspace:FindFirstChild("Map")
 	if existing then
 		existing:Destroy()
@@ -215,6 +226,7 @@ end
 export type Lobby = { model: Model, pad: BasePart, padLabel: TextLabel, spawn: SpawnLocation }
 
 function MapBuilder.buildLobby(): Lobby
+	removeTemplateParts()
 	local model = Instance.new("Model")
 	model.Name = "Lobby"
 	part({

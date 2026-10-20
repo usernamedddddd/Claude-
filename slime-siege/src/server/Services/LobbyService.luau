@@ -31,7 +31,7 @@ local function onPad(player: Player, pad: BasePart): boolean
 	if not root or not root:IsA("BasePart") then
 		return false
 	end
-	local offset = root.Position - pad.Position
+	local offset = root.CFrame.Position - pad.CFrame.Position
 	return Vector3.new(offset.X, 0, offset.Z).Magnitude <= PAD_RADIUS and math.abs(offset.Y) < 10
 end
 

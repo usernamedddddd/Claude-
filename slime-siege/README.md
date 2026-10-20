@@ -25,6 +25,7 @@ rojo serve                       # then connect from Studio and press Play
 | `lune run tools/generate_rounds` | Regenerates `src/shared/Data/Rounds.luau` and prints the difficulty curve. It fails if the curve breaks the rules. |
 | `lune run tools/simulate [N]` | Plays the reference defense through rounds 1..N and prints pops, leaks and cash for each round. |
 | `lune run tools/bench` | Measures server step and snapshot cost with about 300 slimes and 30 towers. |
+| `lune run tools/smoke [scenario]` | Emulated playtests: builds the place and runs the real server Script and client LocalScript against mocked engine services. Scenarios: `solo`, `fuzz`, `coop`, `data`, `lobby`. |
 
 `tools/lib/Loader.luau` builds a virtual DataModel from `default.project.json`. That lets the same `require(script.Parent.X)` modules and spec files run in both Lune and Studio. In Studio, the specs run when the Workspace attribute `RunTests = true` is set and `wally install` has been run.
 
@@ -79,7 +80,21 @@ tools/                 Lune CLIs and the headless loader / TestEZ-compatible run
 * `lune run tools/test`: **55 passed, 0 failed**. The specs cover layer splitting, immunities, the crosspath rule, sell refunds and the economy, the round generator (including a check that `Rounds.luau` is in sync), the simulator acceptance test, targeting, placement, votes, the snapshot protocol and rewards.
 * `luau-lsp analyze` in strict mode on `src` and `tests`: **0 errors**. `rojo build` produces a working `.rbxl`.
 
-### M1–M5: code complete, not yet playtested in Studio ⚠️
+### Emulated playtests ✅ (`lune run tools/smoke`)
+
+`tools/emu/Runtime.luau` loads the place built by Rojo with Lune's Roblox library and runs the **real** scripts. It replaces the engine services with mocks: a virtual-clock scheduler, per-machine client contexts, remotes that copy arguments as the network does, DataStore, Teleport, input and raycasts. It catches script errors, wiring mistakes and logic bugs. It does not test rendering, physics, feel or performance.
+
+| Scenario | Checks | What it covers |
+|---|---|---|
+| `solo` | 40/40 | UI placement (hotbar → ghost → click; refused on the path), upgrade panel, targeting button, hotkeys, round 1 auto-starting, rendering slimes, skip and 2× votes, debug remote, boss round with pop burst, win at round 40, Goo reward, results card, Studio reset |
+| `fuzz` | 6/6 | 1,728 garbage calls (nil, NaN, ±inf, huge strings, tables, buffers, wrong types) to every remote: no script errors, nothing placed or bought, rate limits trip |
+| `coop` | 18/18 | 4 players: separate cash, can't upgrade or sell a teammate's tower, 2/4 vs 3/4 skip and speed majorities, read-only teammate panel, a player leaving mid-wave, round bonus to all |
+| `data` | 14/14 | Live mode: profile created and session-locked, lock released on leave, kicked (and data untouched) when another server holds the lock, stale lock taken over, kicked on DataStore outage, BindToClose flush, no Debug remote |
+| `lobby` | 12/12 | Live lobby: Goo unlocks (and refusal without enough Goo), unconfigured products refused, 2 players on the pad teleport together with a reserved code and party data |
+
+Bugs these runs found and fixed: round 1 never auto-started unless the lobby had sent party data (`partyDeadline` defaulted to infinity). Studio's template Baseplate and SpawnLocation now get removed so they don't z-fight with the map.
+
+### M1–M5: code complete, emulator-tested, not yet playtested in Studio ⚠️
 
 I had no Roblox Studio in this environment, so **I have no Studio screenshots or playtest results** for M1–M5, and the 4-client M3 test has not been run. Everything compiles under strict typing and builds into a place file. The gameplay logic underneath is the same unit-tested engine. Rendering, UI layout, input feel and DataStore/Teleport behaviour still need a Studio pass:
 
