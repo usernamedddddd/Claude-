@@ -1,0 +1,8 @@
+DevPackages/*
+!DevPackages/.gitkeep
+Packages/
+sourcemap.json
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+.tools/

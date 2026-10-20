@@ -1,0 +1,51 @@
+{
+  "name": "SlimeSiege",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "ServerStorage": {
+      "Content": {
+        "$path": "src/content"
+      },
+      "Tests": {
+        "$path": "tests"
+      },
+      "DevPackages": {
+        "$path": "DevPackages",
+        "$ignoreUnknownInstances": true
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "FilteringEnabled": true
+      },
+      "$attributes": {
+        "StudioMode": "match",
+        "RunTests": false
+      }
+    },
+    "Lighting": {
+      "$properties": {
+        "Brightness": 2.5,
+        "ClockTime": 13.5,
+        "OutdoorAmbient": [0.65, 0.6, 0.7]
+      }
+    }
+  }
+}
