@@ -1,0 +1,344 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  @font-face{font-family:'Luckiest Guy';src:url(./LuckiestGuy.woff2) format('woff2')}
+  html,body{margin:0;overflow:hidden;background:#000}
+  #wrap{position:relative} canvas,#ov{position:absolute;left:0;top:0} .t{font-family:'Luckiest Guy',sans-serif}
+</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+</head><body><div id="wrap"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const q = new URLSearchParams(location.search);
+const W = +q.get('w') || 1920, H = +q.get('h') || 1080, SCENE = q.get('s') || 'mythic';
+const INK = '#1d1033';
+
+// ---------- canvas helpers ----------
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+function ellipse(x, cx, cy, rx, ry, fill) { x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); x.fillStyle = fill; x.fill(); }
+const decalMat = tex => new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: .5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 });
+function decal(tex, w, h) { return new THREE.Mesh(new THREE.PlaneGeometry(w, h), decalMat(tex)); }
+const mat = (color, o = {}) => new THREE.MeshPhysicalMaterial({ color, roughness: .42, clearcoat: .35, clearcoatRoughness: .4, ...o });
+function rbox(w, h, d, m, r = .1) { const me = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 4, Math.min(r, w / 2 - .01, h / 2 - .01, d / 2 - .01)), m); me.castShadow = me.receiveShadow = true; return me; }
+
+// ---------- avatar faces ----------
+const FACES = {
+  smirk(x) { // confident smirk, one brow raised
+    x.lineCap = 'round'; x.strokeStyle = INK; x.lineWidth = 22;
+    x.beginPath(); x.moveTo(130, 170); x.lineTo(215, 185); x.stroke();
+    x.beginPath(); x.moveTo(300, 175); x.lineTo(385, 150); x.stroke();
+    ellipse(x, 180, 250, 30, 42, INK); ellipse(x, 335, 250, 30, 42, INK);
+    ellipse(x, 170, 232, 10, 12, '#fff'); ellipse(x, 325, 232, 10, 12, '#fff');
+    x.lineWidth = 20; x.beginPath(); x.moveTo(190, 370); x.quadraticCurveTo(290, 400, 350, 335); x.stroke();
+  },
+  grin(x) {
+    x.lineCap = 'round'; x.strokeStyle = INK; x.lineWidth = 20;
+    x.beginPath(); x.moveTo(135, 165); x.quadraticCurveTo(180, 140, 225, 160); x.stroke();
+    x.beginPath(); x.moveTo(290, 160); x.quadraticCurveTo(335, 140, 380, 165); x.stroke();
+    ellipse(x, 180, 240, 30, 44, INK); ellipse(x, 335, 240, 30, 44, INK);
+    ellipse(x, 170, 222, 11, 13, '#fff'); ellipse(x, 325, 222, 11, 13, '#fff');
+    x.beginPath(); x.moveTo(150, 320); x.lineTo(370, 320); x.quadraticCurveTo(360, 450, 260, 450); x.quadraticCurveTo(160, 450, 150, 320); x.fillStyle = INK; x.fill();
+    x.fillStyle = '#fff'; x.fillRect(175, 322, 170, 34);
+    ellipse(x, 260, 425, 55, 22, '#ff5f7e');
+  },
+  shock(x) {
+    x.lineCap = 'round'; x.strokeStyle = INK; x.lineWidth = 18;
+    x.beginPath(); x.moveTo(120, 140); x.quadraticCurveTo(175, 105, 225, 130); x.stroke();
+    x.beginPath(); x.moveTo(290, 130); x.quadraticCurveTo(340, 105, 395, 140); x.stroke();
+    ellipse(x, 180, 240, 50, 58, '#fff'); x.lineWidth = 12; x.beginPath(); x.ellipse(180, 240, 50, 58, 0, 0, 7); x.stroke();
+    ellipse(x, 335, 240, 50, 58, '#fff'); x.beginPath(); x.ellipse(335, 240, 50, 58, 0, 0, 7); x.stroke();
+    ellipse(x, 185, 248, 22, 26, INK); ellipse(x, 330, 248, 22, 26, INK);
+    ellipse(x, 258, 395, 42, 55, INK); ellipse(x, 258, 415, 26, 22, '#ff5f7e');
+  },
+  sad(x) {
+    x.lineCap = 'round'; x.strokeStyle = INK; x.lineWidth = 20;
+    x.beginPath(); x.moveTo(130, 195); x.lineTo(220, 160); x.stroke();
+    x.beginPath(); x.moveTo(295, 160); x.lineTo(385, 195); x.stroke();
+    ellipse(x, 180, 255, 28, 38, INK); ellipse(x, 335, 255, 28, 38, INK);
+    ellipse(x, 172, 240, 9, 11, '#fff'); ellipse(x, 327, 240, 9, 11, '#fff');
+    x.beginPath(); x.moveTo(190, 405); x.quadraticCurveTo(258, 340, 326, 405); x.stroke();
+    x.beginPath(); x.moveTo(150, 300); x.quadraticCurveTo(120, 360, 150, 380); x.quadraticCurveTo(180, 360, 150, 300); x.fillStyle = '#5fc8ff'; x.fill();
+  },
+  classic(x) {
+    x.lineCap = 'round'; x.strokeStyle = INK; x.lineWidth = 20;
+    ellipse(x, 190, 235, 24, 36, INK); ellipse(x, 325, 235, 24, 36, INK);
+    x.beginPath(); x.moveTo(170, 340); x.quadraticCurveTo(258, 420, 345, 340); x.stroke();
+  },
+};
+const faceTex = {}; for (const k in FACES) faceTex[k] = canvasTex(512, 512, (x) => FACES[k](x));
+
+// ---------- avatar ----------
+function avatar({ skin = '#f5c89a', shirt = '#2b2b33', pants = '#2c3e8c', shoes = '#1d1d24', hair = 'bacon', hairColor = '#5b3418', face = 'smirk', logo = null }) {
+  const g = new THREE.Group(), P = {};
+  const mSkin = mat(skin), mShirt = mat(shirt), mPants = mat(pants);
+  for (const s of [-1, 1]) { // legs
+    const piv = new THREE.Group(); piv.position.set(s * .5, 2, 0);
+    const leg = rbox(.98, 2, 1, mPants, .08); leg.position.y = -1; piv.add(leg);
+    const shoe = rbox(1, .35, 1.04, mat(shoes), .08); shoe.position.y = -1.83; piv.add(shoe);
+    g.add(piv); P[s < 0 ? 'legL' : 'legR'] = piv;
+  }
+  const torso = rbox(2, 2, 1, mShirt, .1); torso.position.y = 3; g.add(torso); P.torso = torso;
+  if (logo) { const d = decal(logo, 1.1, 1.1); d.position.set(0, 3.15, .505); g.add(d); }
+  for (const s of [-1, 1]) { // arms, pivot at shoulder
+    const piv = new THREE.Group(); piv.position.set(s * 1.5, 3.8, 0);
+    const sleeve = rbox(.98, .9, 1, mShirt, .08); sleeve.position.y = -.25; piv.add(sleeve);
+    const arm = rbox(.96, 1.25, .98, mSkin, .08); arm.position.y = -1.3; piv.add(arm);
+    g.add(piv); P[s < 0 ? 'armL' : 'armR'] = piv;
+  }
+  const head = new THREE.Group(); head.position.y = 4.68; g.add(head); P.head = head;
+  head.add(rbox(1.3, 1.25, 1.25, mSkin, .22));
+  const f = decal(faceTex[face], 1.12, 1.12); f.position.z = .63; head.add(f);
+  if (hair === 'bacon') {
+    const mh = mat(hairColor, { roughness: .6, clearcoat: .1 });
+    const top = rbox(1.46, .5, 1.42, mh, .22); top.position.set(0, .6, -.03); head.add(top);
+    const back = rbox(1.46, 1.05, .42, mh, .18); back.position.set(0, .15, -.52); head.add(back);
+    for (const s of [-1, 1]) { const side = rbox(.22, .7, 1.1, mh, .1); side.position.set(s * .7, .28, -.08); head.add(side); }
+    // the wavy "bacon" locks across the forehead
+    const lock = new THREE.CapsuleGeometry(.17, .42, 6, 12);
+    [[-.5, .42, .2], [-.22, .48, .35], [.08, .46, .45], [.36, .42, .55], [.6, .36, .7]].forEach(([x, y, r], i) => {
+      const m = new THREE.Mesh(lock, mh); m.position.set(x, y, .58); m.rotation.z = -1.0 + i * .05; m.rotation.x = .3; m.castShadow = true; head.add(m);
+      const m2 = new THREE.Mesh(lock, mh); m2.position.set(x - .05, .78, .25 - i * .1); m2.rotation.set(1.2, 0, -.9); m2.castShadow = true; head.add(m2);
+    });
+  } else if (hair === 'crown') {
+    const mh = mat(hairColor, { roughness: .6 }); const cap = rbox(1.42, .45, 1.38, mh, .2); cap.position.y = .58; head.add(cap);
+    const gold = mat('#ffc928', { metalness: .9, roughness: .25, emissive: '#ff9d00', emissiveIntensity: .25 });
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(.62, .62, .32, 24, 1, true), gold); band.position.y = .98; band.material.side = THREE.DoubleSide; head.add(band);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; const sp = new THREE.Mesh(new THREE.ConeGeometry(.13, .38, 4), gold); sp.position.set(Math.sin(a) * .6, 1.3, Math.cos(a) * .6); head.add(sp);
+      const gem = new THREE.Mesh(new THREE.SphereGeometry(.07, 12, 8), mat(['#ff2e63', '#36b6ff', '#3ee07a'][i % 3], { emissive: ['#ff2e63', '#36b6ff', '#3ee07a'][i % 3], emissiveIntensity: .6 })); gem.position.set(Math.sin(a) * .63, .98, Math.cos(a) * .63); head.add(gem); }
+  }
+  g.userData.P = P; return g;
+}
+
+// ---------- pets ----------
+const PAW = (x, cx, cy, s, col) => { x.fillStyle = col; ellipse(x, cx, cy + 13 * s, 17 * s, 14 * s, col); [[-22, -8], [-8, -20], [8, -20], [22, -8]].forEach(([dx, dy]) => ellipse(x, cx + dx * s, cy + dy * s, 8 * s, 8.5 * s, col)); };
+function petFace(kind) {
+  return canvasTex(512, 512, (x) => {
+    ellipse(x, 165, 230, 52, 64, INK); ellipse(x, 347, 230, 52, 64, INK);
+    ellipse(x, 148, 205, 20, 22, '#fff'); ellipse(x, 330, 205, 20, 22, '#fff');
+    ellipse(x, 182, 262, 9, 9, '#fff'); ellipse(x, 364, 262, 9, 9, '#fff');
+    ellipse(x, 95, 320, 40, 22, 'rgba(255,95,162,.55)'); ellipse(x, 417, 320, 40, 22, 'rgba(255,95,162,.55)');
+    x.strokeStyle = INK; x.lineWidth = 14; x.lineCap = 'round';
+    if (kind === 'dog') { ellipse(x, 256, 330, 34, 24, INK); x.beginPath(); x.moveTo(210, 375); x.quadraticCurveTo(256, 420, 302, 375); x.stroke(); ellipse(x, 256, 405, 20, 26, '#ff5f7e'); }
+    else if (kind === 'dragon') { x.beginPath(); x.moveTo(190, 345); x.quadraticCurveTo(256, 400, 322, 345); x.stroke(); x.fillStyle = '#fff'; x.beginPath(); x.moveTo(205, 355); x.lineTo(222, 390); x.lineTo(238, 362); x.fill(); x.beginPath(); x.moveTo(275, 362); x.lineTo(291, 390); x.lineTo(307, 355); x.fill(); }
+    else { x.beginPath(); x.moveTo(240, 315); x.lineTo(272, 315); x.lineTo(256, 335); x.fillStyle = '#ff5f7e'; x.fill();
+      x.beginPath(); x.moveTo(215, 350); x.quadraticCurveTo(235, 375, 256, 350); x.quadraticCurveTo(277, 375, 297, 350); x.stroke(); }
+  });
+}
+const petFaces = {}; ['cat', 'dog', 'dragon', 'bunny', 'unicorn'].forEach(k => petFaces[k] = petFace(k));
+function pet(kind, color, { glow = 0, glowColor = color, metal = 0 } = {}) {
+  const g = new THREE.Group();
+  const m = mat(color, { emissive: glowColor, emissiveIntensity: glow, metalness: metal, roughness: metal ? .3 : .42 });
+  const body = rbox(1.6, 1.4, 1.45, m, .3); g.add(body);
+  const f = decal(petFaces[kind], 1.35, 1.35); f.position.z = .73; f.position.y = -.05; g.add(f);
+  for (const s of [-1, 1]) { const foot = rbox(.42, .3, .5, m, .1); foot.position.set(s * .45, -.78, .3); g.add(foot); }
+  const accent = (c, o = {}) => mat(c, { emissive: glow ? c : '#000', emissiveIntensity: glow * .6, ...o });
+  if (kind === 'cat') for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.ConeGeometry(.3, .5, 4), m); e.position.set(s * .5, .9, 0); e.rotation.y = Math.PI / 4; e.castShadow = true; g.add(e); }
+  if (kind === 'dog') for (const s of [-1, 1]) { const e = rbox(.25, .8, .55, accent(new THREE.Color(color).multiplyScalar(.55).getStyle()), .1); e.position.set(s * .88, .15, 0); e.rotation.z = s * .25; g.add(e); }
+  if (kind === 'bunny') for (const s of [-1, 1]) { const e = rbox(.3, 1.1, .2, m, .12); e.position.set(s * .38, 1.2, 0); e.rotation.z = -s * .12; g.add(e); }
+  if (kind === 'unicorn') {
+    const horn = new THREE.Mesh(new THREE.ConeGeometry(.16, .9, 16), accent('#ffd23f', { metalness: .6, roughness: .25 })); horn.position.set(0, 1.12, .25); g.add(horn);
+    ['#ff7ad9', '#b46bff', '#36b6ff'].forEach((c, i) => { const mm = rbox(.34, .32, 1.0, accent(c), .12); mm.position.set(-.42 + i * .3, .82, -.15); g.add(mm); });
+  }
+  if (kind === 'dragon') {
+    const gold = accent('#ffd23f', { metalness: .6, roughness: .3 });
+    for (const s of [-1, 1]) { const h = new THREE.Mesh(new THREE.ConeGeometry(.14, .6, 12), gold); h.position.set(s * .45, .95, -.1); h.rotation.z = -s * .35; g.add(h); }
+    for (let i = 0; i < 3; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(.12, .3, 4), gold); sp.position.set(0, .82, .35 - i * .35); g.add(sp); }
+    const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(1.6, 1.1); sh.lineTo(1.35, .45); sh.lineTo(1.9, .5); sh.lineTo(1.5, -.05); sh.lineTo(1.75, -.4); sh.lineTo(.9, -.25); sh.lineTo(0, -.3);
+    const wg = new THREE.ExtrudeGeometry(sh, { depth: .08, bevelEnabled: true, bevelSize: .04, bevelThickness: .04 });
+    const wm = accent(new THREE.Color(color).lerp(new THREE.Color('#ffffff'), .25).getStyle(), { emissiveIntensity: glow * .8 });
+    for (const s of [-1, 1]) { const w = new THREE.Mesh(wg, wm); w.position.set(s * .7, .3, -.35); w.scale.x = s; w.rotation.y = s * .5; w.castShadow = true; g.add(w); }
+  }
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+// ---------- dice ----------
+const pawTex = canvasTex(256, 256, x => PAW(x, 128, 128, 3, '#8b3dff'));
+const pawTexPink = canvasTex(256, 256, x => PAW(x, 128, 128, 3, '#ff3d9a'));
+function dice(glow = .25) {
+  const g = new THREE.Group();
+  g.add(rbox(1, 1, 1, mat('#f4efff', { emissive: '#ffe9a0', emissiveIntensity: glow * .35, clearcoat: 1, roughness: .2 }), .14));
+  const faces = [[0, 0, .505, 0, 0, pawTexPink, [[0, 0, .7]]], [.505, 0, 0, 0, Math.PI / 2, pawTex, [[-.22, .22, .4], [.22, -.22, .4]]], [0, .505, 0, -Math.PI / 2, 0, pawTex, [[-.25, .25, .34], [0, 0, .34], [.25, -.25, .34]]],
+    [-.505, 0, 0, 0, -Math.PI / 2, pawTex, [[-.22, .22, .38], [.22, .22, .38], [-.22, -.22, .38], [.22, -.22, .38]]]];
+  for (const [x, y, z, rx, ry, tex, pts] of faces) {
+    const fg = new THREE.Group(); fg.position.set(x, y, z); fg.rotation.set(rx, ry, 0, 'YXZ'); g.add(fg);
+    for (const [px, py, s] of pts) { const d = decal(tex, s, s); d.position.set(px, py, .002); fg.add(d); }
+  }
+  return g;
+}
+
+// ---------- fx ----------
+function glowSprite(color, size, opacity = 1) {
+  const t = canvasTex(256, 256, (x) => { const gr = x.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, '#fff'); gr.addColorStop(.25, color); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(0, 0, 256, 256); });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, blending: THREE.AdditiveBlending, transparent: true, opacity, depthWrite: false })); s.scale.set(size, size, 1); return s;
+}
+function rainbowAura(size) {
+  const t = canvasTex(512, 512, (x) => {
+    const cg = x.createConicGradient(0, 256, 256); ['#ff4fa3', '#ffb627', '#ffe93f', '#3ee07a', '#36b6ff', '#b46bff', '#ff4fa3'].forEach((c, i, a) => cg.addColorStop(i / (a.length - 1), c));
+    x.fillStyle = cg; x.fillRect(0, 0, 512, 512);
+    x.globalCompositeOperation = 'destination-in'; const rg = x.createRadialGradient(256, 256, 0, 256, 256, 256);
+    rg.addColorStop(0, 'rgba(0,0,0,.95)'); rg.addColorStop(.45, 'rgba(0,0,0,.7)'); rg.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = rg; x.fillRect(0, 0, 512, 512);
+  });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); s.scale.set(size, size, 1); return s;
+}
+const starTex = canvasTex(128, 128, (x) => { x.translate(64, 64); x.fillStyle = '#fff'; x.beginPath(); x.moveTo(0, -64); x.quadraticCurveTo(6, -6, 64, 0); x.quadraticCurveTo(6, 6, 0, 64); x.quadraticCurveTo(-6, 6, -64, 0); x.quadraticCurveTo(-6, -6, 0, -64); x.fill(); });
+function sparkles(scene, n, box, seed = 3, color = '#ffffff') {
+  let s = seed; const r = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  for (let i = 0; i < n; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex, color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+    sp.position.set(box[0] + r() * (box[1] - box[0]), box[2] + r() * (box[3] - box[2]), box[4] + r() * (box[5] - box[4])); const k = .25 + r() * .5; sp.scale.set(k, k, 1); scene.add(sp); }
+}
+function burstBg(c1, c2, c3, cx = .5, cy = .5, rays = true, split = null) {
+  return canvasTex(W, H, (x) => {
+    const paint = (a, b, c, px, py) => { const gr = x.createRadialGradient(px * W, py * H, 0, px * W, py * H, Math.max(W, H) * .8); gr.addColorStop(0, a); gr.addColorStop(.4, b); gr.addColorStop(1, c); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+      if (rays) { x.save(); x.translate(px * W, py * H); x.fillStyle = 'rgba(255,255,255,.13)'; const n = 20, R = W * 2; for (let i = 0; i < n; i++) { const a0 = i / n * Math.PI * 2; x.beginPath(); x.moveTo(0, 0); x.lineTo(R * Math.cos(a0), R * Math.sin(a0)); x.lineTo(R * Math.cos(a0 + Math.PI / n), R * Math.sin(a0 + Math.PI / n)); x.fill(); } x.restore(); } };
+    if (!split) return paint(c1, c2, c3, cx, cy);
+    paint(...split.left); x.save(); x.beginPath(); x.moveTo(W * .56, 0); x.lineTo(W, 0); x.lineTo(W, H); x.lineTo(W * .44, H); x.clip(); paint(...split.right); x.restore();
+  });
+}
+function skyBg() {
+  return canvasTex(W, H, (x) => { const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#2f8cff'); gr.addColorStop(.6, '#8fd3ff'); gr.addColorStop(1, '#d9f3ff'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+    x.fillStyle = 'rgba(255,255,255,.92)'; [[.12, .18, 1], [.78, .12, 1.3], [.5, .26, .8], [.95, .35, .9]].forEach(([cx, cy, k]) => [[0, 0, 70], [60, 10, 55], [-60, 12, 50], [110, 25, 40], [-105, 28, 36]].forEach(([dx, dy, r]) => { x.beginPath(); x.arc(cx * W + dx * k * W / 1920, cy * H + dy * k * H / 1080, r * k * W / 1920, 0, 7); x.fill(); })); });
+}
+
+// ---------- renderer ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.getElementById('wrap').appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
+scene.environmentIntensity = .35;
+const camera = new THREE.PerspectiveCamera(32, W / H, .1, 200);
+function lights({ key = 1.9, rim = '#b98cff', rimI = 2.2, hemiSky = '#ffffff', hemiGround = '#6b5bd6' } = {}) {
+  scene.add(new THREE.HemisphereLight(hemiSky, hemiGround, .75));
+  const k = new THREE.DirectionalLight('#fff4e0', key); k.position.set(-6, 12, 10); k.castShadow = true;
+  k.shadow.mapSize.set(2048, 2048); Object.assign(k.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14 }); k.shadow.bias = -.0005; k.shadow.radius = 4; scene.add(k);
+  const r = new THREE.DirectionalLight(rim, rimI * .8); r.position.set(6, 6, -10); scene.add(r);
+  const f = new THREE.DirectionalLight('#ffffff', .35); f.position.set(2, 2, 12); scene.add(f);
+}
+function shadowFloor(y = 0, opacity = .35) { const p = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity })); p.rotation.x = -Math.PI / 2; p.position.y = y; p.receiveShadow = true; scene.add(p); }
+function at(obj, x, y, z, s = 1, ry = 0, rx = 0, rz = 0) { obj.position.set(x, y, z); obj.scale.setScalar(s); obj.rotation.set(rx, ry, rz); scene.add(obj); return obj; }
+const pawLogo = canvasTex(256, 256, x => PAW(x, 128, 128, 3.2, '#ffffff'));
+
+// ---------- overlay text (SVG) ----------
+const DEFS = `<defs>
+ <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff3b6b"/><stop offset=".2" stop-color="#ff9a1f"/><stop offset=".4" stop-color="#ffe93f"/><stop offset=".6" stop-color="#3ee07a"/><stop offset=".8" stop-color="#36b6ff"/><stop offset="1" stop-color="#b46bff"/></linearGradient>
+ <linearGradient id="red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8a8a"/><stop offset=".5" stop-color="#ff2b2b"/><stop offset="1" stop-color="#b30000"/></linearGradient>
+ <linearGradient id="green" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8ff7a"/><stop offset=".5" stop-color="#3ee05a"/><stop offset="1" stop-color="#119a2e"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7b0"/><stop offset=".45" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff8a1f"/></linearGradient>
+ <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>`;
+function txt(str, x, y, size, fill, { anchor = 'middle', rot = 0, outline = '#140a24', inner = '#ffffff' } = {}) {
+  const sw = size * .13;
+  return `<g class="t" transform="rotate(${rot} ${x} ${y})" text-anchor="${anchor}" font-size="${size}" paint-order="stroke" stroke-linejoin="round">
+    <text x="${x}" y="${y + size * .07}" fill="${outline}" stroke="${outline}" stroke-width="${sw * 1.5}">${str}</text>
+    <text x="${x}" y="${y}" fill="${fill}" stroke="${outline}" stroke-width="${sw}">${str}</text>
+    <text x="${x}" y="${y}" fill="none" stroke="${inner}" stroke-width="${sw * .28}" opacity=".9">${str}</text>
+    <text x="${x}" y="${y}" fill="url(#shine)">${str}</text></g>`;
+}
+let overlay = '';
+
+// ---------- scenes ----------
+const SCENES = {
+  // 1. "0.0001%" — confident bacon hair holding the dice, giant glowing mythic dragon behind
+  mythic() {
+    scene.background = burstBg('#ff9bf0', '#7b2cff', '#12043d', .64, .42);
+    lights({ rim: '#ff7ad9', rimI: 3 });
+    camera.position.set(0, 4.3, 13); camera.lookAt(.2, 3.9, 0);
+    const av = at(avatar({ shirt: '#1e1e26', pants: '#2b3a7a', face: 'smirk', logo: pawLogo }), -2.6, -.2, 1.5, 1, .35);
+    const P = av.userData.P; P.armR.rotation.set(-.4, 0, 2.55); P.armL.rotation.z = -.15; P.head.rotation.set(.04, .1, -.06);
+    av.updateMatrixWorld(true); const hand = P.armR.localToWorld(new THREE.Vector3(0, -2.2, 0));
+    const d = at(dice(.9), hand.x + .1, hand.y + .6, hand.z + .4, 1.15, .6, .5, .2);
+    at(glowSprite('#ffd23f', 3.6, .55), d.position.x + .3, d.position.y + .2, d.position.z - 1.4);
+    at(rainbowAura(11), 3.2, 4.8, -7);
+    at(pet('dragon', '#8a3dff', { glow: .08, glowColor: '#b46bff' }), 3.0, 4.6, -4, 2.1, -.12, .05);
+    const pl = new THREE.PointLight('#d08bff', 25, 20); pl.position.set(3.4, 5, -1.5); scene.add(pl);
+    sparkles(scene, 26, [-7, 9, 1, 9, -6, 2], 5);
+    overlay = txt('0.0001%', W * .63, H * .9, 210, 'url(#rainbow)', { rot: -3 });
+    return { bloom: [.35, .45, .97] };
+  },
+  // 2. NOOB vs PRO
+  noobpro() {
+    scene.background = burstBg(0, 0, 0, 0, 0, true, { left: ['#bfe3ff', '#5b8dd6', '#24305e', .22, .5], right: ['#fff1a8', '#ffb627', '#a63d00', .78, .45] });
+    lights({ rim: '#ffd68a', rimI: 2.4 });
+    camera.position.set(0, 4.0, 15.5); camera.lookAt(0, 3.3, 0);
+    shadowFloor(0, .3);
+    const noob = at(avatar({ skin: '#f7d33c', shirt: '#1f7fe0', pants: '#7bc142', shoes: '#7bc142', hair: 'none', face: 'sad' }), -4.3, 0, 0, 1, .32);
+    const N = noob.userData.P; N.armL.rotation.set(-1.25, 0, .25); N.armR.rotation.set(-1.25, 0, -.25); N.head.rotation.x = .12;
+    at(pet('cat', '#a8acb8'), -4.25, 2.7, 1.55, .75, .32);
+    const pro = at(avatar({ skin: '#f5c89a', shirt: '#121218', pants: '#121218', hair: 'crown', hairColor: '#1a1a1f', face: 'smirk', logo: pawLogo }), 2.6, 0, 0, 1, -.3);
+    const Pp = pro.userData.P; Pp.armR.rotation.set(0, 0, .3); Pp.armL.rotation.set(0, 0, -.12);
+    at(glowSprite('#ffb627', 8, .45), 5.9, 5.0, -5);
+    at(pet('dragon', '#ffc928', { glow: .06, glowColor: '#ff9d00', metal: .55 }), 5.9, 4.7, -2.2, 1.45, -.3);
+    const pl = new THREE.PointLight('#ffcc66', 20, 18); pl.position.set(6, 6, -1); scene.add(pl);
+    sparkles(scene, 18, [2, 10, 1, 9, -5, 1], 9, '#fff3b0');
+    overlay = txt('NOOB', W * .2, H * .18, 170, 'url(#red)', { rot: -5 }) + txt('PRO', W * .66, H * .17, 190, 'url(#green)', { rot: 4 });
+    return { bloom: [.3, .45, .97] };
+  },
+  // 3. Rolling outdoors — giant dice exploding with pets
+  roll() {
+    scene.background = skyBg();
+    lights({ rim: '#ffffff', rimI: 1.4, hemiGround: '#5aa34a' });
+    camera.position.set(0, 4.4, 19); camera.lookAt(.6, 3.6, 0);
+    const grass = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: '#52c43a', roughness: .9 })); grass.rotation.x = -Math.PI / 2; grass.receiveShadow = true; scene.add(grass);
+    const d = at(dice(.5), 2.4, 2.6, -1, 4.2, .62, .28, .12);
+    at(glowSprite('#ffe27a', 11, .4), 2.4, 4.2, -6);
+    at(pet('dragon', '#8a3dff', { glow: .08, glowColor: '#b46bff' }), 2.6, 7.6, -2, 1.7, -.2, .1);
+    at(rainbowAura(6), 2.6, 7.6, -4);
+    at(pet('unicorn', '#f7f2ff'), 7.4, 5.3, -1, 1.35, -.5, 0, -.15);
+    at(pet('cat', '#ffa94d'), -1.6, 6.2, -.5, 1.25, .35, 0, .2);
+    at(pet('dog', '#e9b57d'), 7.0, 1.0, 1.2, 1.3, -.4);
+    at(pet('bunny', '#e8e2f7'), -1.3, 1.0, 2.6, 1.0, .3);
+    const av = at(avatar({ shirt: '#2f9bff', pants: '#26306e', face: 'grin', logo: pawLogo }), -5.0, 0, 2.5, 1, .45);
+    const P = av.userData.P; P.armL.rotation.z = -2.7; P.armR.rotation.z = 2.7; P.head.rotation.x = -.08;
+    sparkles(scene, 30, [-3, 10, 1, 10, -4, 2], 13, '#fff6c8');
+    return { bloom: [.25, .45, .98] };
+  },
+  // Icon: bacon hair + glowing dice + RNG
+  icon() {
+    scene.background = burstBg('#ff9bf0', '#7b2cff', '#12043d', .5, .45);
+    lights({ rim: '#ff7ad9', rimI: 3 });
+    camera.position.set(0, 4.7, 9.5); camera.lookAt(.35, 4.35, 0);
+    const av = at(avatar({ shirt: '#1e1e26', face: 'smirk', logo: pawLogo }), -.3, 0, 0, 1, .3);
+    const P = av.userData.P; P.armR.rotation.set(-.3, 0, 2.3); P.head.rotation.z = -.05;
+    av.updateMatrixWorld(true); const hand = P.armR.localToWorld(new THREE.Vector3(0, -2.2, 0));
+    at(glowSprite('#ffd23f', 3, .5), hand.x + .3, hand.y + .7, hand.z - 1.4);
+    at(dice(1), hand.x + .2, hand.y + .55, hand.z + .3, 1.05, .6, .5, .2);
+    sparkles(scene, 10, [-3, 4, 3, 7, -2, 1], 21);
+    overlay = txt('RNG', W * .5, H * .93, 140, 'url(#rainbow)', { rot: -4 });
+    return { bloom: [.35, .45, .97] };
+  },
+};
+
+const cfg = SCENES[SCENE]();
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), ...cfg.bloom));
+composer.addPass(new OutputPass());
+// Composite the 3D render and the SVG text overlay into one PNG (headless screenshots of WebGL are unreliable).
+window.renderPNG = async () => {
+  composer.render();
+  const out = document.createElement('canvas'); out.width = W; out.height = H;
+  const ctx = out.getContext('2d'); ctx.drawImage(renderer.domElement, 0, 0);
+  if (overlay) {
+    const buf = await (await fetch('./LuckiestGuy.woff2')).arrayBuffer();
+    let bin = ''; new Uint8Array(buf).forEach(b => bin += String.fromCharCode(b));
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><style>@font-face{font-family:'LG';src:url(data:font/woff2;base64,${btoa(bin)}) format('woff2')}.t{font-family:'LG'}</style>${DEFS}${overlay}</svg>`;
+    const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); await img.decode();
+    ctx.drawImage(img, 0, 0);
+  }
+  return out.toDataURL('image/png');
+};
+window.done = true;
+</script></body></html>
