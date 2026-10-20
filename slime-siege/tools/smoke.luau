@@ -227,7 +227,7 @@ function scenarios.solo()
 	end
 	check(frog:GetAttribute("TierA") == 1, "upgrade applied (TierA = 1)")
 	check(myCash(ana) == 310, "upgrade cost deducted ($310 left)")
-	local lastSegment = findButtonWithText(panel, "Last", true)
+	local lastSegment = findButtonWithText(panel, "LAST", true)
 	check(lastSegment ~= nil, "targeting is a segmented control")
 	if lastSegment then
 		Runtime.click(ctx, lastSegment)
@@ -253,7 +253,7 @@ function scenarios.solo()
 		banner and banner.Visible and bannerTitle and string.find(bannerTitle.Text, "ROUND 1", 1, true) ~= nil,
 		"round banner pops in with ROUND 1"
 	)
-	check(findDescendant(hud, "Wave").Visible, "wave progress bar shows during the wave")
+	check(findDescendant(hud, "Progress").Visible, "wave progress bar shows during the wave")
 	Runtime.advance(6)
 	check(slimeCount(ctx) > 0, "client renders slimes during the wave")
 	local cleared = waitFor(60, function()
@@ -269,10 +269,10 @@ function scenarios.solo()
 		end
 	end
 	check(
-		toast.Visible and string.find(table.concat(toastLabels, " "), "Round bonus +$101", 1, true) ~= nil,
+		toast.Visible and string.find(table.concat(toastLabels, " "), "ROUND BONUS +$101", 1, true) ~= nil,
 		"round bonus toast slides in"
 	)
-	check(not findDescendant(hud, "Wave").Visible, "wave bar hides between rounds")
+	check(not findDescendant(hud, "Progress").Visible, "wave bar hides between rounds")
 	state = matchState(ana)
 	check(state.lives == 150, "two frogs hold round 1 without leaks")
 	check(myCash(ana) >= 81 + 101 + 20 - 1, "round bonus + pop cash paid")
@@ -476,7 +476,7 @@ function scenarios.coop()
 	Runtime.advance(0.5)
 	local panel = findDescendant(Runtime.findGui(ctxs[3], "TowerPanel"), "Panel")
 	check(panel.Visible, "teammate can inspect P1's tower")
-	local sell = findButtonWithText(panel, "Sell")
+	local sell = findDescendant(panel, "Sell", "GuiButton")
 	check(sell == nil or not sell.Visible, "sell button hidden for a teammate's tower")
 
 	-- A player leaves mid-wave.
@@ -610,13 +610,13 @@ function scenarios.lobby()
 	-- Unlock a tower with Goo through the lobby UI.
 	local lobbyGui = Runtime.findGui(gilCtx, "Lobby")
 	check(lobbyGui ~= nil, "lobby UI exists")
-	local towersButton = findButtonWithText(lobbyGui, "Towers")
+	local towersButton = findDescendant(lobbyGui, "TowersButton", "GuiButton")
 	Runtime.click(gilCtx, towersButton)
 	local towersPanel = findDescendant(lobbyGui, "Towers")
 	check(towersPanel and towersPanel.Visible, "Towers shop opens")
 	local unlockButtons = {}
 	for _, d in towersPanel:GetDescendants() do
-		if d:IsA("TextLabel") and d.Name == "Label" and string.sub(d.Text, 1, 6) == "Unlock" then
+		if d:IsA("TextLabel") and d.Name == "Label" and string.sub(d.Text, 1, 6) == "UNLOCK" then
 			table.insert(unlockButtons, d.Parent)
 		end
 	end
@@ -640,16 +640,27 @@ function scenarios.lobby()
 	local purchase = Runtime.lastRemote("PurchaseResult", gil)
 	check(purchase and purchase[2] == false, "unconfigured products are refused live")
 
-	-- Two players step on the pad; after the countdown they teleport together.
-	for _, p in { gil, hal } do
+	-- Gil presses PLAY (the server moves him onto the pad); Hal walks onto it.
+	for i, p in { gil, hal } do
 		local character = roblox.Instance.new("Model")
 		local root = roblox.Instance.new("Part")
 		root.Name = "HumanoidRootPart"
-		root.CFrame = roblox.CFrame.new(pad.CFrame.Position + roblox.Vector3.new(1, 3, 0))
+		root.CFrame = if i == 1
+			then roblox.CFrame.new(0, 3, 20)
+			else roblox.CFrame.new(pad.CFrame.Position + roblox.Vector3.new(1, 3, 0))
 		root.Parent = character
+		character.PrimaryPart = root
 		character.Parent = ws
 		p.Character = character
 	end
+	local playButton = findDescendant(lobbyGui, "PlayButton", "GuiButton")
+	check(playButton ~= nil, "lobby has a PLAY button")
+	Runtime.click(gilCtx, playButton)
+	Runtime.advance(0.5)
+	local gilPos = gil.Character.PrimaryPart.CFrame.Position
+	local padPos = pad.CFrame.Position
+	local flat = roblox.Vector3.new(gilPos.X - padPos.X, 0, gilPos.Z - padPos.Z)
+	check(flat.Magnitude < 7, "PLAY moves the character onto the queue pad")
 	local teleported = waitFor(15, function()
 		return #Runtime.teleports > 0
 	end)

@@ -1,8 +1,8 @@
 --!strict
--- Match HUD, implemented from the Figma "Match HUD — Desktop" / "— Phone" frames:
--- stat pills + wave progress (top-left), team list, start/skip + 2x votes (top-right),
--- toasts (top-centre), the tower hotbar (bottom), the touch/gamepad place bar, the round
--- banner and the boss warning. Animations follow the Figma motion spec (see Motion.luau).
+-- Match HUD from the Figma "Match HUD v2" frame (reference style): outlined lives + cash on
+-- the left, WAVE counter + progress top-centre, Skip / 2x / Settings square tiles top-right
+-- with vote badges, the numbered loadout hotbar at the bottom, toasts, the round banner, the
+-- boss warning and the touch/gamepad place bar. Motion follows the Figma motion spec.
 
 local ContextActionService = game:GetService("ContextActionService")
 local GuiService = game:GetService("GuiService")
@@ -18,13 +18,14 @@ local Remotes = require(Shared.Net.Remotes)
 
 local Motion = require(script.Parent.Motion)
 local Placement = require(script.Parent.Placement)
+local SettingsPanel = require(script.Parent.SettingsPanel)
 local Sound = require(script.Parent.Sound)
 local Store = require(script.Parent.Store)
 local UI = require(script.Parent.UI)
 
 local HUD = {}
 
-local C = UI.Colors
+local V = UI.V2
 
 local function sortedTowers(): { TowerData.TowerDef }
 	local list = {}
@@ -65,7 +66,7 @@ local function describeRound(round: number): string
 		camo = camo or g.camo == true
 	end
 	if boss then
-		return "The BIG BOSS SLIME is here!"
+		return "The Big Boss Slime is here!"
 	end
 	local text = table.concat(names, " + ") .. " slimes incoming!"
 	return if camo then text .. " Some are camo!" else text
@@ -88,156 +89,145 @@ function HUD.start()
 	local gui = UI.screen("HUD", 1)
 	local root = UI.root(gui)
 
-	---------------------------------------------------------------- stats (top-left)
-	local stats = UI.new("Frame", {
-		Name = "Stats",
-		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(700, 70),
-		Position = UDim2.fromOffset(32, 28),
-		Parent = root,
-	})
-	UI.list(stats, Enum.FillDirection.Horizontal, 16, Enum.HorizontalAlignment.Left)
-	local lives = UI.pill({ Name = "Lives", icon = "heart", width = 150, LayoutOrder = 1, Parent = stats })
-	local cash = UI.pill({ Name = "Cash", icon = "coin", width = 210, LayoutOrder = 2, Parent = stats })
-	local round = UI.pill({ Name = "Round", icon = "star", width = 250, LayoutOrder = 3, Parent = stats })
+	---------------------------------------------------------------- resources (left)
+	local resources = UI.new(
+		"Frame",
+		{
+			Name = "Resources",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(320, 150),
+			Position = UDim2.fromOffset(40, 120),
+			Parent = root,
+		}
+	)
+	UI.list(resources, Enum.FillDirection.Vertical, 10, Enum.HorizontalAlignment.Left).VerticalAlignment =
+		Enum.VerticalAlignment.Top
+	local livesFrame, livesValue =
+		UI.currency({ Name = "Lives", icon = "heart", color = V.LivesText, LayoutOrder = 1, Parent = resources })
+	local cashFrame, cashValue =
+		UI.currency({ Name = "Cash", icon = "coin", color = V.CoinText, LayoutOrder = 2, Parent = resources })
 
-	local wave = UI.new("Frame", {
-		Name = "Wave",
-		BackgroundColor3 = C.Panel,
-		Size = UDim2.fromOffset(470, 34),
-		Position = UDim2.fromOffset(32, 112),
-		Visible = false,
-		Parent = root,
-	})
-	UI.corner(wave, 999)
-	UI.stroke(wave, 3)
-	UI.list(wave, Enum.FillDirection.Horizontal, 10, Enum.HorizontalAlignment.Left)
-	UI.padding(wave, 0, 16, 0, 16)
-	UI.text({
-		Text = "Wave",
-		color = C.TextMuted,
-		size = 16,
-		Size = UDim2.fromOffset(44, 34),
-		LayoutOrder = 1,
+	---------------------------------------------------------------- wave (top-centre)
+	local wave = UI.new(
+		"Frame",
+		{
+			Name = "Wave",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(420, 110),
+			Position = UDim2.new(0.5, 0, 0, 104),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Parent = root,
+		}
+	)
+	local waveTitle = UI.text({
+		Name = "Title",
+		Text = "Wave 1/40",
+		font = "label",
+		size = 40,
+		Position = UDim2.new(0.5, 0, 0, 0),
+		AnchorPoint = Vector2.new(0.5, 0),
 		Parent = wave,
-		stroke = false,
 	})
-	local _, waveFill = UI.bar({ Size = UDim2.fromOffset(250, 14), LayoutOrder = 2, Parent = wave })
-	local waveLabel = UI.text({
+	local waveBar, waveFill = UI.bar({
+		Name = "Progress",
+		Size = UDim2.fromOffset(360, 18),
+		Position = UDim2.fromOffset(30, 54),
+		Parent = wave,
+	})
+	local waveLeft = UI.text({
+		Name = "Left",
 		Text = "",
-		size = 16,
-		Size = UDim2.fromOffset(130, 34),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = 3,
+		font = "label",
+		size = 14,
+		Position = UDim2.new(0.5, 0, 0, 80),
+		AnchorPoint = Vector2.new(0.5, 0),
 		Parent = wave,
-		stroke = false,
-	})
-
-	---------------------------------------------------------------- team list
-	local team = UI.new("Frame", {
-		Name = "Team",
-		BackgroundColor3 = C.Panel,
-		Size = UDim2.fromOffset(0, 0),
-		AutomaticSize = Enum.AutomaticSize.XY,
-		Position = UDim2.fromOffset(32, 166),
-		Visible = false,
-		Parent = root,
-	})
-	UI.corner(team, 20)
-	UI.stroke(team, 3)
-	UI.padding(team, 12, 18, 14, 16)
-	UI.list(team, Enum.FillDirection.Vertical, 6, Enum.HorizontalAlignment.Left)
-	UI.text({
-		Text = "TEAM",
-		color = C.TextMuted,
-		size = 15,
-		Size = UDim2.fromOffset(200, 18),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = 0,
-		Parent = team,
-		stroke = false,
 	})
 
 	---------------------------------------------------------------- controls (top-right)
-	local controls = UI.new("Frame", {
-		Name = "Controls",
-		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(400, 200),
-		Position = UDim2.new(1, -32, 0, 28),
-		AnchorPoint = Vector2.new(1, 0),
-		Parent = root,
-	})
-	UI.list(controls, Enum.FillDirection.Vertical, 12, Enum.HorizontalAlignment.Right).VerticalAlignment =
+	local controls = UI.new(
+		"Frame",
+		{
+			Name = "Controls",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(420, 130),
+			Position = UDim2.new(1, -40, 0, 24),
+			AnchorPoint = Vector2.new(1, 0),
+			Parent = root,
+		}
+	)
+	UI.list(controls, Enum.FillDirection.Horizontal, 22, Enum.HorizontalAlignment.Right).VerticalAlignment =
 		Enum.VerticalAlignment.Top
-	local skipButton = UI.button({
-		Name = "StartButton",
-		Text = "Start",
-		icon = "play",
-		color = C.Green,
-		Size = UDim2.fromOffset(330, 66),
-		LayoutOrder = 1,
-		Parent = controls,
-	}, function()
-		Remotes.get("VoteSkip"):FireServer()
-	end)
-	local votesChip, votesLabel = UI.chip({ Name = "SkipVotes", Text = "", LayoutOrder = 2, Parent = controls })
-	local speedButton = UI.button({
-		Name = "SpeedButton",
-		Text = "2× speed",
-		icon = "fast",
-		color = C.Blue,
-		Size = UDim2.fromOffset(330, 66),
-		LayoutOrder = 3,
-		Parent = controls,
-	}, function()
-		Remotes.get("VoteSpeed"):FireServer()
-	end)
+	local skip = UI.squareTile(
+		{
+			Name = "StartButton",
+			icon = "skip",
+			Text = "Start",
+			accent = V.Green,
+			badge = "",
+			LayoutOrder = 1,
+			Parent = controls,
+		},
+		function()
+			Remotes.get("VoteSkip"):FireServer()
+		end
+	)
+	local speed = UI.squareTile(
+		{
+			Name = "SpeedButton",
+			icon = "fast",
+			Text = "2x Speed",
+			accent = V.Blue,
+			badge = "",
+			LayoutOrder = 2,
+			Parent = controls,
+		},
+		function()
+			Remotes.get("VoteSpeed"):FireServer()
+		end
+	)
+	UI.squareTile(
+		{
+			Name = "SettingsButton",
+			icon = "settings",
+			Text = "Settings",
+			accent = V.Blue,
+			LayoutOrder = 3,
+			Parent = controls,
+		},
+		function()
+			SettingsPanel.toggle(root)
+		end
+	)
 
-	---------------------------------------------------------------- toast (top-centre)
-	local toast = UI.new("Frame", {
+	---------------------------------------------------------------- toast (under the wave counter)
+	local toastShown, toastHidden = UDim2.new(0.5, 0, 0, 226), UDim2.new(0.5, 0, 0, -80)
+	local toast, toastLabel = UI.chip({
 		Name = "Toast",
-		BackgroundColor3 = C.Gold,
-		Size = UDim2.fromOffset(0, 58),
-		AutomaticSize = Enum.AutomaticSize.X,
-		Position = UDim2.new(0.5, 0, 0, -80),
+		Text = "",
+		icon = "coin",
+		height = 54,
+		textSize = 22,
+		color = V.CoinText,
+		Position = toastHidden,
 		AnchorPoint = Vector2.new(0.5, 0),
 		Visible = false,
 		Parent = root,
 	})
-	UI.corner(toast, 999)
-	UI.stroke(toast, 4)
-	UI.padding(toast, 6, 26, 8, 18)
-	UI.list(toast, Enum.FillDirection.Horizontal, 12)
-	local toastIcon = UI.icon("coin", { Size = UDim2.fromOffset(36, 36), LayoutOrder = 1, Parent = toast })
-	local toastText = UI.text({
-		Text = "",
-		size = 26,
-		Size = UDim2.new(0, 0, 1, 0),
-		AutomaticSize = Enum.AutomaticSize.X,
-		TextWrapped = false,
-		color = C.TextDark,
-		LayoutOrder = 2,
-		Parent = toast,
-	})
-	local toastShown, toastHidden = UDim2.new(0.5, 0, 0, 30), UDim2.new(0.5, 0, 0, -80)
+	local toastIcon = toast:FindFirstChild("Icon") :: GuiObject
+	local toastStroke = toast:FindFirstChildOfClass("UIStroke") :: UIStroke
 	local toastToken = 0
 	local function showToast(message: string, kind: string)
 		toastToken += 1
 		local token = toastToken
-		local fill = if kind == "error"
-			then C.Red
-			elseif kind == "success" then C.Green
-			elseif kind == "info" then C.Panel
-			else C.Gold
-		toast.BackgroundColor3 = fill
-		toastText.Text = message
-		toastText.TextColor3 = UI.labelColorFor(fill)
-		local stroke = toastText:FindFirstChildOfClass("UIStroke")
-		if UI.labelColorFor(fill) == C.Text and not stroke then
-			UI.stroke(toastText, 2)
-		elseif stroke then
-			stroke.Enabled = UI.labelColorFor(fill) == C.Text
-		end
+		local ring = if kind == "error"
+			then V.Red
+			elseif kind == "success" then V.Green
+			elseif kind == "info" then V.Blue
+			else V.Gold
+		toastStroke.Color = ring
+		toastLabel.TextColor3 = if kind == "cash" then V.CoinText else Color3.new(1, 1, 1)
+		UI.setText(toastLabel, message)
 		toastIcon.Visible = kind == "cash"
 		if kind == "error" then
 			Sound.play("error")
@@ -253,49 +243,45 @@ function HUD.start()
 		showToast(message, kind)
 	end)
 
-	---------------------------------------------------------------- round banner
-	local banner = UI.new("Frame", {
+	---------------------------------------------------------------- round banner + boss warning
+	local banner = UI.panel({
 		Name = "RoundBanner",
-		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(760, 220),
-		Position = UDim2.new(0.5, 0, 0, 260),
+		Size = UDim2.fromOffset(680, 180),
+		Position = UDim2.new(0.5, 0, 0, 300),
 		AnchorPoint = Vector2.new(0.5, 0),
+		accent = V.Gold,
+		strokeWidth = 6,
+		radius = 28,
 		Visible = false,
 		Parent = root,
 	})
-	local bannerCard = UI.surface({
-		Name = "Card",
-		Size = UDim2.fromOffset(640, 170),
-		Position = UDim2.fromScale(0.5, 0),
-		AnchorPoint = Vector2.new(0.5, 0),
-		color = C.Purple,
-		radius = 40,
-		Parent = banner,
-	})
 	local bannerTitle = UI.text({
 		Name = "Title",
-		Text = "ROUND 1",
-		size = 96,
-		Size = UDim2.new(1, 0, 0, 110),
-		Position = UDim2.fromOffset(0, 8),
-		Parent = bannerCard.face,
-		strokeThickness = 3,
+		Text = "Round 1",
+		font = "label",
+		size = 88,
+		Position = UDim2.new(0.5, 0, 0, 18),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Parent = banner.face,
 	})
 	local bannerSub = UI.text({
+		Name = "Subtitle",
 		Text = "",
-		size = 26,
-		color = C.Gold,
-		Size = UDim2.new(1, -40, 0, 34),
-		Position = UDim2.new(0, 20, 0, 118),
-		Parent = bannerCard.face,
+		font = "label",
+		size = 22,
+		color = V.Gold,
+		Position = UDim2.new(0.5, 0, 0, 122),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Parent = banner.face,
 	})
 	local bossChip = UI.chip({
 		Name = "BossWarning",
-		Text = "Next round: BIG BOSS SLIME!",
-		color = C.Red,
-		textSize = 24,
-		height = 46,
-		Position = UDim2.new(0.5, 0, 0, 30),
+		Text = "Next round: Big Boss Slime!",
+		icon = "skull",
+		ring = V.Red,
+		height = 50,
+		textSize = 20,
+		Position = UDim2.new(0.5, 0, 0, 226),
 		AnchorPoint = Vector2.new(0.5, 0),
 		Visible = false,
 		Parent = root,
@@ -305,43 +291,44 @@ function HUD.start()
 	local function showBanner(roundNumber: number)
 		bannerToken += 1
 		local token = bannerToken
-		bannerTitle.Text = `ROUND {roundNumber}`
-		bannerSub.Text = describeRound(roundNumber)
-		bannerCard.face.BackgroundColor3 = if isBossRound(roundNumber) then C.Red else C.Purple
-		Motion.popIn(banner, 0.4, Motion.T.bannerIn)
-		if isBossRound(roundNumber) then
+		local boss = isBossRound(roundNumber)
+		UI.setText(bannerTitle, `Round {roundNumber}`)
+		UI.setText(bannerSub, describeRound(roundNumber))
+		banner.stroke.Color = if boss then V.Red else V.Gold
+		bannerSub.TextColor3 = if boss then V.LivesText else V.Gold
+		Motion.popIn(banner.holder, 0.4, Motion.T.bannerIn)
+		if boss then
 			Sound.play("bossPop")
 			task.delay(Motion.T.bannerIn, function()
-				Motion.shake(banner, 10, 2)
+				Motion.shake(banner.holder, 10, 2)
 			end)
 		end
 		task.delay(Motion.T.bannerIn + Motion.T.bannerHold, function()
 			if token == bannerToken then
-				banner.Visible = false
+				banner.holder.Visible = false
 			end
 		end)
 	end
 
-	---------------------------------------------------------------- hotbar (bottom)
-	local hotbar = UI.new("Frame", {
-		Name = "Hotbar",
-		BackgroundColor3 = C.Ink,
-		BackgroundTransparency = 0.45,
-		Size = UDim2.fromOffset(0, 186),
-		AutomaticSize = Enum.AutomaticSize.X,
-		Position = UDim2.new(0.5, 0, 1, -24),
-		AnchorPoint = Vector2.new(0.5, 1),
-		Parent = root,
-	})
-	UI.corner(hotbar, 32)
-	UI.padding(hotbar, 16, 18, 26, 18)
+	---------------------------------------------------------------- loadout hotbar (bottom)
+	local hotbar = UI.new(
+		"Frame",
+		{
+			Name = "Hotbar",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(0, 112),
+			AutomaticSize = Enum.AutomaticSize.X,
+			Position = UDim2.new(0.5, 0, 1, -28),
+			AnchorPoint = Vector2.new(0.5, 1),
+			Parent = root,
+		}
+	)
 	UI.list(hotbar, Enum.FillDirection.Horizontal, 14)
 
 	type Slot = {
 		button: TextButton,
-		face: Frame,
+		ring: UIStroke,
 		cost: TextLabel,
-		key: TextLabel,
 		icon: GuiObject,
 		lock: GuiObject,
 		def: TowerData.TowerDef,
@@ -372,49 +359,85 @@ function HUD.start()
 				Placement.begin(def.id)
 			end
 		end
-		local button = UI.button({
-			Name = def.id,
-			color = C.Card,
-			Size = UDim2.fromOffset(120, 144),
-			LayoutOrder = i,
-			radius = 24,
-			Parent = hotbar,
-		}, choose)
-		local face = button:FindFirstChild("Face") :: Frame
-		local content = face:FindFirstChild("Content") :: Frame
-		content:Destroy() -- slots use their own vertical layout
-		local key = UI.text({
+		-- Figma LoadoutSlot: translucent dark square, light ring, white number badge, cost.
+		local button = UI.new(
+			"TextButton",
+			{
+				Name = def.id,
+				AutoButtonColor = false,
+				Text = "",
+				BackgroundColor3 = V.Slot,
+				BackgroundTransparency = V.SlotTransparency,
+				Size = UDim2.fromOffset(110, 110),
+				LayoutOrder = i,
+				Selectable = true,
+				Parent = hotbar,
+			}
+		)
+		UI.corner(button, 14)
+		local ring = UI.stroke(button, 3, V.SlotRing)
+		local icon = UI.icon(
+			def.icon,
+			{
+				Size = UDim2.fromOffset(66, 66),
+				Position = UDim2.new(0.5, 0, 0, 10),
+				AnchorPoint = Vector2.new(0.5, 0),
+				Parent = button,
+			}
+		)
+		local lock = UI.icon(
+			"lock",
+			{
+				Name = "Lock",
+				Size = UDim2.fromOffset(60, 60),
+				Position = UDim2.new(0.5, 0, 0, 12),
+				AnchorPoint = Vector2.new(0.5, 0),
+				Parent = button,
+			}
+		)
+		local key = UI.new(
+			"Frame",
+			{
+				Name = "Key",
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				Size = UDim2.fromOffset(28, 28),
+				Position = UDim2.fromOffset(6, 6),
+				Parent = button,
+			}
+		)
+		UI.corner(key, 7)
+		UI.stroke(key, 2)
+		UI.text({
 			Text = tostring(i),
 			Name = "Hotkey",
-			size = 16,
-			color = C.TextDark,
-			Size = UDim2.new(1, 0, 0, 20),
-			Position = UDim2.fromOffset(0, 6),
-			Parent = face,
-		})
-		local icon = UI.icon(def.icon, {
-			Size = UDim2.fromOffset(66, 66),
-			Position = UDim2.new(0.5, 0, 0, 28),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = face,
-		})
-		local lock = UI.icon("lock", {
-			Name = "Lock",
-			Size = UDim2.fromOffset(66, 66),
-			Position = UDim2.new(0.5, 0, 0, 28),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = face,
+			font = "label",
+			size = 18,
+			color = Color3.new(0, 0, 0),
+			stroke = false,
+			Size = UDim2.fromScale(1, 1),
+			Parent = key,
 		})
 		local cost = UI.text({
-			Text = UI.formatCash(def.cost),
 			Name = "Cost",
-			size = 22,
-			color = C.TextDark,
-			Size = UDim2.new(1, -8, 0, 28),
-			Position = UDim2.new(0, 4, 1, -36),
-			Parent = face,
+			Text = UI.formatCash(def.cost),
+			size = 20,
+			color = V.CoinText,
+			Position = UDim2.new(0.5, 0, 1, -16),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Parent = button,
 		})
-		local slot: Slot = { button = button, face = face, cost = cost, key = key, icon = icon, lock = lock, def = def }
+		local scale = Motion.scaleOf(button)
+		button.MouseButton1Down:Connect(function()
+			Motion.tween(scale, Motion.T.press, { Scale = 0.93 })
+		end)
+		button.MouseButton1Up:Connect(function()
+			Motion.tween(scale, Motion.T.release, { Scale = 1 }, Enum.EasingStyle.Back)
+		end)
+		button.Activated:Connect(function()
+			Sound.play("click")
+			choose()
+		end)
+		local slot: Slot = { button = button, ring = ring, cost = cost, icon = icon, lock = lock, def = def }
 		slotRef = slot
 		slots[def.id] = slot
 		if hotkeys[i] then
@@ -433,7 +456,7 @@ function HUD.start()
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.KeyCode.ButtonY)
 
-	-- Figma HotbarSlot states: Default / Selected / Too expensive / Locked
+	-- Figma LoadoutSlot states: Default / Selected / Too expensive / Locked
 	local selectedId: string? = nil
 	local function refreshSlots()
 		local cashNow = Store.cash()
@@ -443,98 +466,94 @@ function HUD.start()
 			local affordable = cashNow >= slot.def.cost
 			slot.icon.Visible = allowed
 			slot.lock.Visible = not allowed
-			local textColor = C.TextDark
 			if not allowed then
-				slot.face.BackgroundColor3 = C.Disabled
-				UI.setRing(slot.face, C.Ink, 4)
-				slot.cost.Text = `{slot.def.unlockGoo} Goo`
-				textColor = C.Text
-			elseif selected then
-				slot.face.BackgroundColor3 = C.Gold
-				UI.setRing(slot.face, C.Ink, 6)
-				slot.cost.Text = UI.formatCash(slot.def.cost)
+				slot.ring.Color = Color3.fromHex("#6E6680")
+				slot.ring.Thickness = 3
+				UI.setText(slot.cost, `{slot.def.unlockGoo} Goo`)
+				slot.cost.TextColor3 = V.Muted
 			else
-				slot.face.BackgroundColor3 = C.Card
-				UI.setRing(slot.face, if affordable then C.Ink else C.Red, 4)
-				slot.cost.Text = UI.formatCash(slot.def.cost)
+				slot.ring.Color = if selected then V.Gold else V.SlotRing
+				slot.ring.Thickness = if selected then 6 else 3
+				UI.setText(slot.cost, UI.formatCash(slot.def.cost))
+				slot.cost.TextColor3 = if affordable or selected then V.CoinText else V.LivesText
 			end
-			slot.cost.TextColor3 = if allowed and not affordable and not selected then C.Red else textColor
-			slot.key.TextColor3 = textColor
 		end
 		local nowSelected = Placement.placingId()
 		if nowSelected ~= selectedId then
-			-- lift the newly selected slot (Figma: lift 8 px + 1.08, 160 ms Back-Out)
 			if selectedId and slots[selectedId] then
 				Motion.tween(Motion.scaleOf(slots[selectedId].button), 0.12, { Scale = 1 })
 			end
-			if nowSelected and slots[nowSelected] then
-				local s = Motion.scaleOf(slots[nowSelected].button)
-				s.Scale = 1
-				if not Motion.reduced() then
-					Motion.tween(s, 0.16, { Scale = 1.08 }, Enum.EasingStyle.Back)
-				end
+			if nowSelected and slots[nowSelected] and not Motion.reduced() then
+				Motion.tween(Motion.scaleOf(slots[nowSelected].button), 0.16, { Scale = 1.08 }, Enum.EasingStyle.Back)
 			end
 			selectedId = nowSelected
 		end
 	end
 
 	---------------------------------------------------------------- touch / gamepad place bar
-	local placeBar = UI.new("Frame", {
-		Name = "PlaceBar",
-		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(440, 130),
-		Position = UDim2.new(0.5, 0, 1, -236),
-		AnchorPoint = Vector2.new(0.5, 1),
-		Visible = false,
-		Parent = root,
-	})
-	local hint = UI.chip({
+	local placeBar = UI.new(
+		"Frame",
+		{
+			Name = "PlaceBar",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(480, 130),
+			Position = UDim2.new(0.5, 0, 1, -160),
+			AnchorPoint = Vector2.new(0.5, 1),
+			Visible = false,
+			Parent = root,
+		}
+	)
+	local _hint, hintLabel = UI.chip({
 		Name = "Hint",
 		Text = "",
+		ring = V.Purple,
 		Position = UDim2.fromScale(0.5, 0),
 		AnchorPoint = Vector2.new(0.5, 0),
 		Parent = placeBar,
 	})
-	local placeButton = UI.button({
-		Name = "Place",
-		Text = "Place",
-		icon = "check",
-		color = C.Purple,
-		Size = UDim2.fromOffset(200, 66),
-		Position = UDim2.new(0, 10, 1, -70),
-		Parent = placeBar,
-	}, function()
-		Placement.confirm()
-	end)
-	UI.button({
-		Name = "Cancel",
-		Text = "Cancel",
-		icon = "close",
-		color = C.Red,
-		Size = UDim2.fromOffset(200, 66),
-		Position = UDim2.new(1, -10, 1, -70),
-		AnchorPoint = Vector2.new(1, 0),
-		Parent = placeBar,
-	}, function()
-		Placement.cancel()
-	end)
-	local hintLabel = hint:FindFirstChild("Label") :: TextLabel
-
-	-- Gamepad aim cursor
+	local placeButton = UI.button(
+		{
+			Name = "Place",
+			Text = "Place",
+			icon = "check",
+			style = "green",
+			Size = UDim2.fromOffset(220, 68),
+			Position = UDim2.new(0, 10, 1, -72),
+			Parent = placeBar,
+		},
+		function()
+			Placement.confirm()
+		end
+	)
+	UI.button(
+		{
+			Name = "Cancel",
+			Text = "Cancel",
+			icon = "close",
+			style = "red",
+			Size = UDim2.fromOffset(220, 68),
+			Position = UDim2.new(1, -10, 1, -72),
+			AnchorPoint = Vector2.new(1, 0),
+			Parent = placeBar,
+		},
+		function()
+			Placement.cancel()
+		end
+	)
 	local crosshair = UI.text({
 		Text = "+",
-		size = 48,
-		Size = UDim2.fromOffset(60, 60),
+		size = 56,
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Parent = root,
 	})
 
 	---------------------------------------------------------------- state → UI
-	local teamRows: { Instance } = {}
 	local lastLives, lastCash, lastRound, lastPhase = -1, -1, -1, ""
 	local stopCountdownPulse: (() -> ())? = nil
 	local stopLowLivesPulse: (() -> ())? = nil
+	local skipRing = skip.face:FindFirstChildOfClass("UIStroke") :: UIStroke
+	local speedRing = speed.face:FindFirstChildOfClass("UIStroke") :: UIStroke
 
 	local function refreshMatch()
 		local match = Store.match
@@ -543,17 +562,16 @@ function HUD.start()
 		end
 		local me = Store.me()
 
-		-- Lives: count + red flash/shake when lost, heartbeat when low.
-		Motion.countTo(lives.value, match.lives, tostring)
+		Motion.countTo(livesValue, match.lives, tostring)
 		if lastLives >= 0 and match.lives < lastLives then
-			Motion.shake(lives.holder, 4, 2)
-			lives.face.BackgroundColor3 = C.Red
+			Motion.shake(livesFrame, 5, 2)
+			livesValue.TextColor3 = V.Red
 			task.delay(0.25, function()
-				lives.face.BackgroundColor3 = C.Panel
+				livesValue.TextColor3 = V.LivesText
 			end)
 		end
 		if match.lives < 25 and match.lives > 0 and not stopLowLivesPulse then
-			stopLowLivesPulse = Motion.pulse(lives.bubble, 1.15, 0.6)
+			stopLowLivesPulse = Motion.pulse(livesFrame, 1.12, 0.6)
 		elseif match.lives >= 25 and stopLowLivesPulse then
 			stopLowLivesPulse()
 			stopLowLivesPulse = nil
@@ -561,20 +579,17 @@ function HUD.start()
 		lastLives = match.lives
 
 		local cashNow = Store.cash()
-		Motion.countTo(cash.value, cashNow, UI.formatCash)
+		Motion.countTo(cashValue, cashNow, UI.formatCash)
 		if lastCash >= 0 and cashNow > lastCash + 50 then
-			Motion.punch(cash.holder)
+			Motion.punch(cashFrame)
 		end
 		lastCash = cashNow
 
-		round.value.Text = `Round {math.max(match.round, 1)}/{match.totalRounds}`
-		if match.round ~= lastRound then
-			if match.round > 0 and lastRound >= 0 then
-				Motion.punch(round.holder)
-				showBanner(match.round)
-			end
+		UI.setText(waveTitle, `Wave {math.max(match.round, 1)}/{match.totalRounds}`)
+		if match.round ~= lastRound and match.round > 0 and lastRound >= 0 then
+			Motion.punch(waveTitle, 1.15)
+			showBanner(match.round)
 		end
-		-- Round bonus toast when a wave ends.
 		if lastPhase == "wave" and match.phase == "intermission" then
 			showToast(`Round bonus +${Config.ROUND_BONUS_BASE + match.round}!`, "cash")
 			Sound.play("cash")
@@ -582,30 +597,26 @@ function HUD.start()
 		lastRound = match.round
 		lastPhase = match.phase
 
-		-- Wave progress
-		wave.Visible = match.phase == "wave"
-		local progress = match.waveProgress or 0
-		Motion.tween(waveFill, 0.25, { Size = UDim2.fromScale(math.clamp(progress, 0, 1), 1) })
-		waveLabel.Text = `{match.slimesLeft or 0} slimes left`
+		local inWave = match.phase == "wave"
+		waveBar.Visible = inWave
+		waveLeft.Visible = inWave
+		Motion.tween(waveFill, 0.25, { Size = UDim2.fromScale(math.clamp(match.waveProgress or 0, 0, 1), 1) })
+		UI.setText(waveLeft, `{match.slimesLeft or 0} slimes left`)
 
-		-- Start / next round + votes
 		local waiting = match.phase == "prep" or match.phase == "intermission"
-		skipButton.Visible = waiting
-		votesChip.Visible = waiting and match.playerCount > 1
+		skip.button.Visible = waiting
 		if waiting then
-			local label = if match.phase == "prep" then "Start" else "Next round"
-			local countdownText = if match.waitingForParty then "waiting…" else `{match.countdown}s`
-			UI.setButtonText(skipButton, `{label} · {countdownText}`)
-			UI.setButtonColor(skipButton, if me and me.skip then C.Gold else C.Green)
-			local need = math.floor(match.playerCount / 2) + 1
-			local before = votesLabel.Text
-			votesLabel.Text = `Skip votes {match.skipVotes}/{match.playerCount} · need {need}`
-			if before ~= votesLabel.Text and before ~= "" then
-				Motion.punch(votesChip, 1.15)
+			local countdownText = if match.waitingForParty then "…" else `{match.countdown}s`
+			UI.setText(skip.label, (if match.phase == "prep" then "Start " else "Skip ") .. countdownText)
+			skip.badge.Visible = match.playerCount > 1
+			local before = skip.badgeLabel.Text
+			UI.setText(skip.badgeLabel, `{match.skipVotes}/{match.playerCount}`)
+			if before ~= skip.badgeLabel.Text and before ~= "" then
+				Motion.punch(skip.badge, 1.25)
 			end
 			if match.countdown <= 3 and not match.waitingForParty then
 				if not stopCountdownPulse then
-					stopCountdownPulse = Motion.pulse(skipButton, 1.06, 1)
+					stopCountdownPulse = Motion.pulse(skip.button, 1.06, 1)
 				end
 			elseif stopCountdownPulse then
 				stopCountdownPulse()
@@ -615,62 +626,13 @@ function HUD.start()
 			stopCountdownPulse()
 			stopCountdownPulse = nil
 		end
-		local speedText = if match.playerCount > 1
-			then `{match.speed}× speed · {match.speedVotes}/{match.playerCount}`
-			else `{match.speed}× speed`
-		UI.setButtonText(speedButton, speedText)
-		UI.setButtonColor(speedButton, if me and me.fast then C.Gold else C.Blue)
+		skipRing.Color = if me and me.skip then V.Gold else V.Green
+		UI.setText(speed.label, `{match.speed}x Speed`)
+		speed.badge.Visible = match.playerCount > 1
+		UI.setText(speed.badgeLabel, `{match.speedVotes}/{match.playerCount}`)
+		speedRing.Color = if me and me.fast then V.Gold else V.Blue
 
-		-- Bosses: warn during the intermission before a boss round.
 		bossChip.Visible = waiting and isBossRound(match.round + 1)
-
-		-- Team list (co-op only)
-		for _, row in teamRows do
-			row:Destroy()
-		end
-		table.clear(teamRows)
-		team.Visible = #match.players > 1
-		if team.Visible then
-			for i, p in match.players do
-				local row = UI.new("Frame", {
-					Name = "Row",
-					BackgroundTransparency = 1,
-					Size = UDim2.fromOffset(0, 28),
-					AutomaticSize = Enum.AutomaticSize.X,
-					LayoutOrder = i,
-					Parent = team,
-				})
-				UI.list(row, Enum.FillDirection.Horizontal, 10, Enum.HorizontalAlignment.Left)
-				local isMe = me ~= nil and p.userId == me.userId
-				local dot = UI.new("Frame", {
-					BackgroundColor3 = if isMe then C.Lime else C.Cyan,
-					Size = UDim2.fromOffset(12, 12),
-					LayoutOrder = 1,
-					Parent = row,
-				})
-				UI.corner(dot, 999)
-				UI.text({
-					Text = if isMe then "You" else p.name,
-					size = 20,
-					Size = UDim2.new(0, 0, 1, 0),
-					AutomaticSize = Enum.AutomaticSize.X,
-					TextWrapped = false,
-					LayoutOrder = 2,
-					Parent = row,
-				})
-				UI.text({
-					Text = UI.formatCash(p.cash),
-					size = 20,
-					color = C.Gold,
-					Size = UDim2.new(0, 0, 1, 0),
-					AutomaticSize = Enum.AutomaticSize.X,
-					TextWrapped = false,
-					LayoutOrder = 3,
-					Parent = row,
-				})
-				table.insert(teamRows, row)
-			end
-		end
 		refreshSlots()
 	end
 	Store.matchChanged:Connect(refreshMatch)
@@ -681,12 +643,15 @@ function HUD.start()
 		local mode = Placement.inputMode()
 		placeBar.Visible = placing and mode ~= "mouse"
 		local ok, reason = Placement.status()
-		UI.setButtonColor(placeButton, if ok then C.Purple else C.Disabled)
-		hintLabel.Text = if not placing
-			then ""
-			elseif mode == "touch" then (if ok then "Tap the garden to aim, then Place" else reason or "")
-			elseif mode == "gamepad" then (if ok then "Ⓐ Place   Ⓑ Cancel" else reason or "")
-			else ""
+		UI.setButtonStyle(placeButton, if ok then "green" else "gray")
+		UI.setText(
+			hintLabel,
+			if not placing
+				then ""
+				elseif mode == "touch" then (if ok then "Tap the garden to aim, then Place" else reason or "")
+				elseif mode == "gamepad" then (if ok then "A: Place   B: Cancel" else reason or "")
+				else ""
+		)
 		crosshair.Visible = mode == "gamepad"
 		refreshSlots()
 	end

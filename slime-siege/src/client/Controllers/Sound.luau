@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 
 local Theme = require(ReplicatedStorage:WaitForChild("Shared").Data.Theme)
+local Prefs = require(script.Parent.Prefs)
 
 local Sound = {}
 
@@ -46,6 +47,9 @@ local function getPool(key: string): Pool?
 end
 
 function Sound.play(key: string, volumeScale: number?)
+	if not Prefs.sfx then
+		return
+	end
 	local pool = getPool(key)
 	local def = Theme.Sounds[key]
 	if not pool or not def then

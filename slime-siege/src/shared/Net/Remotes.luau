@@ -16,6 +16,7 @@ Remotes.EVENTS = {
 	"VoteSkip", -- ()
 	"VoteSpeed", -- ()
 	"UnlockTower", -- (towerId: string)  lobby only
+	"QuickPlay", -- ()  lobby only: move my character onto the queue pad
 	"PurchaseRequest", -- (productKey: string)
 	"ClientReady", -- ()  client finished loading; server sends a full enemy sync
 	-- server -> client

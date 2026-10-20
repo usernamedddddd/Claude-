@@ -1,11 +1,12 @@
 --!strict
--- UI kit implementing the Figma "Slime Siege UI" design system:
---   * chunky surfaces: a face with a 3-4 px ink outline sitting on an ink "lip" (the Figma
---     Chunky shadow: 0, 6 px, no blur)
---   * Fredoka One text; white labels with an ink outline on saturated fills, ink labels on gold
---     and light cards (all pairs >= 4.5:1 contrast)
---   * a root UIScale so layouts are authored at 1920x1080 and scale to any screen, with a
---     floor that keeps phones readable (matches the Figma phone frame)
+-- UI kit implementing the Figma "Style v2 (reference)" page:
+--   * panels: dark purple gradient, thick bright accent border, hard black drop "lip"
+--   * buttons: bright gradient face, white border, black lip; press pushes the face down
+--   * labels: heavy UPPERCASE Montserrat, white with a black outline; numbers in Fredoka One
+--   * tiles: wide menu tiles (icon + label) and square icon tiles with the label overlapping the
+--     bottom edge and an optional red notification badge
+--   * a root UIScale: layouts are authored at 1920x1080 and scale to any screen, with a floor
+--     that keeps phones readable
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -18,10 +19,25 @@ local Sound = require(script.Parent.Sound)
 local UI = {}
 
 UI.Colors = Theme.Colors
-UI.FONT = Theme.FONT
-UI.LIP = 6
+UI.V2 = Theme.V2
+UI.LIP = 5
 
-local C = Theme.Colors
+local V = Theme.V2
+local WHITE = Color3.new(1, 1, 1)
+
+export type Style = "green" | "red" | "blue" | "gold" | "purple" | "gray"
+local STYLES: { [string]: { top: Color3, bottom: Color3 } } = {
+	green = { top = V.GreenTop, bottom = V.GreenBottom },
+	red = { top = V.RedTop, bottom = V.RedBottom },
+	blue = { top = Color3.fromHex("#6FAEFF"), bottom = Color3.fromHex("#1F5FD6") },
+	gold = { top = Color3.fromHex("#FFE27A"), bottom = Color3.fromHex("#E59A00") },
+	purple = { top = Color3.fromHex("#B98CFF"), bottom = Color3.fromHex("#6A3CCB") },
+	gray = { top = Color3.fromHex("#8A8098"), bottom = Color3.fromHex("#4E465E") },
+}
+
+---------------------------------------------------------------------------
+-- Basics
+---------------------------------------------------------------------------
 
 function UI.screen(name: string, displayOrder: number?): ScreenGui
 	local gui = Instance.new("ScreenGui")
@@ -35,8 +51,7 @@ function UI.screen(name: string, displayOrder: number?): ScreenGui
 	return gui
 end
 
--- Full-screen root authored in 1920x1080 "design pixels". Children position with scale anchors
--- (e.g. top-right = Position (1, -32, 0, 28), AnchorPoint (1, 0)) and size in design pixels.
+-- Full-screen root authored in 1920x1080 design pixels.
 function UI.root(gui: ScreenGui): Frame
 	local root = Instance.new("Frame")
 	root.Name = "Root"
@@ -49,7 +64,7 @@ function UI.root(gui: ScreenGui): Frame
 	local function update()
 		local camera = Workspace.CurrentCamera
 		local height = if camera then camera.ViewportSize.Y else 1080
-		-- 1080p = 1.0; phones (~390 px tall) get ~0.62 like the Figma phone frame.
+		-- 1080p = 1.0; phones (~390 px tall) get ~0.62 so tiles stay thumb-sized.
 		local s = math.clamp(math.max(height / 1080, math.min(height / 600, 0.62)), 0.45, 2)
 		scale.Scale = s
 		root.Size = UDim2.fromScale(1 / s, 1 / s)
@@ -81,13 +96,13 @@ function UI.new(className: string, props: { [string]: any }, children: { Instanc
 end
 
 function UI.corner(parent: Instance, radius: number?): UICorner
-	return UI.new("UICorner", { CornerRadius = UDim.new(0, radius or 18), Parent = parent })
+	return UI.new("UICorner", { CornerRadius = UDim.new(0, radius or 16), Parent = parent })
 end
 
 function UI.stroke(parent: Instance, thickness: number?, color: Color3?): UIStroke
 	return UI.new("UIStroke", {
 		Thickness = thickness or 3,
-		Color = color or C.Ink,
+		Color = color or V.Outline,
 		ApplyStrokeMode = if parent:IsA("TextLabel") or parent:IsA("TextButton")
 			then Enum.ApplyStrokeMode.Contextual
 			else Enum.ApplyStrokeMode.Border,
@@ -130,37 +145,53 @@ function UI.padding(parent: Instance, top: number, right: number?, bottom: numbe
 	})
 end
 
--- Text in the game font. Light-on-dark text gets an ink outline for readability over the 3D
--- scene; dark text on light/gold surfaces does not.
+function UI.gradient(parent: Instance, top: Color3, bottom: Color3): UIGradient
+	return UI.new("UIGradient", { Color = ColorSequence.new(top, bottom), Rotation = 90, Parent = parent })
+end
+
+---------------------------------------------------------------------------
+-- Text
+---------------------------------------------------------------------------
+
+-- props.font: "label" (heavy UPPERCASE Montserrat) or "number" (Fredoka One, default).
+-- Text is white with a black outline unless props.stroke == false.
 function UI.text(props: { [string]: any }): TextLabel
-	local color = props.color or C.Text
+	local isLabel = props.font == "label"
+	local size = props.size or 24
+	local text = props.Text or ""
 	local label = UI.new("TextLabel", {
 		BackgroundTransparency = 1,
-		Font = Theme.FONT,
-		TextScaled = props.size == nil,
-		TextSize = props.size or 24,
-		TextColor3 = color,
-		Text = props.Text or "",
-		Size = props.Size or UDim2.fromScale(1, 1),
-		AutomaticSize = props.AutomaticSize or Enum.AutomaticSize.None,
+		FontFace = if isLabel then Theme.LabelFont else Theme.NumberFont,
+		TextSize = size,
+		TextScaled = props.scaled == true,
+		TextColor3 = props.color or WHITE,
+		Text = if isLabel then string.upper(text) else text,
+		Size = props.Size or UDim2.new(0, 0, 0, size + 6),
+		AutomaticSize = props.AutomaticSize or (if props.Size then Enum.AutomaticSize.None else Enum.AutomaticSize.X),
 		Position = props.Position or UDim2.fromScale(0, 0),
 		AnchorPoint = props.AnchorPoint or Vector2.zero,
 		TextXAlignment = props.TextXAlignment or Enum.TextXAlignment.Center,
 		TextYAlignment = props.TextYAlignment or Enum.TextYAlignment.Center,
-		TextWrapped = props.TextWrapped ~= false,
+		TextWrapped = props.TextWrapped == true,
 		Name = props.Name or "Text",
 		LayoutOrder = props.LayoutOrder or 0,
 		ZIndex = props.ZIndex or 1,
+		Visible = if props.Visible == nil then true else props.Visible,
 		Parent = props.Parent,
 	})
-	local wantsStroke = if props.stroke ~= nil then props.stroke else color ~= C.TextDark and color ~= C.Ink
-	if wantsStroke then
-		UI.stroke(label, props.strokeThickness or 2)
+	label:SetAttribute("Upper", isLabel)
+	if props.stroke ~= false then
+		UI.stroke(label, props.strokeThickness or math.clamp(math.floor(size / 9 + 0.5), 2, 6))
 	end
-	if props.size == nil then
-		UI.new("UITextSizeConstraint", { MaxTextSize = props.maxTextSize or 48, Parent = label })
+	if props.scaled then
+		UI.new("UITextSizeConstraint", { MaxTextSize = size, Parent = label })
 	end
 	return label
+end
+
+-- Sets text, keeping labels uppercase.
+function UI.setText(label: TextLabel, text: string)
+	label.Text = if label:GetAttribute("Upper") == true then string.upper(text) else text
 end
 
 -- An icon from Theme.Icons: an image once uploaded, a glyph until then.
@@ -180,30 +211,37 @@ function UI.icon(key: string, props: { [string]: any }): GuiObject
 			Parent = props.Parent,
 		})
 	else
-		node = UI.text({
+		node = UI.new("TextLabel", {
+			BackgroundTransparency = 1,
+			Font = Enum.Font.FredokaOne,
 			Text = icon.glyph,
-			Size = props.Size,
-			Position = props.Position,
-			AnchorPoint = props.AnchorPoint,
-			LayoutOrder = props.LayoutOrder,
+			TextScaled = true,
+			TextColor3 = WHITE,
+			Size = props.Size or UDim2.fromScale(1, 1),
+			Position = props.Position or UDim2.fromScale(0, 0),
+			AnchorPoint = props.AnchorPoint or Vector2.zero,
+			LayoutOrder = props.LayoutOrder or 0,
 			Name = props.Name or "Icon",
 			Parent = props.Parent,
-			stroke = false,
-			maxTextSize = 120,
 		})
 	end
 	UI.aspect(node, 1)
 	return node
 end
 
+---------------------------------------------------------------------------
+-- Panels
+---------------------------------------------------------------------------
+
 export type Chunky = { holder: GuiObject, face: Frame, shadow: Frame, stroke: UIStroke }
 
-local function makeChunky(holder: GuiObject, props: { [string]: any }): Chunky
+local function layer(holder: GuiObject, props: { [string]: any }): Chunky
 	local radius = props.radius or 18
 	local lip = if props.lip == nil then UI.LIP else props.lip
 	local shadow = UI.new("Frame", {
 		Name = "Shadow",
-		BackgroundColor3 = C.Ink,
+		BackgroundColor3 = V.Outline,
+		BackgroundTransparency = 0.15,
 		BorderSizePixel = 0,
 		Size = UDim2.fromScale(1, 1),
 		Position = UDim2.fromOffset(0, lip),
@@ -213,95 +251,54 @@ local function makeChunky(holder: GuiObject, props: { [string]: any }): Chunky
 	UI.corner(shadow, radius)
 	local face = UI.new("Frame", {
 		Name = "Face",
-		BackgroundColor3 = props.color or C.Panel,
+		BackgroundColor3 = WHITE,
 		BackgroundTransparency = props.transparency or 0,
 		BorderSizePixel = 0,
 		Size = UDim2.fromScale(1, 1),
 		Parent = holder,
 	})
 	UI.corner(face, radius)
-	local stroke = UI.stroke(face, props.strokeWidth or 4, props.ring or C.Ink)
+	UI.gradient(face, props.top, props.bottom).Name = "Fill"
+	local stroke = UI.stroke(face, props.strokeWidth or 5, props.ring or V.Purple)
 	return { holder = holder, face = face, shadow = shadow, stroke = stroke }
 end
 
--- A chunky panel/card. Put content in `.face`.
-function UI.surface(props: { [string]: any }): Chunky
+-- Dark gradient panel with a bright accent border. Put content in `.face`.
+function UI.panel(props: { [string]: any }): Chunky
 	local holder = UI.new("Frame", {
-		Name = props.Name or "Surface",
+		Name = props.Name or "Panel",
 		BackgroundTransparency = 1,
 		Size = props.Size or UDim2.fromOffset(100, 100),
 		Position = props.Position or UDim2.fromScale(0, 0),
 		AnchorPoint = props.AnchorPoint or Vector2.zero,
-		AutomaticSize = props.AutomaticSize or Enum.AutomaticSize.None,
 		LayoutOrder = props.LayoutOrder or 0,
 		Visible = if props.Visible == nil then true else props.Visible,
 		Parent = props.Parent,
 	})
-	return makeChunky(holder, props)
-end
-
-function UI.labelColorFor(fill: Color3): Color3
-	return if fill == C.Gold
-			or fill == C.Card
-			or fill == C.Pink
-			or fill == C.Cyan
-			or fill == C.Lime
-		then C.TextDark
-		else C.Text
-end
-
--- Chunky button: icon + label on a coloured face over an ink lip. Pressing pushes the face
--- into the lip and squishes it (Figma motion spec: 80 ms in, 180 ms Back-Out out).
-function UI.button(props: { [string]: any }, onClick: () -> ()): TextButton
-	local button = UI.new("TextButton", {
-		Name = props.Name or "Button",
-		AutoButtonColor = false,
-		BackgroundTransparency = 1,
-		Text = "",
-		Size = props.Size or UDim2.fromOffset(220, 64),
-		Position = props.Position or UDim2.fromScale(0, 0),
-		AnchorPoint = props.AnchorPoint or Vector2.zero,
-		LayoutOrder = props.LayoutOrder or 0,
-		Selectable = true,
-		Visible = if props.Visible == nil then true else props.Visible,
-		Parent = props.Parent,
+	return layer(holder, {
+		top = V.PanelTop,
+		bottom = V.PanelBottom,
+		transparency = V.PanelTransparency,
+		ring = props.accent or V.Purple,
+		strokeWidth = props.strokeWidth or 5,
+		radius = props.radius or 20,
+		lip = props.lip,
 	})
-	local fill = props.color or C.Green
-	local chunky = makeChunky(button, { color = fill, radius = props.radius or 18, lip = props.lip, strokeWidth = 4 })
-	local content = UI.new(
-		"Frame",
-		{ Name = "Content", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Parent = chunky.face }
-	)
-	UI.list(content, Enum.FillDirection.Horizontal, 10)
-	UI.padding(content, 6, 16, 8, 16)
-	if props.icon then
-		UI.icon(
-			props.icon,
-			{ Size = UDim2.new(0, props.iconSize or 34, 0, props.iconSize or 34), LayoutOrder = 1, Parent = content }
-		)
-	end
-	if props.Text then
-		local label = UI.text({
-			Text = props.Text,
-			Name = "Label",
-			color = UI.labelColorFor(fill),
-			Size = UDim2.new(0, 0, 1, 0),
-			AutomaticSize = Enum.AutomaticSize.X,
-			size = props.textSize or 28,
-			TextWrapped = false,
-			LayoutOrder = 2,
-			Parent = content,
-		})
-		label:SetAttribute("Fill", fill:ToHex())
-	end
-	button:SetAttribute("Fill", fill:ToHex())
+end
 
-	local face = chunky.face
+-- Back-compat name used by older screens.
+UI.surface = UI.panel
+
+---------------------------------------------------------------------------
+-- Buttons
+---------------------------------------------------------------------------
+
+local function attachPress(button: TextButton, face: Frame, onClick: () -> ())
 	local scale = Motion.scaleOf(button)
-	local pressedOffset = UDim2.fromOffset(0, math.max(UI.LIP - 2, 0))
+	local pressed = UDim2.fromOffset(0, math.max(UI.LIP - 1, 0))
 	local function press()
-		Motion.tween(face, Motion.T.press, { Position = pressedOffset })
-		Motion.tween(scale, Motion.T.press, { Scale = 0.94 })
+		Motion.tween(face, Motion.T.press, { Position = pressed })
+		Motion.tween(scale, Motion.T.press, { Scale = 0.95 })
 	end
 	local function release()
 		Motion.tween(face, Motion.T.release, { Position = UDim2.fromOffset(0, 0) }, Enum.EasingStyle.Back)
@@ -315,97 +312,213 @@ function UI.button(props: { [string]: any }, onClick: () -> ()): TextButton
 		Sound.play("click")
 		onClick()
 	end)
-	return button
 end
 
-local function faceOf(button: Instance): Frame?
-	local face = button:FindFirstChild("Face")
-	return if face and face:IsA("Frame") then face else nil
+local function holderButton(props: { [string]: any }, default: UDim2): TextButton
+	return UI.new("TextButton", {
+		Name = props.Name or "Button",
+		AutoButtonColor = false,
+		BackgroundTransparency = 1,
+		Text = "",
+		Size = props.Size or default,
+		Position = props.Position or UDim2.fromScale(0, 0),
+		AnchorPoint = props.AnchorPoint or Vector2.zero,
+		LayoutOrder = props.LayoutOrder or 0,
+		Selectable = true,
+		Visible = if props.Visible == nil then true else props.Visible,
+		Parent = props.Parent,
+	})
+end
+
+-- Bright gradient button with a white border (PLAY, upgrade, sell...). props.style picks the
+-- colour: "green" | "red" | "blue" | "gold" | "purple" | "gray".
+function UI.button(props: { [string]: any }, onClick: () -> ()): TextButton
+	local button = holderButton(props, UDim2.fromOffset(240, 66))
+	local style = STYLES[props.style or "green"] or STYLES.green
+	local chunky = layer(
+		button,
+		{
+			top = style.top,
+			bottom = style.bottom,
+			ring = WHITE,
+			strokeWidth = props.strokeWidth or 4,
+			radius = props.radius or 12,
+			lip = props.lip,
+		}
+	)
+	local content = UI.new(
+		"Frame",
+		{ Name = "Content", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Parent = chunky.face }
+	)
+	UI.list(content, Enum.FillDirection.Horizontal, 8)
+	UI.padding(content, 4, 12, 6, 12)
+	if props.icon then
+		UI.icon(
+			props.icon,
+			{ Size = UDim2.fromOffset(props.iconSize or 34, props.iconSize or 34), LayoutOrder = 1, Parent = content }
+		)
+	end
+	if props.Text then
+		UI.text({
+			Text = props.Text,
+			Name = "Label",
+			font = "label",
+			size = props.textSize or 24,
+			LayoutOrder = 2,
+			Parent = content,
+		})
+	end
+	button:SetAttribute("Style", props.style or "green")
+	attachPress(button, chunky.face, onClick)
+	return button
 end
 
 function UI.setButtonText(button: Instance, text: string)
 	local label = button:FindFirstChild("Label", true)
 	if label and label:IsA("TextLabel") then
-		label.Text = text
+		UI.setText(label, text)
 	end
 end
 
--- Recolours a chunky button (e.g. to Disabled) and keeps the label readable.
-function UI.setButtonColor(button: Instance, fill: Color3)
-	local face = faceOf(button)
-	if face then
-		face.BackgroundColor3 = fill
+function UI.setButtonStyle(button: Instance, style: Style)
+	if button:GetAttribute("Style") == style then
+		return
 	end
-	button:SetAttribute("Fill", fill:ToHex())
-	local label = button:FindFirstChild("Label", true)
-	if label and label:IsA("TextLabel") then
-		local color = UI.labelColorFor(fill)
-		label.TextColor3 = color
-		local stroke = label:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			stroke.Enabled = color == C.Text
-		elseif color == C.Text then
-			UI.stroke(label, 2)
-		end
+	local s = STYLES[style]
+	local face = button:FindFirstChild("Face")
+	local fill = face and face:FindFirstChild("Fill")
+	if s and fill and fill:IsA("UIGradient") then
+		fill.Color = ColorSequence.new(s.top, s.bottom)
 	end
+	button:SetAttribute("Style", style)
 end
 
-function UI.setRing(chunkyFace: Frame, color: Color3, thickness: number?)
-	local stroke = chunkyFace:FindFirstChildOfClass("UIStroke")
-	if stroke then
-		stroke.Color = color
-		stroke.Thickness = thickness or stroke.Thickness
-	end
+-- Wide menu tile (Figma MenuTile): dark face, accent border, big icon + UPPERCASE label.
+function UI.menuTile(props: { [string]: any }, onClick: () -> ()): TextButton
+	local button = holderButton(props, UDim2.fromOffset(260, 80))
+	local chunky = layer(
+		button,
+		{ top = V.PanelTop, bottom = V.PanelBottom, ring = props.accent or V.Red, strokeWidth = 5, radius = 16 }
+	)
+	UI.icon(
+		props.icon,
+		{
+			Size = UDim2.fromOffset(70, 70),
+			Position = UDim2.new(0, 6, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			Parent = chunky.face,
+		}
+	)
+	UI.text({
+		Text = props.Text or "",
+		Name = "Label",
+		font = "label",
+		size = props.textSize or 24,
+		Position = UDim2.new(0, 86, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Parent = chunky.face,
+	})
+	attachPress(button, chunky.face, onClick)
+	return button
 end
 
--- Stat pill (Figma StatPill): dark pill, raised icon bubble, white value.
-export type Pill = { holder: GuiObject, value: TextLabel, bubble: Frame, face: Frame }
-function UI.pill(props: { [string]: any }): Pill
-	local chunky = UI.surface({
-		Name = props.Name or "Pill",
-		Size = UDim2.fromOffset(props.width or 200, props.height or 64),
-		LayoutOrder = props.LayoutOrder,
-		radius = 999,
-		color = C.Panel,
-		Position = props.Position,
-		AnchorPoint = props.AnchorPoint,
+export type SquareTile = { button: TextButton, label: TextLabel, badge: Frame, badgeLabel: TextLabel, face: Frame }
+
+-- Square icon tile (Figma SquareTile): label overlapping the bottom edge, optional badge.
+function UI.squareTile(props: { [string]: any }, onClick: () -> ()): SquareTile
+	local button = holderButton(props, UDim2.fromOffset(108, 104))
+	local chunky = layer(
+		button,
+		{ top = V.PanelTop, bottom = V.PanelBottom, ring = props.accent or V.Blue, strokeWidth = 5, radius = 20 }
+	)
+	UI.icon(
+		props.icon,
+		{
+			Size = UDim2.fromOffset(66, 66),
+			Position = UDim2.new(0.5, 0, 0, 10),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Parent = chunky.face,
+		}
+	)
+	local label = UI.text({
+		Text = props.Text or "",
+		Name = "Label",
+		font = "label",
+		size = props.textSize or 18,
+		Position = UDim2.new(0.5, 0, 1, 2),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		ZIndex = 3,
+		Parent = button,
+	})
+	local badge = UI.new(
+		"Frame",
+		{
+			Name = "Badge",
+			BackgroundColor3 = V.Badge,
+			Size = UDim2.fromOffset(0, 34),
+			AutomaticSize = Enum.AutomaticSize.X,
+			Position = UDim2.new(1, 8, 0, -10),
+			AnchorPoint = Vector2.new(1, 0),
+			Visible = props.badge ~= nil,
+			ZIndex = 3,
+			Parent = button,
+		}
+	)
+	UI.corner(badge, 999)
+	UI.stroke(badge, 3, WHITE)
+	UI.padding(badge, 0, 9, 0, 9)
+	local badgeLabel = UI.text({
+		Text = props.badge or "",
+		Name = "BadgeText",
+		font = "label",
+		size = 16,
+		Size = UDim2.new(0, 0, 1, 0),
+		ZIndex = 4,
+		Parent = badge,
+	})
+	attachPress(button, chunky.face, onClick)
+	return { button = button, label = label, badge = badge, badgeLabel = badgeLabel, face = chunky.face }
+end
+
+---------------------------------------------------------------------------
+-- Display widgets
+---------------------------------------------------------------------------
+
+-- Currency counter (Figma Currency): icon + big outlined number, no background.
+function UI.currency(props: { [string]: any }): (Frame, TextLabel)
+	local frame = UI.new("Frame", {
+		Name = props.Name or "Currency",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(0, 64),
+		AutomaticSize = Enum.AutomaticSize.X,
+		Position = props.Position or UDim2.fromScale(0, 0),
+		AnchorPoint = props.AnchorPoint or Vector2.zero,
+		LayoutOrder = props.LayoutOrder or 0,
 		Parent = props.Parent,
 	})
-	local h = props.height or 64
-	local bubble = UI.new("Frame", {
-		Name = "Bubble",
-		BackgroundColor3 = C.PanelRaised,
-		Size = UDim2.fromOffset(h - 12, h - 12),
-		Position = UDim2.fromOffset(6, 6),
-		Parent = chunky.face,
-	})
-	UI.corner(bubble, 999)
-	UI.icon(props.icon, {
-		Size = UDim2.fromScale(0.78, 0.78),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Parent = bubble,
-	})
+	UI.list(frame, Enum.FillDirection.Horizontal, 10, Enum.HorizontalAlignment.Left)
+	UI.icon(
+		props.icon,
+		{ Size = UDim2.fromOffset(props.iconSize or 58, props.iconSize or 58), LayoutOrder = 1, Parent = frame }
+	)
 	local value = UI.text({
-		Text = props.Text or "",
+		Text = props.Text or "0",
 		Name = "Value",
-		size = props.textSize or 28,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.new(1, -(h + 14), 1, 0),
-		Position = UDim2.fromOffset(h + 2, 0),
-		TextWrapped = false,
-		Parent = chunky.face,
+		size = props.size or 40,
+		color = props.color or V.CoinText,
+		LayoutOrder = 2,
+		Parent = frame,
 	})
-	return { holder = chunky.holder, value = value, bubble = bubble, face = chunky.face }
+	return frame, value
 end
 
--- Small rounded chip (vote counts, countdowns, hints).
+-- Dark pill with an accent ring and an outlined label (toasts, chips, queue status).
 function UI.chip(props: { [string]: any }): (Frame, TextLabel)
-	local fill = props.color or C.Panel
 	local chip = UI.new("Frame", {
 		Name = props.Name or "Chip",
-		BackgroundColor3 = fill,
-		Size = UDim2.fromOffset(0, props.height or 34),
+		BackgroundColor3 = props.fill or V.Slot,
+		BackgroundTransparency = props.fillTransparency or 0.3,
+		Size = UDim2.fromOffset(0, props.height or 44),
 		AutomaticSize = Enum.AutomaticSize.X,
 		Position = props.Position or UDim2.fromScale(0, 0),
 		AnchorPoint = props.AnchorPoint or Vector2.zero,
@@ -414,42 +527,129 @@ function UI.chip(props: { [string]: any }): (Frame, TextLabel)
 		Parent = props.Parent,
 	})
 	UI.corner(chip, 999)
-	UI.stroke(chip, 3)
-	UI.padding(chip, 2, 14, 4, 14)
+	UI.stroke(chip, props.ringWidth or 3, props.ring or V.Gold)
+	UI.padding(chip, 0, 18, 0, 18)
+	UI.list(chip, Enum.FillDirection.Horizontal, 8)
+	if props.icon then
+		UI.icon(
+			props.icon,
+			{
+				Size = UDim2.fromOffset((props.height or 44) - 10, (props.height or 44) - 10),
+				LayoutOrder = 1,
+				Parent = chip,
+			}
+		)
+	end
 	local label = UI.text({
 		Text = props.Text or "",
 		Name = "Label",
-		color = UI.labelColorFor(fill),
+		font = "label",
 		size = props.textSize or 18,
-		Size = UDim2.new(0, 0, 1, 0),
-		AutomaticSize = Enum.AutomaticSize.X,
-		TextWrapped = false,
+		color = props.color,
+		LayoutOrder = 2,
 		Parent = chip,
 	})
 	return chip, label
 end
 
--- Horizontal progress bar (wave progress, XP). Returns the bar and its fill.
+-- Progress bar: translucent black track, black outline, gradient fill, optional ticks.
 function UI.bar(props: { [string]: any }): (Frame, Frame)
 	local track = UI.new("Frame", {
 		Name = props.Name or "Bar",
-		BackgroundColor3 = C.PanelRaised,
-		Size = props.Size or UDim2.fromOffset(260, 14),
+		BackgroundColor3 = V.Slot,
+		BackgroundTransparency = 0.25,
+		Size = props.Size or UDim2.fromOffset(360, 18),
+		Position = props.Position or UDim2.fromScale(0, 0),
 		LayoutOrder = props.LayoutOrder or 0,
+		ClipsDescendants = false,
 		Parent = props.Parent,
 	})
 	UI.corner(track, 999)
-	if props.outline then
-		UI.stroke(track, 3)
-	end
+	UI.stroke(track, 3)
 	local fill = UI.new("Frame", {
 		Name = "Fill",
-		BackgroundColor3 = props.color or C.Lime,
+		BackgroundColor3 = WHITE,
 		Size = UDim2.fromScale(math.clamp(props.value or 0, 0, 1), 1),
 		Parent = track,
 	})
 	UI.corner(fill, 999)
+	UI.new("UIGradient", { Color = ColorSequence.new(props.from or V.GooText, props.to or V.Green), Parent = fill })
+	for i = 1, (props.ticks or 0) - 1 do
+		UI.new("Frame", {
+			Name = "Tick",
+			BackgroundColor3 = V.Outline,
+			BackgroundTransparency = 0.6,
+			BorderSizePixel = 0,
+			Size = UDim2.new(0, 3, 1, 0),
+			Position = UDim2.fromScale(i / props.ticks, 0),
+			ZIndex = 2,
+			Parent = track,
+		})
+	end
 	return track, fill
+end
+
+export type XpBar = { holder: Frame, level: TextLabel, nextLevel: TextLabel, fill: Frame, exp: TextLabel, max: TextLabel }
+
+-- Level + segmented XP bar (Figma XPBar).
+function UI.xpBar(props: { [string]: any }): XpBar
+	local holder = UI.new("Frame", {
+		Name = props.Name or "XpBar",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(760, 64),
+		Position = props.Position or UDim2.fromScale(0, 0),
+		AnchorPoint = props.AnchorPoint or Vector2.zero,
+		Parent = props.Parent,
+	})
+	UI.text({ Text = "Lv.", font = "label", size = 14, Position = UDim2.fromOffset(18, 0), Parent = holder })
+	local level = UI.text({
+		Name = "Level",
+		Text = "1",
+		size = 40,
+		color = V.Xp,
+		Size = UDim2.fromOffset(70, 44),
+		Position = UDim2.fromOffset(0, 16),
+		Parent = holder,
+	})
+	local track, fill = UI.bar({
+		Name = "Track",
+		Size = UDim2.fromOffset(600, 28),
+		Position = UDim2.fromOffset(80, 22),
+		from = Color3.fromHex("#1F5FFF"),
+		to = Color3.fromHex("#7FD0FF"),
+		ticks = 7,
+		Parent = holder,
+	})
+	local exp = UI.text({
+		Name = "Exp",
+		Text = "0 Exp",
+		font = "label",
+		size = 14,
+		Position = UDim2.new(0, 14, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		ZIndex = 3,
+		Parent = track,
+	})
+	local max = UI.text({
+		Name = "Max",
+		Text = "500",
+		font = "label",
+		size = 14,
+		Position = UDim2.new(1, -14, 0.5, 0),
+		AnchorPoint = Vector2.new(1, 0.5),
+		ZIndex = 3,
+		Parent = track,
+	})
+	local nextLevel = UI.text({
+		Name = "NextLevel",
+		Text = "2",
+		size = 34,
+		color = V.Xp,
+		Size = UDim2.fromOffset(70, 40),
+		Position = UDim2.fromOffset(690, 18),
+		Parent = holder,
+	})
+	return { holder = holder, level = level, nextLevel = nextLevel, fill = fill, exp = exp, max = max }
 end
 
 function UI.formatCash(n: number): string

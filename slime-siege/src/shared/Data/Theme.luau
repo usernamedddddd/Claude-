@@ -37,6 +37,41 @@ Theme.Colors = {
 	Lime = hex("#7CFF8A"), -- progress fills, "you" marker
 }
 
+-- v2 style (Figma page "Style v2 (reference)"): dark translucent gradient panels with thick
+-- bright borders, white UPPERCASE labels with black outlines, illustrated icons, big green
+-- PLAY-style buttons. Every label sits on a dark panel or carries a black outline.
+Theme.V2 = {
+	PanelTop = hex("#2E2350"),
+	PanelBottom = hex("#130E22"),
+	PanelTransparency = 0.06,
+	Slot = hex("#0B0816"),
+	SlotTransparency = 0.4,
+	SlotRing = hex("#D9D4E6"),
+	Outline = hex("#000000"),
+	Red = hex("#FF4157"),
+	Cyan = hex("#35C8FF"),
+	Purple = hex("#9A5BFF"),
+	Green = hex("#2FCB4E"),
+	GreenTop = hex("#5BEF74"),
+	GreenBottom = hex("#15A332"),
+	RedTop = hex("#FF7A8A"),
+	RedBottom = hex("#D61F3A"),
+	Gold = hex("#FFC83D"),
+	Blue = hex("#2F7BFF"),
+	Xp = hex("#3FA2FF"),
+	CoinText = hex("#FFD447"),
+	GooText = hex("#8CFF6B"),
+	LivesText = hex("#FF8FA3"),
+	Muted = hex("#C9C2D6"),
+	PathA = hex("#FF6FB5"),
+	PathB = hex("#35C8FF"),
+	Badge = hex("#FF2E4D"),
+}
+
+-- Labels: heavy uppercase Montserrat. Numbers and titles: Fredoka One.
+Theme.LabelFont = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Heavy)
+Theme.NumberFont = Font.fromEnum(Enum.Font.FredokaOne)
+
 -- Animation timings from the Figma motion spec (seconds).
 Theme.Motion = {
 	press = 0.08,
@@ -73,6 +108,9 @@ Theme.Icons = {
 	lock = { image = "", glyph = "🔒" },
 	sell = { image = "", glyph = "💲" },
 	target = { image = "", glyph = "🎯" },
+	towers = { image = "", glyph = "🐸" },
+	skip = { image = "", glyph = "⏭️" },
+	store = { image = "", glyph = "🧺" },
 	frog = { image = "", glyph = "🐸" },
 	crab = { image = "", glyph = "🦀" },
 	penguin = { image = "", glyph = "🐧" },

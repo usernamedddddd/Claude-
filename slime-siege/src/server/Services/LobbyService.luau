@@ -92,6 +92,17 @@ end
 function LobbyService.start()
 	local lobby = MapBuilder.buildLobby()
 	Remotes.get("UnlockTower").OnServerEvent:Connect(onUnlockTower)
+	-- PLAY button: put the player's character on the queue pad (server decides where).
+	Remotes.get("QuickPlay").OnServerEvent:Connect(function(player: Player)
+		if not Guard.allow(player, "QuickPlay", 0.5, 2) or launching then
+			return
+		end
+		local character = player.Character
+		if character and character.PrimaryPart and not onPad(player, lobby.pad) then
+			local offset = Vector3.new((#queue % 2) * 3 - 1.5, 4, (#queue // 2) * 3 - 1.5)
+			character:PivotTo(CFrame.new(lobby.pad.CFrame.Position + offset))
+		end
+	end)
 	local queueRemote = Remotes.get("QueueState")
 
 	task.spawn(function()

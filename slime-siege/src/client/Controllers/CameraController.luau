@@ -10,6 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 local MapData = require(ReplicatedStorage:WaitForChild("Shared").Data.MapData)
+local Prefs = require(script.Parent.Prefs)
 
 local CameraController = {}
 
@@ -29,6 +30,9 @@ local gamepadLook = Vector2.zero
 local rng = Random.new()
 
 function CameraController.shake(strength: number, duration: number)
+	if not Prefs.shake then
+		return
+	end
 	if strength >= shakeStrength * (1 - shakeTime / math.max(shakeDuration, 0.001)) then
 		shakeStrength = strength
 		shakeDuration = duration

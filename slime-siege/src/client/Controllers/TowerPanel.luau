@@ -1,7 +1,8 @@
 --!strict
--- Tower upgrade panel from the Figma "Tower Panel" (Match HUD screen): portrait + name, two
--- upgrade-path cards (pink A / cyan B) with tier pips, the next upgrade or the crosspath lock,
--- a segmented targeting control, and sell. Read-only for teammates' towers.
+-- Tower upgrade panel from the Figma "Tower Panel v2" (reference style): dark gradient panel
+-- with a purple border, portrait + outlined name, two path cards (pink A / cyan B) with tier
+-- pips and either the next upgrade (green buy button) or the crosspath lock, a segmented
+-- targeting control, and a red sell button. Read-only for teammates' towers.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -19,9 +20,10 @@ local UI = require(script.Parent.UI)
 
 local TowerPanel = {}
 
-local C = UI.Colors
-local WIDTH = 460
-local COLUMN_W = (WIDTH - 40 - 12) / 2
+local V = UI.V2
+local WIDTH = 450
+local COLUMN_W = (WIDTH - 36 - 12) / 2
+local PIP_OFF = Color3.fromHex("#3A3150")
 
 type PathUI = {
 	pips: { Frame },
@@ -37,153 +39,169 @@ type PathUI = {
 function TowerPanel.start()
 	local gui = UI.screen("TowerPanel", 2)
 	local root = UI.root(gui)
-	local shown, hidden = UDim2.new(1, -32, 0, 250), UDim2.new(1, WIDTH + 40, 0, 250)
-	local panel = UI.surface({
+	local shown, hidden = UDim2.new(1, -40, 0, 200), UDim2.new(1, WIDTH + 60, 0, 200)
+	local panel = UI.panel({
 		Name = "Panel",
-		Size = UDim2.fromOffset(WIDTH, 640),
+		Size = UDim2.fromOffset(WIDTH, 650),
 		Position = hidden,
 		AnchorPoint = Vector2.new(1, 0),
-		color = C.Panel,
-		radius = 28,
+		accent = V.Purple,
 		Visible = false,
 		Parent = root,
 	})
 	local face = panel.face
 
 	-- Header
-	local portrait = UI.new("Frame", {
-		Name = "Portrait",
-		BackgroundColor3 = C.PanelRaised,
-		Size = UDim2.fromOffset(72, 72),
-		Position = UDim2.fromOffset(20, 20),
-		Parent = face,
-	})
-	UI.corner(portrait, 999)
-	UI.stroke(portrait, 3)
+	local portrait = UI.new(
+		"Frame",
+		{
+			Name = "Portrait",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(76, 76),
+			Position = UDim2.fromOffset(16, 14),
+			Parent = face,
+		}
+	)
 	local title = UI.text({
 		Name = "Title",
 		Text = "",
 		size = 36,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.new(1, -190, 0, 42),
-		Position = UDim2.fromOffset(106, 20),
-		TextWrapped = false,
+		Position = UDim2.fromOffset(100, 16),
 		Parent = face,
 	})
 	local subtitle = UI.text({
 		Name = "Subtitle",
 		Text = "",
-		size = 16,
-		color = C.TextMuted,
+		font = "label",
+		size = 13,
+		color = V.Muted,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.new(1, -190, 0, 22),
-		Position = UDim2.fromOffset(106, 64),
+		Position = UDim2.fromOffset(102, 62),
 		Parent = face,
-		stroke = false,
 	})
-	UI.button({
-		Name = "Close",
-		icon = "close",
-		color = C.Red,
-		Size = UDim2.fromOffset(56, 56),
-		Position = UDim2.new(1, -20, 0, 20),
-		AnchorPoint = Vector2.new(1, 0),
-		radius = 16,
-		Parent = face,
-	}, function()
-		Placement.select(nil)
-	end)
+	UI.button(
+		{
+			Name = "Close",
+			icon = "close",
+			style = "red",
+			Size = UDim2.fromOffset(54, 54),
+			Position = UDim2.new(1, -18, 0, 18),
+			AnchorPoint = Vector2.new(1, 0),
+			iconSize = 30,
+			Parent = face,
+		},
+		function()
+			Placement.select(nil)
+		end
+	)
 
 	local currentModel: Model? = nil
 	local paths: { [string]: PathUI } = {}
 
 	for i, key in { "A", "B" } do
-		local accent = if key == "A" then C.Pink else C.Cyan
-		local col = UI.surface({
+		local accent = if key == "A" then V.PathA else V.PathB
+		local col = UI.panel({
 			Name = "Path" .. key,
-			Size = UDim2.fromOffset(COLUMN_W, 300),
-			Position = UDim2.fromOffset(20 + (i - 1) * (COLUMN_W + 12), 112),
-			color = C.Card,
-			radius = 20,
+			Size = UDim2.fromOffset(COLUMN_W, 312),
+			Position = UDim2.fromOffset(18 + (i - 1) * (COLUMN_W + 12), 104),
+			accent = accent,
+			strokeWidth = 4,
+			radius = 16,
 			lip = 0,
 			Parent = face,
 		})
 		local cf = col.face
-		local tagChip, tagLabel =
-			UI.chip({ Name = "Tag", Text = key, color = accent, Position = UDim2.fromOffset(12, 12), Parent = cf })
-		local _ = tagChip
-		local pipRow = UI.new("Frame", {
-			Name = "Pips",
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, -24, 0, 14),
-			Position = UDim2.fromOffset(12, 58),
+		local tag = UI.text({
+			Name = "Tag",
+			Text = key,
+			font = "label",
+			size = 17,
+			color = accent,
+			Position = UDim2.fromOffset(12, 12),
 			Parent = cf,
 		})
-		UI.list(pipRow, Enum.FillDirection.Horizontal, 8, Enum.HorizontalAlignment.Left)
+		local pipRow = UI.new(
+			"Frame",
+			{
+				Name = "Pips",
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, -24, 0, 12),
+				Position = UDim2.fromOffset(12, 44),
+				Parent = cf,
+			}
+		)
+		UI.list(pipRow, Enum.FillDirection.Horizontal, 6, Enum.HorizontalAlignment.Left)
 		local pips = {}
 		for t = 1, 3 do
-			local pip = UI.new("Frame", {
-				Name = "Pip" .. t,
-				BackgroundColor3 = C.Disabled,
-				Size = UDim2.fromOffset(52, 14),
-				LayoutOrder = t,
-				Parent = pipRow,
-			})
+			local pip = UI.new(
+				"Frame",
+				{
+					Name = "Pip" .. t,
+					BackgroundColor3 = PIP_OFF,
+					Size = UDim2.fromOffset(56, 12),
+					LayoutOrder = t,
+					Parent = pipRow,
+				}
+			)
 			UI.corner(pip, 999)
-			UI.stroke(pip, 3)
+			UI.stroke(pip, 2)
 			table.insert(pips, pip)
 		end
 		local caption = UI.text({
-			Text = "NEXT UPGRADE",
-			size = 14,
-			color = C.Purple,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Size = UDim2.new(1, -24, 0, 18),
-			Position = UDim2.fromOffset(12, 84),
+			Text = "Next upgrade",
+			font = "label",
+			size = 12,
+			color = V.Gold,
+			Position = UDim2.fromOffset(12, 70),
 			Parent = cf,
-			stroke = false,
 		})
 		local lockIcon =
-			UI.icon("lock", { Size = UDim2.fromOffset(28, 28), Position = UDim2.fromOffset(12, 104), Parent = cf })
+			UI.icon("lock", { Size = UDim2.fromOffset(34, 34), Position = UDim2.fromOffset(12, 88), Parent = cf })
 		local name = UI.text({
 			Name = "UpgradeName",
 			Text = "",
 			size = 24,
-			color = C.TextDark,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			Size = UDim2.new(1, -24, 0, 30),
-			Position = UDim2.fromOffset(12, 104),
+			Position = UDim2.fromOffset(12, 90),
 			Parent = cf,
 		})
 		local desc = UI.text({
 			Name = "Description",
 			Text = "",
 			size = 15,
-			color = C.TextDark,
+			color = Color3.fromHex("#E2DCEE"),
+			stroke = false,
+			TextWrapped = true,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextYAlignment = Enum.TextYAlignment.Top,
-			Size = UDim2.new(1, -24, 0, 76),
-			Position = UDim2.fromOffset(12, 140),
+			Size = UDim2.new(1, -24, 0, 92),
+			Position = UDim2.fromOffset(12, 126),
 			Parent = cf,
 		})
-		local button = UI.button({
-			Name = "Upgrade",
-			Text = "",
-			icon = "coin",
-			color = C.Green,
-			Size = UDim2.new(1, -24, 0, 58),
-			Position = UDim2.new(0, 12, 1, -72),
-			textSize = 26,
-			Parent = cf,
-		}, function()
-			local model = currentModel
-			if model then
-				Remotes.get("UpgradeTower"):FireServer(model:GetAttribute("Uid"), key)
+		local button = UI.button(
+			{
+				Name = "Upgrade",
+				Text = "",
+				icon = "coin",
+				style = "green",
+				Size = UDim2.new(1, -24, 0, 56),
+				Position = UDim2.new(0, 12, 1, -70),
+				textSize = 24,
+				iconSize = 30,
+				Parent = cf,
+			},
+			function()
+				local model = currentModel
+				if model then
+					Remotes.get("UpgradeTower"):FireServer(model:GetAttribute("Uid"), key)
+				end
 			end
-		end)
+		)
 		paths[key] = {
 			pips = pips,
-			tag = tagLabel,
+			tag = tag,
 			caption = caption,
 			name = name,
 			desc = desc,
@@ -194,42 +212,49 @@ function TowerPanel.start()
 	end
 
 	-- Targeting (segmented)
-	UI.icon("target", { Size = UDim2.fromOffset(28, 28), Position = UDim2.fromOffset(20, 428), Parent = face })
+	UI.icon("target", { Size = UDim2.fromOffset(30, 30), Position = UDim2.fromOffset(18, 432), Parent = face })
 	UI.text({
 		Text = "Target priority",
-		size = 20,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.fromOffset(300, 28),
-		Position = UDim2.fromOffset(56, 428),
+		font = "label",
+		size = 16,
+		Position = UDim2.new(0, 56, 0, 447),
+		AnchorPoint = Vector2.new(0, 0.5),
 		Parent = face,
 	})
-	local segments = UI.new("Frame", {
-		Name = "Targeting",
-		BackgroundColor3 = C.PanelRaised,
-		Size = UDim2.new(1, -40, 0, 62),
-		Position = UDim2.fromOffset(20, 466),
-		Parent = face,
-	})
-	UI.corner(segments, 18)
+	local segments = UI.new(
+		"Frame",
+		{
+			Name = "Targeting",
+			BackgroundColor3 = V.Slot,
+			BackgroundTransparency = 0.25,
+			Size = UDim2.new(1, -36, 0, 60),
+			Position = UDim2.fromOffset(18, 472),
+			Parent = face,
+		}
+	)
+	UI.corner(segments, 14)
 	UI.stroke(segments, 3)
 	UI.padding(segments, 6)
 	UI.list(segments, Enum.FillDirection.Horizontal, 6)
 	local segmentButtons: { [string]: TextButton } = {}
 	for i, mode in Targeting.MODES do
-		local seg = UI.new("TextButton", {
-			Name = mode,
-			AutoButtonColor = false,
-			Text = "",
-			BackgroundColor3 = C.Gold,
-			BackgroundTransparency = 1,
-			Size = UDim2.new(0.25, -5, 1, 0),
-			LayoutOrder = i,
-			Parent = segments,
-		})
-		UI.corner(seg, 12)
-		local ring = UI.stroke(seg, 3)
+		local seg = UI.new(
+			"TextButton",
+			{
+				Name = mode,
+				AutoButtonColor = false,
+				Text = "",
+				BackgroundColor3 = V.Gold,
+				BackgroundTransparency = 1,
+				Size = UDim2.new(0.25, -5, 1, 0),
+				LayoutOrder = i,
+				Parent = segments,
+			}
+		)
+		UI.corner(seg, 10)
+		local ring = UI.stroke(seg, 3, Color3.new(1, 1, 1))
 		ring.Enabled = false
-		UI.text({ Name = "Label", Text = mode, size = 22, Parent = seg })
+		UI.text({ Name = "Label", Text = mode, font = "label", size = 16, Size = UDim2.fromScale(1, 1), Parent = seg })
 		seg.Activated:Connect(function()
 			local model = currentModel
 			if model and model:GetAttribute("Owner") == Players.LocalPlayer.UserId then
@@ -239,21 +264,25 @@ function TowerPanel.start()
 		segmentButtons[mode] = seg
 	end
 
-	local sellButton = UI.button({
-		Name = "Sell",
-		Text = "Sell",
-		icon = "coin",
-		color = C.Red,
-		Size = UDim2.new(1, -40, 0, 64),
-		Position = UDim2.new(0, 20, 1, -86),
-		Parent = face,
-	}, function()
-		local model = currentModel
-		if model then
-			Remotes.get("SellTower"):FireServer(model:GetAttribute("Uid"))
-			Placement.select(nil)
+	local sellButton = UI.button(
+		{
+			Name = "Sell",
+			Text = "Sell",
+			icon = "coin",
+			style = "red",
+			Size = UDim2.new(1, -36, 0, 62),
+			Position = UDim2.new(0, 18, 1, -84),
+			textSize = 22,
+			Parent = face,
+		},
+		function()
+			local model = currentModel
+			if model then
+				Remotes.get("SellTower"):FireServer(model:GetAttribute("Uid"))
+				Placement.select(nil)
+			end
 		end
-	end)
+	)
 
 	local portraitIcon: GuiObject? = nil
 	local function refresh()
@@ -269,23 +298,23 @@ function TowerPanel.start()
 		local mine = model:GetAttribute("Owner") == Players.LocalPlayer.UserId
 		local tiers: Upgrades.Tiers =
 			{ A = tonumber(model:GetAttribute("TierA")) or 0, B = tonumber(model:GetAttribute("TierB")) or 0 }
-		title.Text = def.displayName
+		UI.setText(title, def.displayName)
 		local pops = model:GetAttribute("Pops") or 0
-		subtitle.Text = if mine
-			then `Your tower · {pops} pops`
-			else `{model:GetAttribute("OwnerName")}'s tower · {pops} pops`
+		UI.setText(
+			subtitle,
+			if mine then `Your tower · {pops} pops` else `{model:GetAttribute("OwnerName")}'s tower · {pops} pops`
+		)
 		local cash = Store.cash()
 
 		for key, ui in paths do
 			local pathKey: Upgrades.PathKey = if key == "A" then "A" else "B"
 			local pathDef = def.paths[pathKey]
-			local accent = if key == "A" then C.Pink else C.Cyan
-			ui.tag.Text = `{key} · {pathDef.name}`
+			local accent = if key == "A" then V.PathA else V.PathB
+			UI.setText(ui.tag, `{key} · {pathDef.name}`)
 			for t, pip in ui.pips do
-				pip.BackgroundColor3 = if t <= tiers[pathKey] then accent else C.Disabled
+				pip.BackgroundColor3 = if t <= tiers[pathKey] then accent else PIP_OFF
 			end
 			if ui.tier >= 0 and tiers[pathKey] > ui.tier then
-				-- upgrade bought: newest pip pops, card punches (Figma motion spec)
 				local pip = ui.pips[tiers[pathKey]]
 				if pip then
 					Motion.punch(pip, 1.4)
@@ -297,24 +326,24 @@ function TowerPanel.start()
 			if nextTier then
 				ui.caption.Visible = true
 				ui.lockIcon.Visible = false
-				ui.name.Position = UDim2.fromOffset(12, 104)
-				ui.name.Text = nextTier.name
+				ui.name.Position = UDim2.fromOffset(12, 90)
+				UI.setText(ui.name, nextTier.name)
 				ui.desc.Text = nextTier.description
 				UI.setButtonText(ui.button, UI.formatCash(nextTier.cost))
-				UI.setButtonColor(ui.button, if mine and cash >= nextTier.cost then C.Green else C.Disabled)
+				UI.setButtonStyle(ui.button, if mine and cash >= nextTier.cost then "green" else "gray")
 				ui.button.Visible = mine
 			else
 				local _, reason = Upgrades.canUpgrade(tiers, pathKey)
 				local maxed = reason == "Path maxed"
 				ui.caption.Visible = false
 				ui.lockIcon.Visible = not maxed
-				ui.name.Position = UDim2.fromOffset(if maxed then 12 else 46, 104)
-				ui.name.Text = if maxed then "Fully upgraded!" else "Locked"
+				ui.name.Position = UDim2.fromOffset(if maxed then 12 else 52, 90)
+				UI.setText(ui.name, if maxed then "Maxed!" else "Locked")
 				ui.desc.Text = if maxed
-					then "This path is maxed out."
+					then "This path is fully upgraded."
 					else "The other path is past tier 1. Only one path can go above tier 1."
-				UI.setButtonText(ui.button, if maxed then "MAX" else "Locked")
-				UI.setButtonColor(ui.button, C.Disabled)
+				UI.setButtonText(ui.button, if maxed then "Max" else "Locked")
+				UI.setButtonStyle(ui.button, "gray")
 				ui.button.Visible = mine
 			end
 		end
@@ -326,14 +355,6 @@ function TowerPanel.start()
 			local ring = seg:FindFirstChildOfClass("UIStroke")
 			if ring then
 				ring.Enabled = selected
-			end
-			local label = seg:FindFirstChild("Label") :: TextLabel?
-			if label then
-				label.TextColor3 = if selected then C.TextDark else C.Text
-				local stroke = label:FindFirstChildOfClass("UIStroke")
-				if stroke then
-					stroke.Enabled = not selected
-				end
 			end
 			seg.Active = mine
 		end
@@ -356,12 +377,7 @@ function TowerPanel.start()
 				portraitIcon:Destroy()
 			end
 			if def then
-				portraitIcon = UI.icon(def.icon, {
-					Size = UDim2.fromScale(0.8, 0.8),
-					Position = UDim2.fromScale(0.5, 0.5),
-					AnchorPoint = Vector2.new(0.5, 0.5),
-					Parent = portrait,
-				})
+				portraitIcon = UI.icon(def.icon, { Size = UDim2.fromScale(1, 1), Parent = portrait })
 			end
 			for _, ui in paths do
 				ui.tier = -1
