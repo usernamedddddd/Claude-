@@ -17,6 +17,8 @@ export type MatchView = {
 	phase: string,
 	countdown: number,
 	waitingForParty: boolean,
+	waveProgress: number?,
+	slimesLeft: number?,
 	speed: number,
 	skipVotes: number,
 	speedVotes: number,

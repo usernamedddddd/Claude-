@@ -60,6 +60,14 @@ tools/                 Lune CLIs and the headless loader / TestEZ-compatible run
 * **Purchases.** Clients call `Monetization.promptPurchase(productKey, onGranted)`. Product IDs are 0 for now: Studio prints and grants the item, live servers answer "coming soon". The `ProcessReceipt` and game-pass code paths are already written for when real IDs are added.
 * **Analytics.** Everything goes through `Analytics.track(event, data)`, which is currently a stub that buffers events and prints them in Studio. It covers all 9 events from the spec.
 
+## UI design (Figma)
+
+The whole UI is designed in Figma first: **Slime Siege UI**, https://www.figma.com/design/QeUFsylb3ObuML5Z1agJr7.
+- **Design System page:** color tokens with contrast ratios (all text pairs are at least 4.5:1, for example white on green 5.2:1 and ink on gold 10.5:1), Fredoka One text styles, the Chunky shadow, the components (Button, IconButton, StatPill, HotbarSlot, TowerCard) and 19 vector icons.
+- **Screens page:** desktop match HUD with the tower panel, victory and defeat results, lobby with the tower shop, phone HUD (844×390), round-start banner, and the **Motion spec** (every animation's trigger, timing and easing).
+- **In the game:** `Data/Theme.luau` holds the tokens and motion timings. `Controllers/UI.luau` builds the chunky surfaces, press-in buttons, pills, chips and bars, and scales the 1920×1080 design to any screen. `Controllers/Motion.luau` runs the animations and respects Reduced Motion. `HUD`, `TowerPanel`, `Results` and `LobbyUI` are built from the screens.
+- **Icons:** in Figma, select the `Icons` frame on the Design System page and export all `Icon/*` components as PNG @2x. Upload them in Studio (Asset Manager > Images) and paste the ids into `Theme.Icons`. Until then the game shows emoji.
+
 ## Interpretations of the spec (please confirm)
 
 * **What "layers" means.** The table's *Layers* column is used as the lives lost on a leak and as the difficulty weight. Each normal slime takes one hit to pop, and the Boss has 200 HP. The table is not internally additive (a Black is worth 6 but splits into 2× Pink = 8), and I used its numbers as given.
@@ -86,7 +94,7 @@ tools/                 Lune CLIs and the headless loader / TestEZ-compatible run
 
 | Scenario | Checks | What it covers |
 |---|---|---|
-| `solo` | 40/40 | UI placement (hotbar → ghost → click; refused on the path), upgrade panel, targeting button, hotkeys, round 1 auto-starting, rendering slimes, skip and 2× votes, debug remote, boss round with pop burst, win at round 40, Goo reward, results card, Studio reset |
+| `solo` | 46/46 | UI placement (hotbar → ghost → click; refused on the path), upgrade panel, targeting button, hotkeys, round 1 auto-starting, rendering slimes, skip and 2× votes, debug remote, boss round with pop burst, win at round 40, Goo reward, results card, Studio reset |
 | `fuzz` | 6/6 | 1,728 garbage calls (nil, NaN, ±inf, huge strings, tables, buffers, wrong types) to every remote: no script errors, nothing placed or bought, rate limits trip |
 | `coop` | 18/18 | 4 players: separate cash, can't upgrade or sell a teammate's tower, 2/4 vs 3/4 skip and speed majorities, read-only teammate panel, a player leaving mid-wave, round bonus to all |
 | `data` | 14/14 | Live mode: profile created and session-locked, lock released on leave, kicked (and data untouched) when another server holds the lock, stale lock taken over, kicked on DataStore outage, BindToClose flush, no Debug remote |

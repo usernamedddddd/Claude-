@@ -22,32 +22,45 @@ function DebugPanel.start(mode: string)
 	end
 	local debugRemote = remote :: RemoteEvent
 	local gui = UI.screen("DebugPanel", 10)
-	local panel = UI.panel({
-		Size = UDim2.fromScale(0.2, 0.62),
-		Position = UDim2.fromScale(0.01, 0.3),
+	local root = UI.root(gui)
+	local panel = UI.new("ScrollingFrame", {
+		Name = "Panel",
+		BackgroundColor3 = UI.Colors.Ink,
+		BackgroundTransparency = 0.1,
+		Size = UDim2.fromOffset(300, 640),
+		Position = UDim2.fromOffset(32, 300),
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		ScrollBarThickness = 8,
 		Visible = false,
-		color = Color3.fromRGB(40, 40, 50),
-		Parent = gui,
+		Parent = root,
 	})
-	UI.list(panel, Enum.FillDirection.Vertical, 0.01)
-	UI.padding(panel, 0.02)
-	local toggle = UI.button({
+	UI.corner(panel, 16)
+	UI.list(panel, Enum.FillDirection.Vertical, 8)
+	UI.padding(panel, 12)
+	UI.button({
+		Name = "DebugToggle",
 		Text = "DEBUG",
-		Size = UDim2.fromScale(0.07, 0.045),
-		Position = UDim2.fromScale(0.01, 0.24),
-		color = Color3.fromRGB(80, 80, 90),
-		Parent = gui,
+		color = UI.Colors.Disabled,
+		Size = UDim2.fromOffset(140, 48),
+		Position = UDim2.fromOffset(32, 236),
+		textSize = 20,
+		lip = 3,
+		Parent = root,
 	}, function()
 		panel.Visible = not panel.Visible
 	end)
-	toggle.ZIndex = 5
 
 	local camo = false
 	local function row(text: string, onClick: () -> ())
-		UI.button(
-			{ Text = text, Size = UDim2.fromScale(1, 0.065), color = Color3.fromRGB(110, 110, 130), Parent = panel },
-			onClick
-		)
+		UI.button({
+			Text = text,
+			Size = UDim2.new(1, 0, 0, 48),
+			color = UI.Colors.PanelRaised,
+			textSize = 20,
+			lip = 3,
+			Parent = panel,
+		}, onClick)
 	end
 	row("+1000 Goo", function()
 		debugRemote:FireServer("goo", 1000)
@@ -70,13 +83,17 @@ function DebugPanel.start(mode: string)
 		end)
 	end
 	local camoButton: TextButton
-	camoButton = UI.button(
-		{ Text = "Camo: off", Size = UDim2.fromScale(1, 0.065), color = Color3.fromRGB(110, 110, 130), Parent = panel },
-		function()
-			camo = not camo
-			UI.setButtonText(camoButton, if camo then "Camo: ON" else "Camo: off")
-		end
-	)
+	camoButton = UI.button({
+		Text = "Camo: off",
+		Size = UDim2.new(1, 0, 0, 48),
+		color = UI.Colors.PanelRaised,
+		textSize = 20,
+		lip = 3,
+		Parent = panel,
+	}, function()
+		camo = not camo
+		UI.setButtonText(camoButton, if camo then "Camo: ON" else "Camo: off")
+	end)
 	for _, kind in Packet.KINDS do
 		row(`Spawn {kind}`, function()
 			debugRemote:FireServer("spawn", kind, camo)

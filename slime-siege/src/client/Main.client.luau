@@ -25,6 +25,7 @@ if mode == "match" then
 	local Placement = require(Controllers.Placement)
 	local HUD = require(Controllers.HUD)
 	local TowerPanel = require(Controllers.TowerPanel)
+	local Results = require(Controllers.Results)
 
 	CameraController.start()
 	Towers.start()
@@ -33,6 +34,7 @@ if mode == "match" then
 	Placement.start()
 	HUD.start()
 	TowerPanel.start()
+	Results.start()
 	Remotes.get("ClientReady"):FireServer()
 else
 	local LobbyUI = require(Controllers.LobbyUI)

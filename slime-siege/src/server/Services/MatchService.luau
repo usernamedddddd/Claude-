@@ -253,7 +253,16 @@ local function sendMatchState()
 	table.sort(list, function(a, b)
 		return a.userId < b.userId
 	end)
+	-- Wave progress: slimes spawned so far vs. the round's initial spawns; "left" also counts
+	-- children currently alive.
+	local spawned, total = 0, 0
+	for _, cursor in state.cursors do
+		spawned += cursor.spawned
+		total += cursor.group.count
+	end
 	remotes.MatchState:FireAllClients({
+		waveProgress = if total > 0 then spawned / total else 0,
+		slimesLeft = #state.enemies + (total - spawned),
 		lives = state.lives,
 		round = state.round,
 		totalRounds = state.totalRounds,

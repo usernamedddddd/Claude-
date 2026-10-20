@@ -500,6 +500,10 @@ local function implementInstanceApi()
 		if not cam then
 			cam = Instance.new("Camera")
 			cam.Name = "Camera"
+			-- Lune has no default for this read-only property; give the emulated screen a size.
+			pcall(function()
+				cam.ViewportSize = roblox.Vector2.new(1000, 1000)
+			end)
 			cam.Parent = ws
 		end
 		return cam
@@ -1062,6 +1066,21 @@ function Runtime.boot(opts: Options)
 	game = roblox.deserializePlace(fs.readFile(opts.place))
 	gameProxy = makeGameProxy()
 	Runtime.gameProxy = gameProxy
+	-- Cameras saved in the place have no ViewportSize in Lune; give them the emulated screen.
+	local cameras = game:GetDescendants()
+	local ok, current = pcall(function()
+		return game:GetService("Workspace").CurrentCamera
+	end)
+	if ok and current then
+		table.insert(cameras, current)
+	end
+	for _, d in cameras do
+		if d.ClassName == "Camera" then
+			pcall(function()
+				d.ViewportSize = roblox.Vector2.new(1000, 1000)
+			end)
+		end
+	end
 	services.Players = newPlayersService()
 	services.RunService = newRunService()
 	services.DataStoreService = newDataStoreService()

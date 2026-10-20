@@ -1,27 +1,58 @@
 --!strict
 -- UI theme, icon and sound tables. Swapping art or audio is a data change here.
 --
--- Icons: the target style is "Free Icon Pack 3.0.1 Basic" by gvesster (chunky simulator icons).
--- Upload the PNGs to Roblox and paste the asset ids below; until then a glyph is drawn instead.
+-- Design source of truth: Figma "Slime Siege UI" (Design System page: tokens, text styles,
+-- components, icons; Screens page: HUD, tower panel, results, lobby, phone, motion spec).
+-- Colors below are the Figma color variables. Contrast (WCAG): white on green 5.2:1, blue 5.4,
+-- red 5.0, purple 6.7, panel 13.7; ink on gold 10.5, on card 15.2.
+--
+-- Icons: export the Figma "Icons" frame (Icon/* components) as PNG @2x, upload them to Roblox
+-- and paste the asset ids below; until then a glyph is drawn instead.
 
 local Theme = {}
 
 Theme.FONT = Enum.Font.FredokaOne
 
+local function hex(h: string): Color3
+	return Color3.fromHex(h)
+end
+
 Theme.Colors = {
-	Panel = Color3.fromRGB(255, 246, 252),
-	PanelDark = Color3.fromRGB(92, 54, 120),
-	Stroke = Color3.fromRGB(58, 30, 80),
-	Text = Color3.fromRGB(255, 255, 255),
-	TextDark = Color3.fromRGB(58, 30, 80),
-	Green = Color3.fromRGB(88, 214, 104),
-	Red = Color3.fromRGB(255, 90, 110),
-	Blue = Color3.fromRGB(80, 170, 255),
-	Yellow = Color3.fromRGB(255, 208, 60),
-	Pink = Color3.fromRGB(255, 130, 200),
-	Purple = Color3.fromRGB(160, 110, 240),
-	Gray = Color3.fromRGB(150, 150, 165),
-	Gold = Color3.fromRGB(255, 200, 40),
+	Ink = hex("#2A1446"), -- outlines, dark text, chunky shadows
+	Panel = hex("#3B1F5C"), -- HUD panels
+	PanelRaised = hex("#4E2A7A"), -- icon bubbles, tracks, segmented control
+	Card = hex("#FFF4FA"), -- light cards (hotbar slots, upgrade columns, shop cards)
+	Scrim = hex("#1A0B2E"),
+	Text = hex("#FFFFFF"), -- text on dark / saturated fills
+	TextMuted = hex("#E6D9F5"),
+	TextDark = hex("#2A1446"), -- text on light / gold
+	Green = hex("#0F7A37"),
+	Blue = hex("#1E66D0"),
+	Red = hex("#D12F4C"),
+	Purple = hex("#6A3CCB"),
+	Gold = hex("#FFC733"),
+	Pink = hex("#FF6FB5"), -- upgrade path A
+	Cyan = hex("#47C6FF"), -- upgrade path B
+	Disabled = hex("#6F6480"),
+	Lime = hex("#7CFF8A"), -- progress fills, "you" marker
+}
+
+-- Animation timings from the Figma motion spec (seconds).
+Theme.Motion = {
+	press = 0.08,
+	release = 0.18,
+	punch = 0.22,
+	toastIn = 0.3,
+	toastOut = 0.2,
+	toastHold = 2.2,
+	bannerIn = 0.45,
+	bannerHold = 1.2,
+	panelIn = 0.26,
+	panelOut = 0.15,
+	countUp = 0.25,
+	resultsCard = 0.5,
+	resultsStagger = 0.12,
+	xpFill = 0.8,
 }
 
 export type Icon = { image: string, glyph: string }
@@ -38,6 +69,7 @@ Theme.Icons = {
 	check = { image = "", glyph = "✔" },
 	play = { image = "", glyph = "▶" },
 	fast = { image = "", glyph = "⏩" },
+	skull = { image = "", glyph = "💀" },
 	lock = { image = "", glyph = "🔒" },
 	sell = { image = "", glyph = "💲" },
 	target = { image = "", glyph = "🎯" },

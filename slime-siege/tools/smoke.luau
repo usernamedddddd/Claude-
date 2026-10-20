@@ -97,9 +97,12 @@ local function findButtonWithText(root: any, needle: string, exact: boolean?): a
 		local isLabel = d:IsA("TextLabel") and d.Name == "Label"
 		local matches = isLabel and (if exact then d.Text == needle else string.find(d.Text, needle, 1, true) ~= nil)
 		if matches then
-			local button = d.Parent
-			if button and button:IsA("GuiButton") then
-				return button
+			local node = d.Parent
+			while node and node ~= root do
+				if node:IsA("GuiButton") then
+					return node
+				end
+				node = node.Parent
 			end
 		end
 	end
@@ -214,7 +217,7 @@ function scenarios.solo()
 	Runtime.clickWorld(ctx, -34, 19)
 	Runtime.advance(0.5)
 	local panelGui = Runtime.findGui(ctx, "TowerPanel")
-	local panel = panelGui:FindFirstChild("Panel")
+	local panel = findDescendant(panelGui, "Panel")
 	check(panel and panel.Visible, "clicking a tower opens the upgrade panel")
 	local upgradeA = findButtonWithText(panel, "$140", true)
 	check(upgradeA ~= nil, "panel shows the $140 path A upgrade")
@@ -224,12 +227,13 @@ function scenarios.solo()
 	end
 	check(frog:GetAttribute("TierA") == 1, "upgrade applied (TierA = 1)")
 	check(myCash(ana) == 310, "upgrade cost deducted ($310 left)")
-	local targetButton = findButtonWithText(panel, "First")
-	if targetButton then
-		Runtime.click(ctx, targetButton)
+	local lastSegment = findButtonWithText(panel, "Last", true)
+	check(lastSegment ~= nil, "targeting is a segmented control")
+	if lastSegment then
+		Runtime.click(ctx, lastSegment)
 		Runtime.advance(0.5)
 	end
-	check(frog:GetAttribute("Targeting") == "Last", "targeting button cycles First -> Last")
+	check(frog:GetAttribute("Targeting") == "Last", "tapping the Last segment sets Last targeting")
 
 	-- Second frog with the keyboard hotkey "1".
 	check(Runtime.pressAction(ctx, Enum.KeyCode.One), "hotkey 1 is bound")
@@ -243,6 +247,13 @@ function scenarios.solo()
 		return s ~= nil and s.round == 1 and s.phase == "wave"
 	end)
 	check(started, "round 1 starts automatically after the prep countdown")
+	local banner = findDescendant(hud, "RoundBanner")
+	local bannerTitle = banner and findDescendant(banner, "Title", "TextLabel")
+	check(
+		banner and banner.Visible and bannerTitle and string.find(bannerTitle.Text, "ROUND 1", 1, true) ~= nil,
+		"round banner pops in with ROUND 1"
+	)
+	check(findDescendant(hud, "Wave").Visible, "wave progress bar shows during the wave")
 	Runtime.advance(6)
 	check(slimeCount(ctx) > 0, "client renders slimes during the wave")
 	local cleared = waitFor(60, function()
@@ -250,6 +261,18 @@ function scenarios.solo()
 		return s ~= nil and s.phase == "intermission"
 	end)
 	check(cleared, "round 1 ends")
+	local toast = findDescendant(hud, "Toast")
+	local toastLabels = {}
+	for _, d in toast:GetDescendants() do
+		if d:IsA("TextLabel") then
+			table.insert(toastLabels, d.Text)
+		end
+	end
+	check(
+		toast.Visible and string.find(table.concat(toastLabels, " "), "Round bonus +$101", 1, true) ~= nil,
+		"round bonus toast slides in"
+	)
+	check(not findDescendant(hud, "Wave").Visible, "wave bar hides between rounds")
 	state = matchState(ana)
 	check(state.lives == 150, "two frogs hold round 1 without leaks")
 	check(myCash(ana) >= 81 + 101 + 20 - 1, "round bonus + pop cash paid")
@@ -320,11 +343,19 @@ function scenarios.solo()
 	check(result and result[1].goo == 40 * 2 + 60, "win pays 140 Goo")
 	local profile = Runtime.lastRemote("ProfileData", ana)
 	check(profile and profile[1].goo == 140 and profile[1].stats.wins == 1, "profile updated with Goo and a win")
-	local resultsCard = findDescendant(Runtime.findGui(ctx, "HUD"), "Results")
+	local resultsCard = findDescendant(Runtime.findGui(ctx, "Results"), "Results")
 	check(resultsCard and resultsCard.Visible, "results card is shown")
+	Runtime.advance(2)
+	local gooTileLabels = {}
+	for _, d in findDescendant(resultsCard, "Goo"):GetDescendants() do
+		if d:IsA("TextLabel") then
+			table.insert(gooTileLabels, d.Text)
+		end
+	end
+	check(table.find(gooTileLabels, "+140") ~= nil, "Goo reward tile counts up to +140")
 
 	-- Studio restarts the match after the results countdown.
-	Runtime.advance(22)
+	Runtime.advance(20)
 	state = matchState(ana)
 	check(
 		state and state.round == 0 and state.phase == "prep" and state.lives == 150,
@@ -443,7 +474,7 @@ function scenarios.coop()
 	-- Teammate sees P1's tower read-only in the panel.
 	Runtime.clickWorld(ctxs[3], -34, 19)
 	Runtime.advance(0.5)
-	local panel = Runtime.findGui(ctxs[3], "TowerPanel"):FindFirstChild("Panel")
+	local panel = findDescendant(Runtime.findGui(ctxs[3], "TowerPanel"), "Panel")
 	check(panel.Visible, "teammate can inspect P1's tower")
 	local sell = findButtonWithText(panel, "Sell")
 	check(sell == nil or not sell.Visible, "sell button hidden for a teammate's tower")
@@ -581,15 +612,15 @@ function scenarios.lobby()
 	check(lobbyGui ~= nil, "lobby UI exists")
 	local towersButton = findButtonWithText(lobbyGui, "Towers")
 	Runtime.click(gilCtx, towersButton)
-	local towersPanel = lobbyGui:FindFirstChild("Towers")
+	local towersPanel = findDescendant(lobbyGui, "Towers")
 	check(towersPanel and towersPanel.Visible, "Towers shop opens")
 	local unlockButtons = {}
 	for _, d in towersPanel:GetDescendants() do
-		if d:IsA("TextLabel") and d.Name == "Label" and d.Text == "Unlock" then
+		if d:IsA("TextLabel") and d.Name == "Label" and string.sub(d.Text, 1, 6) == "Unlock" then
 			table.insert(unlockButtons, d.Parent)
 		end
 	end
-	check(#unlockButtons == 5, "five towers are locked for a new player")
+	check(#unlockButtons == 5, "with 500 Goo all five locked towers show Unlock")
 	fire(gilCtx, "UnlockTower", "CannonCrab")
 	Runtime.advance(0.5)
 	local profile = Runtime.lastRemote("ProfileData", gil)[1]
