@@ -90,16 +90,13 @@ function HUD.start()
 	local root = UI.root(gui)
 
 	---------------------------------------------------------------- resources (left)
-	local resources = UI.new(
-		"Frame",
-		{
-			Name = "Resources",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(320, 150),
-			Position = UDim2.fromOffset(40, 120),
-			Parent = root,
-		}
-	)
+	local resources = UI.new("Frame", {
+		Name = "Resources",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(320, 150),
+		Position = UDim2.fromOffset(40, 120),
+		Parent = root,
+	})
 	UI.list(resources, Enum.FillDirection.Vertical, 10, Enum.HorizontalAlignment.Left).VerticalAlignment =
 		Enum.VerticalAlignment.Top
 	local livesFrame, livesValue =
@@ -108,17 +105,14 @@ function HUD.start()
 		UI.currency({ Name = "Cash", icon = "coin", color = V.CoinText, LayoutOrder = 2, Parent = resources })
 
 	---------------------------------------------------------------- wave (top-centre)
-	local wave = UI.new(
-		"Frame",
-		{
-			Name = "Wave",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(420, 110),
-			Position = UDim2.new(0.5, 0, 0, 104),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = root,
-		}
-	)
+	local wave = UI.new("Frame", {
+		Name = "Wave",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(420, 110),
+		Position = UDim2.new(0.5, 0, 0, 104),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Parent = root,
+	})
 	local waveTitle = UI.text({
 		Name = "Title",
 		Text = "Wave 1/40",
@@ -145,60 +139,48 @@ function HUD.start()
 	})
 
 	---------------------------------------------------------------- controls (top-right)
-	local controls = UI.new(
-		"Frame",
-		{
-			Name = "Controls",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(420, 130),
-			Position = UDim2.new(1, -40, 0, 24),
-			AnchorPoint = Vector2.new(1, 0),
-			Parent = root,
-		}
-	)
+	local controls = UI.new("Frame", {
+		Name = "Controls",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(420, 130),
+		Position = UDim2.new(1, -40, 0, 24),
+		AnchorPoint = Vector2.new(1, 0),
+		Parent = root,
+	})
 	UI.list(controls, Enum.FillDirection.Horizontal, 22, Enum.HorizontalAlignment.Right).VerticalAlignment =
 		Enum.VerticalAlignment.Top
-	local skip = UI.squareTile(
-		{
-			Name = "StartButton",
-			icon = "skip",
-			Text = "Start",
-			accent = V.Green,
-			badge = "",
-			LayoutOrder = 1,
-			Parent = controls,
-		},
-		function()
-			Remotes.get("VoteSkip"):FireServer()
-		end
-	)
-	local speed = UI.squareTile(
-		{
-			Name = "SpeedButton",
-			icon = "fast",
-			Text = "2x Speed",
-			accent = V.Blue,
-			badge = "",
-			LayoutOrder = 2,
-			Parent = controls,
-		},
-		function()
-			Remotes.get("VoteSpeed"):FireServer()
-		end
-	)
-	UI.squareTile(
-		{
-			Name = "SettingsButton",
-			icon = "settings",
-			Text = "Settings",
-			accent = V.Blue,
-			LayoutOrder = 3,
-			Parent = controls,
-		},
-		function()
-			SettingsPanel.toggle(root)
-		end
-	)
+	local skip = UI.squareTile({
+		Name = "StartButton",
+		icon = "skip",
+		Text = "Start",
+		accent = V.Green,
+		badge = "",
+		LayoutOrder = 1,
+		Parent = controls,
+	}, function()
+		Remotes.get("VoteSkip"):FireServer()
+	end)
+	local speed = UI.squareTile({
+		Name = "SpeedButton",
+		icon = "fast",
+		Text = "2x Speed",
+		accent = V.Blue,
+		badge = "",
+		LayoutOrder = 2,
+		Parent = controls,
+	}, function()
+		Remotes.get("VoteSpeed"):FireServer()
+	end)
+	UI.squareTile({
+		Name = "SettingsButton",
+		icon = "settings",
+		Text = "Settings",
+		accent = V.Blue,
+		LayoutOrder = 3,
+		Parent = controls,
+	}, function()
+		SettingsPanel.toggle(root)
+	end)
 
 	---------------------------------------------------------------- toast (under the wave counter)
 	local toastShown, toastHidden = UDim2.new(0.5, 0, 0, 226), UDim2.new(0.5, 0, 0, -80)
@@ -311,18 +293,15 @@ function HUD.start()
 	end
 
 	---------------------------------------------------------------- loadout hotbar (bottom)
-	local hotbar = UI.new(
-		"Frame",
-		{
-			Name = "Hotbar",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(0, 112),
-			AutomaticSize = Enum.AutomaticSize.X,
-			Position = UDim2.new(0.5, 0, 1, -28),
-			AnchorPoint = Vector2.new(0.5, 1),
-			Parent = root,
-		}
-	)
+	local hotbar = UI.new("Frame", {
+		Name = "Hotbar",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(0, 112),
+		AutomaticSize = Enum.AutomaticSize.X,
+		Position = UDim2.new(0.5, 0, 1, -28),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Parent = root,
+	})
 	UI.list(hotbar, Enum.FillDirection.Horizontal, 14)
 
 	type Slot = {
@@ -360,51 +339,39 @@ function HUD.start()
 			end
 		end
 		-- Figma LoadoutSlot: translucent dark square, light ring, white number badge, cost.
-		local button = UI.new(
-			"TextButton",
-			{
-				Name = def.id,
-				AutoButtonColor = false,
-				Text = "",
-				BackgroundColor3 = V.Slot,
-				BackgroundTransparency = V.SlotTransparency,
-				Size = UDim2.fromOffset(110, 110),
-				LayoutOrder = i,
-				Selectable = true,
-				Parent = hotbar,
-			}
-		)
+		local button = UI.new("TextButton", {
+			Name = def.id,
+			AutoButtonColor = false,
+			Text = "",
+			BackgroundColor3 = V.Slot,
+			BackgroundTransparency = V.SlotTransparency,
+			Size = UDim2.fromOffset(110, 110),
+			LayoutOrder = i,
+			Selectable = true,
+			Parent = hotbar,
+		})
 		UI.corner(button, 14)
 		local ring = UI.stroke(button, 3, V.SlotRing)
-		local icon = UI.icon(
-			def.icon,
-			{
-				Size = UDim2.fromOffset(66, 66),
-				Position = UDim2.new(0.5, 0, 0, 10),
-				AnchorPoint = Vector2.new(0.5, 0),
-				Parent = button,
-			}
-		)
-		local lock = UI.icon(
-			"lock",
-			{
-				Name = "Lock",
-				Size = UDim2.fromOffset(60, 60),
-				Position = UDim2.new(0.5, 0, 0, 12),
-				AnchorPoint = Vector2.new(0.5, 0),
-				Parent = button,
-			}
-		)
-		local key = UI.new(
-			"Frame",
-			{
-				Name = "Key",
-				BackgroundColor3 = Color3.new(1, 1, 1),
-				Size = UDim2.fromOffset(28, 28),
-				Position = UDim2.fromOffset(6, 6),
-				Parent = button,
-			}
-		)
+		local icon = UI.icon(def.icon, {
+			Size = UDim2.fromOffset(66, 66),
+			Position = UDim2.new(0.5, 0, 0, 10),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Parent = button,
+		})
+		local lock = UI.icon("lock", {
+			Name = "Lock",
+			Size = UDim2.fromOffset(60, 60),
+			Position = UDim2.new(0.5, 0, 0, 12),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Parent = button,
+		})
+		local key = UI.new("Frame", {
+			Name = "Key",
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			Size = UDim2.fromOffset(28, 28),
+			Position = UDim2.fromOffset(6, 6),
+			Parent = button,
+		})
 		UI.corner(key, 7)
 		UI.stroke(key, 2)
 		UI.text({
@@ -491,18 +458,15 @@ function HUD.start()
 	end
 
 	---------------------------------------------------------------- touch / gamepad place bar
-	local placeBar = UI.new(
-		"Frame",
-		{
-			Name = "PlaceBar",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(480, 130),
-			Position = UDim2.new(0.5, 0, 1, -160),
-			AnchorPoint = Vector2.new(0.5, 1),
-			Visible = false,
-			Parent = root,
-		}
-	)
+	local placeBar = UI.new("Frame", {
+		Name = "PlaceBar",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(480, 130),
+		Position = UDim2.new(0.5, 0, 1, -160),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Visible = false,
+		Parent = root,
+	})
 	local _hint, hintLabel = UI.chip({
 		Name = "Hint",
 		Text = "",
@@ -511,35 +475,29 @@ function HUD.start()
 		AnchorPoint = Vector2.new(0.5, 0),
 		Parent = placeBar,
 	})
-	local placeButton = UI.button(
-		{
-			Name = "Place",
-			Text = "Place",
-			icon = "check",
-			style = "green",
-			Size = UDim2.fromOffset(220, 68),
-			Position = UDim2.new(0, 10, 1, -72),
-			Parent = placeBar,
-		},
-		function()
-			Placement.confirm()
-		end
-	)
-	UI.button(
-		{
-			Name = "Cancel",
-			Text = "Cancel",
-			icon = "close",
-			style = "red",
-			Size = UDim2.fromOffset(220, 68),
-			Position = UDim2.new(1, -10, 1, -72),
-			AnchorPoint = Vector2.new(1, 0),
-			Parent = placeBar,
-		},
-		function()
-			Placement.cancel()
-		end
-	)
+	local placeButton = UI.button({
+		Name = "Place",
+		Text = "Place",
+		icon = "check",
+		style = "green",
+		Size = UDim2.fromOffset(220, 68),
+		Position = UDim2.new(0, 10, 1, -72),
+		Parent = placeBar,
+	}, function()
+		Placement.confirm()
+	end)
+	UI.button({
+		Name = "Cancel",
+		Text = "Cancel",
+		icon = "close",
+		style = "red",
+		Size = UDim2.fromOffset(220, 68),
+		Position = UDim2.new(1, -10, 1, -72),
+		AnchorPoint = Vector2.new(1, 0),
+		Parent = placeBar,
+	}, function()
+		Placement.cancel()
+	end)
 	local crosshair = UI.text({
 		Text = "+",
 		size = 56,

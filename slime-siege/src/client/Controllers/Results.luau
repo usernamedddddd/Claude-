@@ -22,17 +22,14 @@ local V = UI.V2
 function Results.start()
 	local gui = UI.screen("Results", 5)
 	local root = UI.root(gui)
-	local scrim = UI.new(
-		"Frame",
-		{
-			Name = "Scrim",
-			BackgroundColor3 = V.Slot,
-			BackgroundTransparency = 1,
-			Size = UDim2.fromScale(1, 1),
-			Visible = false,
-			Parent = root,
-		}
-	)
+	local scrim = UI.new("Frame", {
+		Name = "Scrim",
+		BackgroundColor3 = V.Slot,
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Visible = false,
+		Parent = root,
+	})
 
 	local card = UI.panel({
 		Name = "Results",
@@ -46,17 +43,14 @@ function Results.start()
 		Parent = root,
 	})
 	local face = card.face
-	local badgeHolder = UI.new(
-		"Frame",
-		{
-			Name = "Badge",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(140, 140),
-			Position = UDim2.new(0.5, 0, 0, 24),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = face,
-		}
-	)
+	local badgeHolder = UI.new("Frame", {
+		Name = "Badge",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(140, 140),
+		Position = UDim2.new(0.5, 0, 0, 24),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Parent = face,
+	})
 	local badgeIcon = UI.icon("trophy", { Size = UDim2.fromScale(1, 1), Parent = badgeHolder })
 	local title = UI.text({
 		Name = "Title",
@@ -77,32 +71,26 @@ function Results.start()
 		Parent = face,
 	})
 
-	local rewards = UI.new(
-		"Frame",
-		{
-			Name = "Rewards",
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, -80, 0, 64),
-			Position = UDim2.new(0, 40, 0, 330),
-			Parent = face,
-		}
-	)
+	local rewards = UI.new("Frame", {
+		Name = "Rewards",
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -80, 0, 64),
+		Position = UDim2.new(0, 40, 0, 330),
+		Parent = face,
+	})
 	UI.list(rewards, Enum.FillDirection.Horizontal, 48)
 	local roundFrame, roundValue =
 		UI.currency({ Name = "Round", icon = "star", color = Color3.new(1, 1, 1), LayoutOrder = 1, Parent = rewards })
 	local gooFrame, gooValue =
 		UI.currency({ Name = "Goo", icon = "goo", color = V.GooText, LayoutOrder = 2, Parent = rewards })
-	local xpFrame = UI.new(
-		"Frame",
-		{
-			Name = "XP",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(0, 64),
-			AutomaticSize = Enum.AutomaticSize.X,
-			LayoutOrder = 3,
-			Parent = rewards,
-		}
-	)
+	local xpFrame = UI.new("Frame", {
+		Name = "XP",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(0, 64),
+		AutomaticSize = Enum.AutomaticSize.X,
+		LayoutOrder = 3,
+		Parent = rewards,
+	})
 	local xpValue = UI.text({
 		Name = "Value",
 		Text = "+0 XP",
@@ -115,20 +103,17 @@ function Results.start()
 
 	local xpBar = UI.xpBar({ Position = UDim2.new(0.5, 0, 0, 418), AnchorPoint = Vector2.new(0.5, 0), Parent = face })
 
-	local footer = UI.button(
-		{
-			Name = "Footer",
-			Text = "Lobby",
-			style = "green",
-			Size = UDim2.fromOffset(380, 80),
-			Position = UDim2.new(0.5, 0, 1, -110),
-			AnchorPoint = Vector2.new(0.5, 0),
-			textSize = 32,
-			strokeWidth = 6,
-			Parent = face,
-		},
-		function() end
-	)
+	local footer = UI.button({
+		Name = "Footer",
+		Text = "Lobby",
+		style = "green",
+		Size = UDim2.fromOffset(380, 80),
+		Position = UDim2.new(0.5, 0, 1, -110),
+		AnchorPoint = Vector2.new(0.5, 0),
+		textSize = 32,
+		strokeWidth = 6,
+		Parent = face,
+	}, function() end)
 	footer.Active = false
 
 	Remotes.get("MatchResult").OnClientEvent:Connect(function(result: { [string]: any })

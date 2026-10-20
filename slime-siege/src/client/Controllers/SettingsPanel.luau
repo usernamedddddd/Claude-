@@ -23,20 +23,17 @@ local function build(root: Frame)
 	})
 	UI.icon("settings", { Size = UDim2.fromOffset(56, 56), Position = UDim2.fromOffset(24, 18), Parent = panel.face })
 	UI.text({ Text = "Settings", font = "label", size = 36, Position = UDim2.fromOffset(92, 30), Parent = panel.face })
-	UI.button(
-		{
-			Name = "Close",
-			icon = "close",
-			style = "red",
-			Size = UDim2.fromOffset(56, 56),
-			Position = UDim2.new(1, -20, 0, 18),
-			AnchorPoint = Vector2.new(1, 0),
-			Parent = panel.face,
-		},
-		function()
-			panel.holder.Visible = false
-		end
-	)
+	UI.button({
+		Name = "Close",
+		icon = "close",
+		style = "red",
+		Size = UDim2.fromOffset(56, 56),
+		Position = UDim2.new(1, -20, 0, 18),
+		AnchorPoint = Vector2.new(1, 0),
+		Parent = panel.face,
+	}, function()
+		panel.holder.Visible = false
+	end)
 	local rows = { { "Sound effects", "sfx" }, { "Screen shake", "shake" } }
 	for i, row in rows do
 		local label, key = row[1], row[2]
@@ -50,23 +47,20 @@ local function build(root: Frame)
 			Parent = panel.face,
 		})
 		local toggle: TextButton
-		toggle = UI.button(
-			{
-				Name = "Toggle_" .. key,
-				Text = "On",
-				style = "green",
-				Size = UDim2.fromOffset(140, 60),
-				Position = UDim2.new(1, -32, 0, y),
-				AnchorPoint = Vector2.new(1, 0),
-				Parent = panel.face,
-			},
-			function()
-				local prefs = Prefs :: any
-				prefs[key] = not prefs[key]
-				UI.setButtonText(toggle, if prefs[key] then "On" else "Off")
-				UI.setButtonStyle(toggle, if prefs[key] then "green" else "gray")
-			end
-		)
+		toggle = UI.button({
+			Name = "Toggle_" .. key,
+			Text = "On",
+			style = "green",
+			Size = UDim2.fromOffset(140, 60),
+			Position = UDim2.new(1, -32, 0, y),
+			AnchorPoint = Vector2.new(1, 0),
+			Parent = panel.face,
+		}, function()
+			local prefs = Prefs :: any
+			prefs[key] = not prefs[key]
+			UI.setButtonText(toggle, if prefs[key] then "On" else "Off")
+			UI.setButtonStyle(toggle, if prefs[key] then "green" else "gray")
+		end)
 	end
 	return panel.holder
 end

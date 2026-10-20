@@ -335,17 +335,14 @@ end
 function UI.button(props: { [string]: any }, onClick: () -> ()): TextButton
 	local button = holderButton(props, UDim2.fromOffset(240, 66))
 	local style = STYLES[props.style or "green"] or STYLES.green
-	local chunky = layer(
-		button,
-		{
-			top = style.top,
-			bottom = style.bottom,
-			ring = WHITE,
-			strokeWidth = props.strokeWidth or 4,
-			radius = props.radius or 12,
-			lip = props.lip,
-		}
-	)
+	local chunky = layer(button, {
+		top = style.top,
+		bottom = style.bottom,
+		ring = WHITE,
+		strokeWidth = props.strokeWidth or 4,
+		radius = props.radius or 12,
+		lip = props.lip,
+	})
 	local content = UI.new(
 		"Frame",
 		{ Name = "Content", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Parent = chunky.face }
@@ -400,15 +397,12 @@ function UI.menuTile(props: { [string]: any }, onClick: () -> ()): TextButton
 		button,
 		{ top = V.PanelTop, bottom = V.PanelBottom, ring = props.accent or V.Red, strokeWidth = 5, radius = 16 }
 	)
-	UI.icon(
-		props.icon,
-		{
-			Size = UDim2.fromOffset(70, 70),
-			Position = UDim2.new(0, 6, 0.5, 0),
-			AnchorPoint = Vector2.new(0, 0.5),
-			Parent = chunky.face,
-		}
-	)
+	UI.icon(props.icon, {
+		Size = UDim2.fromOffset(70, 70),
+		Position = UDim2.new(0, 6, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Parent = chunky.face,
+	})
 	UI.text({
 		Text = props.Text or "",
 		Name = "Label",
@@ -431,15 +425,12 @@ function UI.squareTile(props: { [string]: any }, onClick: () -> ()): SquareTile
 		button,
 		{ top = V.PanelTop, bottom = V.PanelBottom, ring = props.accent or V.Blue, strokeWidth = 5, radius = 20 }
 	)
-	UI.icon(
-		props.icon,
-		{
-			Size = UDim2.fromOffset(66, 66),
-			Position = UDim2.new(0.5, 0, 0, 10),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Parent = chunky.face,
-		}
-	)
+	UI.icon(props.icon, {
+		Size = UDim2.fromOffset(66, 66),
+		Position = UDim2.new(0.5, 0, 0, 10),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Parent = chunky.face,
+	})
 	local label = UI.text({
 		Text = props.Text or "",
 		Name = "Label",
@@ -450,20 +441,17 @@ function UI.squareTile(props: { [string]: any }, onClick: () -> ()): SquareTile
 		ZIndex = 3,
 		Parent = button,
 	})
-	local badge = UI.new(
-		"Frame",
-		{
-			Name = "Badge",
-			BackgroundColor3 = V.Badge,
-			Size = UDim2.fromOffset(0, 34),
-			AutomaticSize = Enum.AutomaticSize.X,
-			Position = UDim2.new(1, 8, 0, -10),
-			AnchorPoint = Vector2.new(1, 0),
-			Visible = props.badge ~= nil,
-			ZIndex = 3,
-			Parent = button,
-		}
-	)
+	local badge = UI.new("Frame", {
+		Name = "Badge",
+		BackgroundColor3 = V.Badge,
+		Size = UDim2.fromOffset(0, 34),
+		AutomaticSize = Enum.AutomaticSize.X,
+		Position = UDim2.new(1, 8, 0, -10),
+		AnchorPoint = Vector2.new(1, 0),
+		Visible = props.badge ~= nil,
+		ZIndex = 3,
+		Parent = button,
+	})
 	UI.corner(badge, 999)
 	UI.stroke(badge, 3, WHITE)
 	UI.padding(badge, 0, 9, 0, 9)
@@ -531,14 +519,11 @@ function UI.chip(props: { [string]: any }): (Frame, TextLabel)
 	UI.padding(chip, 0, 18, 0, 18)
 	UI.list(chip, Enum.FillDirection.Horizontal, 8)
 	if props.icon then
-		UI.icon(
-			props.icon,
-			{
-				Size = UDim2.fromOffset((props.height or 44) - 10, (props.height or 44) - 10),
-				LayoutOrder = 1,
-				Parent = chip,
-			}
-		)
+		UI.icon(props.icon, {
+			Size = UDim2.fromOffset((props.height or 44) - 10, (props.height or 44) - 10),
+			LayoutOrder = 1,
+			Parent = chip,
+		})
 	end
 	local label = UI.text({
 		Text = props.Text or "",

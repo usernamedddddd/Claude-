@@ -52,16 +52,13 @@ function TowerPanel.start()
 	local face = panel.face
 
 	-- Header
-	local portrait = UI.new(
-		"Frame",
-		{
-			Name = "Portrait",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(76, 76),
-			Position = UDim2.fromOffset(16, 14),
-			Parent = face,
-		}
-	)
+	local portrait = UI.new("Frame", {
+		Name = "Portrait",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(76, 76),
+		Position = UDim2.fromOffset(16, 14),
+		Parent = face,
+	})
 	local title = UI.text({
 		Name = "Title",
 		Text = "",
@@ -80,21 +77,18 @@ function TowerPanel.start()
 		Position = UDim2.fromOffset(102, 62),
 		Parent = face,
 	})
-	UI.button(
-		{
-			Name = "Close",
-			icon = "close",
-			style = "red",
-			Size = UDim2.fromOffset(54, 54),
-			Position = UDim2.new(1, -18, 0, 18),
-			AnchorPoint = Vector2.new(1, 0),
-			iconSize = 30,
-			Parent = face,
-		},
-		function()
-			Placement.select(nil)
-		end
-	)
+	UI.button({
+		Name = "Close",
+		icon = "close",
+		style = "red",
+		Size = UDim2.fromOffset(54, 54),
+		Position = UDim2.new(1, -18, 0, 18),
+		AnchorPoint = Vector2.new(1, 0),
+		iconSize = 30,
+		Parent = face,
+	}, function()
+		Placement.select(nil)
+	end)
 
 	local currentModel: Model? = nil
 	local paths: { [string]: PathUI } = {}
@@ -121,29 +115,23 @@ function TowerPanel.start()
 			Position = UDim2.fromOffset(12, 12),
 			Parent = cf,
 		})
-		local pipRow = UI.new(
-			"Frame",
-			{
-				Name = "Pips",
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, -24, 0, 12),
-				Position = UDim2.fromOffset(12, 44),
-				Parent = cf,
-			}
-		)
+		local pipRow = UI.new("Frame", {
+			Name = "Pips",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -24, 0, 12),
+			Position = UDim2.fromOffset(12, 44),
+			Parent = cf,
+		})
 		UI.list(pipRow, Enum.FillDirection.Horizontal, 6, Enum.HorizontalAlignment.Left)
 		local pips = {}
 		for t = 1, 3 do
-			local pip = UI.new(
-				"Frame",
-				{
-					Name = "Pip" .. t,
-					BackgroundColor3 = PIP_OFF,
-					Size = UDim2.fromOffset(56, 12),
-					LayoutOrder = t,
-					Parent = pipRow,
-				}
-			)
+			local pip = UI.new("Frame", {
+				Name = "Pip" .. t,
+				BackgroundColor3 = PIP_OFF,
+				Size = UDim2.fromOffset(56, 12),
+				LayoutOrder = t,
+				Parent = pipRow,
+			})
 			UI.corner(pip, 999)
 			UI.stroke(pip, 2)
 			table.insert(pips, pip)
@@ -180,25 +168,22 @@ function TowerPanel.start()
 			Position = UDim2.fromOffset(12, 126),
 			Parent = cf,
 		})
-		local button = UI.button(
-			{
-				Name = "Upgrade",
-				Text = "",
-				icon = "coin",
-				style = "green",
-				Size = UDim2.new(1, -24, 0, 56),
-				Position = UDim2.new(0, 12, 1, -70),
-				textSize = 24,
-				iconSize = 30,
-				Parent = cf,
-			},
-			function()
-				local model = currentModel
-				if model then
-					Remotes.get("UpgradeTower"):FireServer(model:GetAttribute("Uid"), key)
-				end
+		local button = UI.button({
+			Name = "Upgrade",
+			Text = "",
+			icon = "coin",
+			style = "green",
+			Size = UDim2.new(1, -24, 0, 56),
+			Position = UDim2.new(0, 12, 1, -70),
+			textSize = 24,
+			iconSize = 30,
+			Parent = cf,
+		}, function()
+			local model = currentModel
+			if model then
+				Remotes.get("UpgradeTower"):FireServer(model:GetAttribute("Uid"), key)
 			end
-		)
+		end)
 		paths[key] = {
 			pips = pips,
 			tag = tag,
@@ -221,36 +206,30 @@ function TowerPanel.start()
 		AnchorPoint = Vector2.new(0, 0.5),
 		Parent = face,
 	})
-	local segments = UI.new(
-		"Frame",
-		{
-			Name = "Targeting",
-			BackgroundColor3 = V.Slot,
-			BackgroundTransparency = 0.25,
-			Size = UDim2.new(1, -36, 0, 60),
-			Position = UDim2.fromOffset(18, 472),
-			Parent = face,
-		}
-	)
+	local segments = UI.new("Frame", {
+		Name = "Targeting",
+		BackgroundColor3 = V.Slot,
+		BackgroundTransparency = 0.25,
+		Size = UDim2.new(1, -36, 0, 60),
+		Position = UDim2.fromOffset(18, 472),
+		Parent = face,
+	})
 	UI.corner(segments, 14)
 	UI.stroke(segments, 3)
 	UI.padding(segments, 6)
 	UI.list(segments, Enum.FillDirection.Horizontal, 6)
 	local segmentButtons: { [string]: TextButton } = {}
 	for i, mode in Targeting.MODES do
-		local seg = UI.new(
-			"TextButton",
-			{
-				Name = mode,
-				AutoButtonColor = false,
-				Text = "",
-				BackgroundColor3 = V.Gold,
-				BackgroundTransparency = 1,
-				Size = UDim2.new(0.25, -5, 1, 0),
-				LayoutOrder = i,
-				Parent = segments,
-			}
-		)
+		local seg = UI.new("TextButton", {
+			Name = mode,
+			AutoButtonColor = false,
+			Text = "",
+			BackgroundColor3 = V.Gold,
+			BackgroundTransparency = 1,
+			Size = UDim2.new(0.25, -5, 1, 0),
+			LayoutOrder = i,
+			Parent = segments,
+		})
 		UI.corner(seg, 10)
 		local ring = UI.stroke(seg, 3, Color3.new(1, 1, 1))
 		ring.Enabled = false
@@ -264,25 +243,22 @@ function TowerPanel.start()
 		segmentButtons[mode] = seg
 	end
 
-	local sellButton = UI.button(
-		{
-			Name = "Sell",
-			Text = "Sell",
-			icon = "coin",
-			style = "red",
-			Size = UDim2.new(1, -36, 0, 62),
-			Position = UDim2.new(0, 18, 1, -84),
-			textSize = 22,
-			Parent = face,
-		},
-		function()
-			local model = currentModel
-			if model then
-				Remotes.get("SellTower"):FireServer(model:GetAttribute("Uid"))
-				Placement.select(nil)
-			end
+	local sellButton = UI.button({
+		Name = "Sell",
+		Text = "Sell",
+		icon = "coin",
+		style = "red",
+		Size = UDim2.new(1, -36, 0, 62),
+		Position = UDim2.new(0, 18, 1, -84),
+		textSize = 22,
+		Parent = face,
+	}, function()
+		local model = currentModel
+		if model then
+			Remotes.get("SellTower"):FireServer(model:GetAttribute("Uid"))
+			Placement.select(nil)
 		end
-	)
+	end)
 
 	local portraitIcon: GuiObject? = nil
 	local function refresh()

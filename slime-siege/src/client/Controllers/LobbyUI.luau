@@ -39,36 +39,30 @@ function LobbyUI.start()
 	local root = UI.root(gui)
 
 	---------------------------------------------------------------- announcement strip
-	local news = UI.new(
-		"Frame",
-		{
-			Name = "Announcement",
-			BackgroundColor3 = V.Slot,
-			BackgroundTransparency = 0.45,
-			Size = UDim2.fromOffset(0, 48),
-			AutomaticSize = Enum.AutomaticSize.X,
-			Position = UDim2.new(0.5, 0, 0, 34),
-			AnchorPoint = Vector2.new(0.5, 0),
-			Visible = false,
-			Parent = root,
-		}
-	)
+	local news = UI.new("Frame", {
+		Name = "Announcement",
+		BackgroundColor3 = V.Slot,
+		BackgroundTransparency = 0.45,
+		Size = UDim2.fromOffset(0, 48),
+		AutomaticSize = Enum.AutomaticSize.X,
+		Position = UDim2.new(0.5, 0, 0, 34),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Visible = false,
+		Parent = root,
+	})
 	UI.corner(news, 14)
 	UI.padding(news, 0, 10, 0, 20)
 	UI.list(news, Enum.FillDirection.Horizontal, 14)
 	local newsLabel = UI.text({ Name = "Label", Text = "", font = "label", size = 18, LayoutOrder = 1, Parent = news })
 
 	---------------------------------------------------------------- left menu + Goo
-	local menu = UI.new(
-		"Frame",
-		{
-			Name = "Menu",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(270, 190),
-			Position = UDim2.new(0, 40, 0, 290),
-			Parent = root,
-		}
-	)
+	local menu = UI.new("Frame", {
+		Name = "Menu",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(270, 190),
+		Position = UDim2.new(0, 40, 0, 290),
+		Parent = root,
+	})
 	UI.list(menu, Enum.FillDirection.Vertical, 16, Enum.HorizontalAlignment.Left).VerticalAlignment =
 		Enum.VerticalAlignment.Top
 	local gooFrame, gooValue = UI.currency({
@@ -80,20 +74,17 @@ function LobbyUI.start()
 	})
 
 	---------------------------------------------------------------- popups
-	local scrim = UI.new(
-		"TextButton",
-		{
-			Name = "Scrim",
-			AutoButtonColor = false,
-			Text = "",
-			BackgroundColor3 = V.Slot,
-			BackgroundTransparency = 0.45,
-			Size = UDim2.fromScale(1, 1),
-			Visible = false,
-			ZIndex = 1,
-			Parent = root,
-		}
-	)
+	local scrim = UI.new("TextButton", {
+		Name = "Scrim",
+		AutoButtonColor = false,
+		Text = "",
+		BackgroundColor3 = V.Slot,
+		BackgroundTransparency = 0.45,
+		Size = UDim2.fromScale(1, 1),
+		Visible = false,
+		ZIndex = 1,
+		Parent = root,
+	})
 	local function popup(name: string, title: string, icon: string, accent: Color3): (any, Frame)
 		local m = UI.panel({
 			Name = name,
@@ -115,32 +106,26 @@ function LobbyUI.start()
 			AnchorPoint = Vector2.new(0, 0.5),
 			Parent = m.face,
 		})
-		UI.button(
-			{
-				Name = "Close",
-				icon = "close",
-				style = "red",
-				Size = UDim2.fromOffset(60, 60),
-				Position = UDim2.new(1, -28, 0, 20),
-				AnchorPoint = Vector2.new(1, 0),
-				iconSize = 34,
-				Parent = m.face,
-			},
-			function()
-				m.holder.Visible = false
-				scrim.Visible = false
-			end
-		)
-		local grid = UI.new(
-			"Frame",
-			{
-				Name = "Grid",
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, -56, 1, -124),
-				Position = UDim2.fromOffset(28, 104),
-				Parent = m.face,
-			}
-		)
+		UI.button({
+			Name = "Close",
+			icon = "close",
+			style = "red",
+			Size = UDim2.fromOffset(60, 60),
+			Position = UDim2.new(1, -28, 0, 20),
+			AnchorPoint = Vector2.new(1, 0),
+			iconSize = 34,
+			Parent = m.face,
+		}, function()
+			m.holder.Visible = false
+			scrim.Visible = false
+		end)
+		local grid = UI.new("Frame", {
+			Name = "Grid",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -56, 1, -124),
+			Position = UDim2.fromOffset(28, 104),
+			Parent = m.face,
+		})
 		UI.new("UIGridLayout", {
 			CellSize = UDim2.fromOffset(268, 304),
 			CellPadding = UDim2.fromOffset(20, 24),
@@ -165,15 +150,12 @@ function LobbyUI.start()
 			Size = UDim2.fromOffset(268, 304),
 			Parent = towerGrid,
 		})
-		UI.icon(
-			def.icon,
-			{
-				Size = UDim2.fromOffset(104, 104),
-				Position = UDim2.new(0.5, 0, 0, 14),
-				AnchorPoint = Vector2.new(0.5, 0),
-				Parent = card.face,
-			}
-		)
+		UI.icon(def.icon, {
+			Size = UDim2.fromOffset(104, 104),
+			Position = UDim2.new(0.5, 0, 0, 14),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Parent = card.face,
+		})
 		UI.text({
 			Text = def.displayName,
 			size = 28,
@@ -191,28 +173,25 @@ function LobbyUI.start()
 			Position = UDim2.fromOffset(14, 168),
 			Parent = card.face,
 		})
-		local action = UI.button(
-			{
-				Name = "Action",
-				Text = "Unlock",
-				style = "green",
-				Size = UDim2.new(1, -28, 0, 56),
-				Position = UDim2.new(0, 14, 1, -70),
-				textSize = 18,
-				Parent = card.face,
-			},
-			function()
-				local profile = Store.profile
-				if profile and not profile.unlocked[def.id] then
-					if profile.goo >= def.unlockGoo then
-						Remotes.get("UnlockTower"):FireServer(def.id)
-					else
-						Sound.play("error")
-						Motion.shake(card.holder, 6, 3)
-					end
+		local action = UI.button({
+			Name = "Action",
+			Text = "Unlock",
+			style = "green",
+			Size = UDim2.new(1, -28, 0, 56),
+			Position = UDim2.new(0, 14, 1, -70),
+			textSize = 18,
+			Parent = card.face,
+		}, function()
+			local profile = Store.profile
+			if profile and not profile.unlocked[def.id] then
+				if profile.goo >= def.unlockGoo then
+					Remotes.get("UnlockTower"):FireServer(def.id)
+				else
+					Sound.play("error")
+					Motion.shake(card.holder, 6, 3)
 				end
 			end
-		)
+		end)
 		cards[def.id] = { action = action, holder = card.holder, ring = card.stroke }
 	end
 
@@ -230,15 +209,12 @@ function LobbyUI.start()
 			Size = UDim2.fromOffset(268, 304),
 			Parent = storeGrid,
 		})
-		UI.icon(
-			if product.kind == "gamepass" then "star" else "goo",
-			{
-				Size = UDim2.fromOffset(90, 90),
-				Position = UDim2.new(0.5, 0, 0, 18),
-				AnchorPoint = Vector2.new(0.5, 0),
-				Parent = card.face,
-			}
-		)
+		UI.icon(if product.kind == "gamepass" then "star" else "goo", {
+			Size = UDim2.fromOffset(90, 90),
+			Position = UDim2.new(0.5, 0, 0, 18),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Parent = card.face,
+		})
 		UI.text({
 			Text = product.displayName,
 			size = 26,
@@ -256,22 +232,19 @@ function LobbyUI.start()
 			Position = UDim2.fromOffset(14, 158),
 			Parent = card.face,
 		})
-		UI.button(
-			{
-				Name = "Buy",
-				Text = "Buy",
-				icon = "coin",
-				style = "gold",
-				Size = UDim2.new(1, -28, 0, 56),
-				Position = UDim2.new(0, 14, 1, -70),
-				Parent = card.face,
-			},
-			function()
-				Monetization.promptPurchase(key, function()
-					Store.notified:Fire(`Thanks! {product.displayName} granted.`, "success")
-				end)
-			end
-		)
+		UI.button({
+			Name = "Buy",
+			Text = "Buy",
+			icon = "coin",
+			style = "gold",
+			Size = UDim2.new(1, -28, 0, 56),
+			Position = UDim2.new(0, 14, 1, -70),
+			Parent = card.face,
+		}, function()
+			Monetization.promptPurchase(key, function()
+				Store.notified:Fire(`Thanks! {product.displayName} granted.`, "success")
+			end)
+		end)
 	end
 
 	local function open(m: any)
@@ -300,81 +273,63 @@ function LobbyUI.start()
 	)
 
 	---------------------------------------------------------------- top-right
-	UI.squareTile(
-		{
-			Name = "SettingsButton",
-			icon = "settings",
-			Text = "Settings",
-			accent = V.Blue,
-			Position = UDim2.new(1, -40, 0, 24),
-			AnchorPoint = Vector2.new(1, 0),
-			Parent = root,
-		},
-		function()
-			SettingsPanel.toggle(root)
-		end
-	)
+	UI.squareTile({
+		Name = "SettingsButton",
+		icon = "settings",
+		Text = "Settings",
+		accent = V.Blue,
+		Position = UDim2.new(1, -40, 0, 24),
+		AnchorPoint = Vector2.new(1, 0),
+		Parent = root,
+	}, function()
+		SettingsPanel.toggle(root)
+	end)
 
 	---------------------------------------------------------------- PLAY + queue + loadout + XP
 	local xp = UI.xpBar({ Position = UDim2.new(0.5, 0, 1, -82), AnchorPoint = Vector2.new(0.5, 0), Parent = root })
-	local loadout = UI.new(
-		"Frame",
-		{
-			Name = "Loadout",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(0, 110),
-			AutomaticSize = Enum.AutomaticSize.X,
-			Position = UDim2.new(0.5, 0, 1, -100),
-			AnchorPoint = Vector2.new(0.5, 1),
-			Parent = root,
-		}
-	)
+	local loadout = UI.new("Frame", {
+		Name = "Loadout",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(0, 110),
+		AutomaticSize = Enum.AutomaticSize.X,
+		Position = UDim2.new(0.5, 0, 1, -100),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Parent = root,
+	})
 	UI.list(loadout, Enum.FillDirection.Horizontal, 14)
 	type LoadSlot = { icon: GuiObject, lock: GuiObject, status: TextLabel, ring: UIStroke }
 	local loadSlots: { [string]: LoadSlot } = {}
 	for i, def in sortedDefs() do
-		local slot = UI.new(
-			"Frame",
-			{
-				Name = def.id,
-				BackgroundColor3 = V.Slot,
-				BackgroundTransparency = V.SlotTransparency,
-				Size = UDim2.fromOffset(110, 110),
-				LayoutOrder = i,
-				Parent = loadout,
-			}
-		)
+		local slot = UI.new("Frame", {
+			Name = def.id,
+			BackgroundColor3 = V.Slot,
+			BackgroundTransparency = V.SlotTransparency,
+			Size = UDim2.fromOffset(110, 110),
+			LayoutOrder = i,
+			Parent = loadout,
+		})
 		UI.corner(slot, 14)
 		local ring = UI.stroke(slot, 3, V.SlotRing)
-		local icon = UI.icon(
-			def.icon,
-			{
-				Size = UDim2.fromOffset(68, 68),
-				Position = UDim2.new(0.5, 0, 0, 10),
-				AnchorPoint = Vector2.new(0.5, 0),
-				Parent = slot,
-			}
-		)
-		local lock = UI.icon(
-			"lock",
-			{
-				Name = "Lock",
-				Size = UDim2.fromOffset(58, 58),
-				Position = UDim2.new(0.5, 0, 0, 12),
-				AnchorPoint = Vector2.new(0.5, 0),
-				Parent = slot,
-			}
-		)
-		local key = UI.new(
-			"Frame",
-			{
-				Name = "Key",
-				BackgroundColor3 = Color3.new(1, 1, 1),
-				Size = UDim2.fromOffset(28, 28),
-				Position = UDim2.fromOffset(6, 6),
-				Parent = slot,
-			}
-		)
+		local icon = UI.icon(def.icon, {
+			Size = UDim2.fromOffset(68, 68),
+			Position = UDim2.new(0.5, 0, 0, 10),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Parent = slot,
+		})
+		local lock = UI.icon("lock", {
+			Name = "Lock",
+			Size = UDim2.fromOffset(58, 58),
+			Position = UDim2.new(0.5, 0, 0, 12),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Parent = slot,
+		})
+		local key = UI.new("Frame", {
+			Name = "Key",
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			Size = UDim2.fromOffset(28, 28),
+			Position = UDim2.fromOffset(6, 6),
+			Parent = slot,
+		})
 		UI.corner(key, 7)
 		UI.stroke(key, 2)
 		UI.text({
@@ -398,22 +353,19 @@ function LobbyUI.start()
 		loadSlots[def.id] = { icon = icon, lock = lock, status = status, ring = ring }
 	end
 
-	local playButton = UI.button(
-		{
-			Name = "PlayButton",
-			Text = "Play",
-			style = "green",
-			Size = UDim2.fromOffset(340, 92),
-			Position = UDim2.new(0.5, 0, 1, -236),
-			AnchorPoint = Vector2.new(0.5, 1),
-			textSize = 44,
-			strokeWidth = 6,
-			Parent = root,
-		},
-		function()
-			Remotes.get("QuickPlay"):FireServer()
-		end
-	)
+	local playButton = UI.button({
+		Name = "PlayButton",
+		Text = "Play",
+		style = "green",
+		Size = UDim2.fromOffset(340, 92),
+		Position = UDim2.new(0.5, 0, 1, -236),
+		AnchorPoint = Vector2.new(0.5, 1),
+		textSize = 44,
+		strokeWidth = 6,
+		Parent = root,
+	}, function()
+		Remotes.get("QuickPlay"):FireServer()
+	end)
 	local queueChip, queueLabel = UI.chip({
 		Name = "Queue",
 		Text = "",

@@ -65,6 +65,7 @@ tools/                 Lune CLIs and the headless loader / TestEZ-compatible run
 The whole UI is designed in Figma first: **Slime Siege UI**, https://www.figma.com/design/QeUFsylb3ObuML5Z1agJr7.
 - **Design System page:** color tokens with contrast ratios (all text pairs are at least 4.5:1, for example white on green 5.2:1 and ink on gold 10.5:1), Fredoka One text styles, the Chunky shadow, the components (Button, IconButton, StatPill, HotbarSlot, TowerCard) and 19 vector icons.
 - **Screens page:** desktop match HUD with the tower panel, victory and defeat results, lobby with the tower shop, phone HUD (844×390), round-start banner, and the **Motion spec** (every animation's trigger, timing and easing).
+- **Style v2 (reference) page:** the current style, matched to a reference screenshot of a popular Roblox tower-defense lobby. It has dark translucent gradient panels with thick bright borders, white UPPERCASE Montserrat labels with black outlines, Fredoka One numbers, illustrated icons, wide menu tiles, square icon tiles with notification badges, a big green PLAY button, numbered loadout slots, outlined currency counters and a segmented XP bar. It includes Lobby v2, Match HUD v2 (with the tower panel) and Results v2.
 - **In the game:** `Data/Theme.luau` holds the tokens and motion timings. `Controllers/UI.luau` builds the chunky surfaces, press-in buttons, pills, chips and bars, and scales the 1920×1080 design to any screen. `Controllers/Motion.luau` runs the animations and respects Reduced Motion. `HUD`, `TowerPanel`, `Results` and `LobbyUI` are built from the screens.
 - **Icons:** in Figma, select the `Icons` frame on the Design System page and export all `Icon/*` components as PNG @2x. Upload them in Studio (Asset Manager > Images) and paste the ids into `Theme.Icons`. Until then the game shows emoji.
 
@@ -98,7 +99,7 @@ The whole UI is designed in Figma first: **Slime Siege UI**, https://www.figma.c
 | `fuzz` | 6/6 | 1,728 garbage calls (nil, NaN, ±inf, huge strings, tables, buffers, wrong types) to every remote: no script errors, nothing placed or bought, rate limits trip |
 | `coop` | 18/18 | 4 players: separate cash, can't upgrade or sell a teammate's tower, 2/4 vs 3/4 skip and speed majorities, read-only teammate panel, a player leaving mid-wave, round bonus to all |
 | `data` | 14/14 | Live mode: profile created and session-locked, lock released on leave, kicked (and data untouched) when another server holds the lock, stale lock taken over, kicked on DataStore outage, BindToClose flush, no Debug remote |
-| `lobby` | 12/12 | Live lobby: Goo unlocks (and refusal without enough Goo), unconfigured products refused, 2 players on the pad teleport together with a reserved code and party data |
+| `lobby` | 14/14 | Live lobby: Goo unlocks (and refusal without enough Goo), unconfigured products refused, 2 players on the pad teleport together with a reserved code and party data |
 
 Bugs these runs found and fixed: round 1 never auto-started unless the lobby had sent party data (`partyDeadline` defaulted to infinity). Studio's template Baseplate and SpawnLocation now get removed so they don't z-fight with the map.
 
