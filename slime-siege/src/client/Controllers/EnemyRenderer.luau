@@ -15,6 +15,8 @@ local Path = require(Shared.Sim.Path)
 local Packet = require(Shared.Net.Packet)
 local Remotes = require(Shared.Net.Remotes)
 
+local Theme = require(Shared.Data.Theme)
+
 local Effects = require(script.Parent.Effects)
 
 local EnemyRenderer = {}
@@ -22,6 +24,8 @@ local EnemyRenderer = {}
 local HIDDEN = CFrame.new(0, -1000, 0)
 local SNAPSHOT_INTERVAL = 1 / Config.NET_SNAPSHOT_HZ
 local FACE_TEXTURE = "rbxasset://textures/face.png"
+local SLIME_MESH = Theme.Meshes.slime
+local USE_MESH = SLIME_MESH.meshId ~= "" -- art/blender/make_slime.py, once uploaded
 
 type Record = {
 	id: number,
@@ -51,9 +55,10 @@ local function rgb(c: { number }): Color3
 	return Color3.fromRGB(c[1], c[2], c[3])
 end
 
+local meshOf: { [BasePart]: SpecialMesh } = {}
+
 local function newPart(): BasePart
 	local part = Instance.new("Part")
-	part.Shape = Enum.PartType.Ball
 	part.Anchored = true
 	part.CanCollide = false
 	part.CanQuery = false
@@ -61,20 +66,43 @@ local function newPart(): BasePart
 	part.CastShadow = false
 	part.Material = Enum.Material.SmoothPlastic
 	part.CFrame = HIDDEN
-	local face = Instance.new("Decal")
-	face.Name = "Face"
-	face.Texture = FACE_TEXTURE
-	face.Face = Enum.NormalId.Front
-	face.Parent = part
+	if USE_MESH then
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.FileMesh
+		mesh.MeshId = SLIME_MESH.meshId
+		mesh.TextureId = SLIME_MESH.textureId
+		mesh.Parent = part
+		meshOf[part] = mesh
+	else
+		part.Shape = Enum.PartType.Ball
+		local face = Instance.new("Decal")
+		face.Name = "Face"
+		face.Texture = FACE_TEXTURE
+		face.Face = Enum.NormalId.Front
+		face.Parent = part
+	end
 	part.Parent = folder
 	return part
+end
+
+-- With a textured mesh, the slime colour tints the texture so the face stays dark.
+local function setColor(part: BasePart, color: Color3)
+	part.Color = color
+	local mesh = meshOf[part]
+	if mesh then
+		mesh.VertexColor = Vector3.new(color.R, color.G, color.B)
+	end
 end
 
 local function styleFor(record: Record)
 	local part = record.part
 	local def = SlimeData[record.kind]
-	part.Color = rgb(def.color)
+	setColor(part, rgb(def.color))
 	part.Size = Vector3.one * def.size
+	local mesh = meshOf[part]
+	if mesh then
+		mesh.Scale = Vector3.one * (def.size / SLIME_MESH.nativeSize)
+	end
 	local frozen = bit32.band(record.flags, 1) ~= 0
 	if record.camo then
 		part.Material = Enum.Material.ForceField
@@ -205,7 +233,7 @@ local function render(dt: number)
 		table.insert(parts, record.part)
 		table.insert(cframes, CFrame.lookAt(pos, pos + Vector3.new(dx, 0, dz)))
 		if record.kind == "Rainbow" and not record.camo then
-			record.part.Color = Color3.fromHSV((elapsed * 0.4 + record.phase / 6.283) % 1, 0.65, 1)
+			setColor(record.part, Color3.fromHSV((elapsed * 0.4 + record.phase / 6.283) % 1, 0.65, 1))
 		end
 	end
 	if #parts > 0 then

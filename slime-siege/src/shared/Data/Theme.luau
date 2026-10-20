@@ -49,6 +49,12 @@ Theme.Icons = {
 	owl = { image = "", glyph = "🦉" },
 } :: { [string]: Icon }
 
+-- Optional meshes made with art/blender/*.py. Leave ids empty to use the built-in primitives.
+-- slime: one white-bodied mesh + face texture; the game tints it per slime (VertexColor).
+Theme.Meshes = {
+	slime = { meshId = "", textureId = "", nativeSize = 2 },
+}
+
 -- Built-in engine sounds so the game makes noise with zero uploads; replace with your own ids.
 Theme.Sounds = {
 	squish = { id = "rbxasset://sounds/action_jump_land.mp3", volume = 0.35, pitch = 1.6, jitter = 0.25 },
