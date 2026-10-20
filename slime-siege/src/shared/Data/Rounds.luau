@@ -18,10 +18,10 @@ local Rounds: { { Group } } = {
 		{ slimeType = "Green", count = 15, spacingSeconds = 1.015, delay = 0 },
 		{ slimeType = "Blue", count = 5, spacingSeconds = 1.015, delay = 9.135 },
 	},
-	-- Round 4: difficulty 239.2
+	-- Round 4: difficulty 239.5
 	{
-		{ slimeType = "Green", count = 11, spacingSeconds = 0.998, delay = 0 },
-		{ slimeType = "Blue", count = 8, spacingSeconds = 0.998, delay = 6.587 },
+		{ slimeType = "Green", count = 11, spacingSeconds = 0.997, delay = 0 },
+		{ slimeType = "Blue", count = 8, spacingSeconds = 0.997, delay = 6.58 },
 	},
 	-- Round 5: difficulty 273.7
 	{
@@ -38,31 +38,31 @@ local Rounds: { { Group } } = {
 		{ slimeType = "Blue", count = 12, spacingSeconds = 1.218, delay = 0 },
 		{ slimeType = "Yellow", count = 5, spacingSeconds = 1.218, delay = 8.77 },
 	},
-	-- Round 8: difficulty 409.3
+	-- Round 8: difficulty 409.6
 	{
-		{ slimeType = "Blue", count = 7, spacingSeconds = 1.328, delay = 0 },
-		{ slimeType = "Yellow", count = 10, spacingSeconds = 1.328, delay = 5.578 },
+		{ slimeType = "Blue", count = 7, spacingSeconds = 1.327, delay = 0 },
+		{ slimeType = "Yellow", count = 10, spacingSeconds = 1.327, delay = 5.573 },
 	},
 	-- Round 9: difficulty 468.2
 	{
 		{ slimeType = "Yellow", count = 17, spacingSeconds = 1.525, delay = 0 },
 	},
-	-- Round 10: difficulty 535.2
+	-- Round 10: difficulty 535.6
 	{
-		{ slimeType = "Blue", count = 8, spacingSeconds = 1.303, delay = 0 },
-		{ slimeType = "Yellow", count = 7, spacingSeconds = 1.303, delay = 6.254 },
-		{ slimeType = "Pink", count = 4, spacingSeconds = 1.303, delay = 11.727 },
+		{ slimeType = "Blue", count = 8, spacingSeconds = 1.302, delay = 0 },
+		{ slimeType = "Yellow", count = 7, spacingSeconds = 1.302, delay = 6.25 },
+		{ slimeType = "Pink", count = 4, spacingSeconds = 1.302, delay = 11.718 },
 	},
-	-- Round 11: difficulty 612.2
+	-- Round 11: difficulty 612.5
 	{
-		{ slimeType = "Yellow", count = 10, spacingSeconds = 1.598, delay = 0 },
-		{ slimeType = "Pink", count = 8, spacingSeconds = 1.598, delay = 9.588 },
+		{ slimeType = "Yellow", count = 10, spacingSeconds = 1.597, delay = 0 },
+		{ slimeType = "Pink", count = 8, spacingSeconds = 1.597, delay = 9.582 },
 	},
-	-- Round 12: difficulty 700.0
+	-- Round 12: difficulty 700.6
 	{
-		{ slimeType = "Green", count = 14, spacingSeconds = 1.196, delay = 0, camo = true },
-		{ slimeType = "Yellow", count = 9, spacingSeconds = 1.196, delay = 10.046 },
-		{ slimeType = "Pink", count = 7, spacingSeconds = 1.196, delay = 16.505 },
+		{ slimeType = "Green", count = 14, spacingSeconds = 1.195, delay = 0, camo = true },
+		{ slimeType = "Yellow", count = 9, spacingSeconds = 1.195, delay = 10.038 },
+		{ slimeType = "Pink", count = 7, spacingSeconds = 1.195, delay = 16.491 },
 	},
 	-- Round 13: difficulty 800.9
 	{
@@ -74,16 +74,16 @@ local Rounds: { { Group } } = {
 		{ slimeType = "Pink", count = 11, spacingSeconds = 1.398, delay = 0 },
 		{ slimeType = "Black", count = 7, spacingSeconds = 1.398, delay = 9.227 },
 	},
-	-- Round 15: difficulty 1047.2
+	-- Round 15: difficulty 1048.0
 	{
-		{ slimeType = "Blue", count = 12, spacingSeconds = 1.23, delay = 0, camo = true },
-		{ slimeType = "Pink", count = 11, spacingSeconds = 1.23, delay = 8.856 },
-		{ slimeType = "Black", count = 5, spacingSeconds = 1.23, delay = 16.974 },
+		{ slimeType = "Blue", count = 12, spacingSeconds = 1.229, delay = 0, camo = true },
+		{ slimeType = "Pink", count = 11, spacingSeconds = 1.229, delay = 8.849 },
+		{ slimeType = "Black", count = 5, spacingSeconds = 1.229, delay = 16.96 },
 	},
-	-- Round 16: difficulty 1197.5
+	-- Round 16: difficulty 1198.4
 	{
-		{ slimeType = "Pink", count = 14, spacingSeconds = 1.294, delay = 0 },
-		{ slimeType = "Metal", count = 9, spacingSeconds = 1.294, delay = 10.87 },
+		{ slimeType = "Pink", count = 14, spacingSeconds = 1.293, delay = 0 },
+		{ slimeType = "Metal", count = 9, spacingSeconds = 1.293, delay = 10.861 },
 	},
 	-- Round 17: difficulty 1370.6
 	{
@@ -96,124 +96,124 @@ local Rounds: { { Group } } = {
 		{ slimeType = "Black", count = 8, spacingSeconds = 0.998, delay = 8.383 },
 		{ slimeType = "Metal", count = 8, spacingSeconds = 0.998, delay = 13.174 },
 	},
-	-- Round 19: difficulty 1791.4
+	-- Round 19: difficulty 1792.9
 	{
-		{ slimeType = "Pink", count = 15, spacingSeconds = 1.163, delay = 0 },
-		{ slimeType = "Black", count = 8, spacingSeconds = 1.163, delay = 10.467 },
-		{ slimeType = "Metal", count = 8, spacingSeconds = 1.163, delay = 16.049 },
+		{ slimeType = "Pink", count = 15, spacingSeconds = 1.162, delay = 0 },
+		{ slimeType = "Black", count = 8, spacingSeconds = 1.162, delay = 10.458 },
+		{ slimeType = "Metal", count = 8, spacingSeconds = 1.162, delay = 16.036 },
 	},
-	-- Round 20: difficulty 2048.7
+	-- Round 20: difficulty 2050.2
 	{
-		{ slimeType = "Yellow", count = 26, spacingSeconds = 2.667, delay = 0 },
-		{ slimeType = "Pink", count = 19, spacingSeconds = 2.667, delay = 41.605 },
-		{ slimeType = "Boss", count = 1, spacingSeconds = 2.667, delay = 72.009 },
+		{ slimeType = "Yellow", count = 26, spacingSeconds = 2.665, delay = 0 },
+		{ slimeType = "Pink", count = 19, spacingSeconds = 2.665, delay = 41.574 },
+		{ slimeType = "Boss", count = 1, spacingSeconds = 2.665, delay = 71.955 },
 	},
-	-- Round 21: difficulty 2343.2
+	-- Round 21: difficulty 2512.3
 	{
-		{ slimeType = "Pink", count = 24, spacingSeconds = 1.352, delay = 0 },
-		{ slimeType = "Rainbow", count = 8, spacingSeconds = 1.352, delay = 19.469 },
+		{ slimeType = "Pink", count = 24, spacingSeconds = 1.261, delay = 0 },
+		{ slimeType = "Rainbow", count = 8, spacingSeconds = 1.261, delay = 18.158 },
 	},
-	-- Round 22: difficulty 2679.1
+	-- Round 22: difficulty 3079.8
 	{
-		{ slimeType = "Black", count = 11, spacingSeconds = 0.784, delay = 0 },
-		{ slimeType = "Metal", count = 11, spacingSeconds = 0.784, delay = 5.174 },
-		{ slimeType = "Rainbow", count = 7, spacingSeconds = 0.784, delay = 10.349 },
+		{ slimeType = "Black", count = 11, spacingSeconds = 0.682, delay = 0 },
+		{ slimeType = "Metal", count = 11, spacingSeconds = 0.682, delay = 4.501 },
+		{ slimeType = "Rainbow", count = 7, spacingSeconds = 0.682, delay = 9.002 },
 	},
-	-- Round 23: difficulty 3062.9
+	-- Round 23: difficulty 3776.3
 	{
-		{ slimeType = "Pink", count = 18, spacingSeconds = 1.064, delay = 0, camo = true },
-		{ slimeType = "Metal", count = 12, spacingSeconds = 1.064, delay = 11.491 },
-		{ slimeType = "Rainbow", count = 8, spacingSeconds = 1.064, delay = 19.152 },
+		{ slimeType = "Pink", count = 18, spacingSeconds = 0.863, delay = 0, camo = true },
+		{ slimeType = "Metal", count = 12, spacingSeconds = 0.863, delay = 9.32 },
+		{ slimeType = "Rainbow", count = 8, spacingSeconds = 0.863, delay = 15.534 },
 	},
-	-- Round 24: difficulty 3504.8
+	-- Round 24: difficulty 4625.7
 	{
-		{ slimeType = "Rainbow", count = 23, spacingSeconds = 0.945, delay = 0 },
+		{ slimeType = "Rainbow", count = 23, spacingSeconds = 0.716, delay = 0 },
 	},
-	-- Round 25: difficulty 4006.9
+	-- Round 25: difficulty 5665.8
 	{
-		{ slimeType = "Black", count = 15, spacingSeconds = 0.847, delay = 0, camo = true },
-		{ slimeType = "Rainbow", count = 18, spacingSeconds = 0.847, delay = 7.623 },
+		{ slimeType = "Black", count = 15, spacingSeconds = 0.599, delay = 0, camo = true },
+		{ slimeType = "Rainbow", count = 18, spacingSeconds = 0.599, delay = 5.391 },
 	},
-	-- Round 26: difficulty 4583.9
+	-- Round 26: difficulty 6948.4
 	{
-		{ slimeType = "Pink", count = 26, spacingSeconds = 1.005, delay = 0 },
-		{ slimeType = "Metal", count = 17, spacingSeconds = 1.005, delay = 15.678 },
-		{ slimeType = "Rainbow", count = 11, spacingSeconds = 1.005, delay = 25.929 },
+		{ slimeType = "Pink", count = 26, spacingSeconds = 0.663, delay = 0 },
+		{ slimeType = "Metal", count = 17, spacingSeconds = 0.663, delay = 10.343 },
+		{ slimeType = "Rainbow", count = 11, spacingSeconds = 0.663, delay = 17.105 },
 	},
-	-- Round 27: difficulty 5240.4
+	-- Round 27: difficulty 8513.2
 	{
-		{ slimeType = "Yellow", count = 25, spacingSeconds = 0.887, delay = 0, camo = true },
-		{ slimeType = "Black", count = 19, spacingSeconds = 0.887, delay = 13.305 },
-		{ slimeType = "Rainbow", count = 16, spacingSeconds = 0.887, delay = 23.417 },
+		{ slimeType = "Yellow", count = 25, spacingSeconds = 0.546, delay = 0, camo = true },
+		{ slimeType = "Black", count = 19, spacingSeconds = 0.546, delay = 8.19 },
+		{ slimeType = "Rainbow", count = 16, spacingSeconds = 0.546, delay = 14.414 },
 	},
-	-- Round 28: difficulty 5991.2
+	-- Round 28: difficulty 10434.8
 	{
-		{ slimeType = "Rainbow", count = 21, spacingSeconds = 0.681, delay = 0 },
-		{ slimeType = "Metal", count = 28, spacingSeconds = 0.681, delay = 8.581 },
+		{ slimeType = "Rainbow", count = 21, spacingSeconds = 0.391, delay = 0 },
+		{ slimeType = "Metal", count = 28, spacingSeconds = 0.391, delay = 4.927 },
 	},
-	-- Round 29: difficulty 6852.4
+	-- Round 29: difficulty 12790.3
 	{
-		{ slimeType = "Pink", count = 36, spacingSeconds = 1.077, delay = 0, camo = true },
-		{ slimeType = "Rainbow", count = 28, spacingSeconds = 1.077, delay = 23.263 },
+		{ slimeType = "Pink", count = 36, spacingSeconds = 0.577, delay = 0, camo = true },
+		{ slimeType = "Rainbow", count = 28, spacingSeconds = 0.577, delay = 12.463 },
 	},
-	-- Round 30: difficulty 7834.5
+	-- Round 30: difficulty 15691.8
 	{
-		{ slimeType = "Rainbow", count = 13, spacingSeconds = 0.691, delay = 0, camo = true },
-		{ slimeType = "Rainbow", count = 18, spacingSeconds = 0.691, delay = 5.39 },
-		{ slimeType = "Metal", count = 27, spacingSeconds = 0.691, delay = 12.853 },
+		{ slimeType = "Rainbow", count = 13, spacingSeconds = 0.345, delay = 0, camo = true },
+		{ slimeType = "Rainbow", count = 18, spacingSeconds = 0.345, delay = 2.691 },
+		{ slimeType = "Metal", count = 27, spacingSeconds = 0.345, delay = 6.417 },
 	},
-	-- Round 31: difficulty 8968.6
+	-- Round 31: difficulty 19230.8
 	{
-		{ slimeType = "Black", count = 40, spacingSeconds = 0.669, delay = 0 },
-		{ slimeType = "Metal", count = 20, spacingSeconds = 0.669, delay = 16.056 },
-		{ slimeType = "Rainbow", count = 20, spacingSeconds = 0.669, delay = 24.084 },
+		{ slimeType = "Black", count = 40, spacingSeconds = 0.312, delay = 0 },
+		{ slimeType = "Metal", count = 20, spacingSeconds = 0.312, delay = 7.488 },
+		{ slimeType = "Rainbow", count = 20, spacingSeconds = 0.312, delay = 11.232 },
 	},
-	-- Round 32: difficulty 10259.1
+	-- Round 32: difficulty 23571.1
 	{
-		{ slimeType = "Metal", count = 34, spacingSeconds = 0.664, delay = 0, camo = true },
-		{ slimeType = "Rainbow", count = 39, spacingSeconds = 0.664, delay = 13.546 },
+		{ slimeType = "Metal", count = 34, spacingSeconds = 0.289, delay = 0, camo = true },
+		{ slimeType = "Rainbow", count = 39, spacingSeconds = 0.289, delay = 5.896 },
 	},
-	-- Round 33: difficulty 11730.7
+	-- Round 33: difficulty 28905.8
 	{
-		{ slimeType = "Pink", count = 75, spacingSeconds = 1.03, delay = 0, camo = true },
-		{ slimeType = "Rainbow", count = 38, spacingSeconds = 1.03, delay = 46.35 },
+		{ slimeType = "Pink", count = 75, spacingSeconds = 0.418, delay = 0, camo = true },
+		{ slimeType = "Rainbow", count = 38, spacingSeconds = 0.418, delay = 18.81 },
 	},
-	-- Round 34: difficulty 13404.3
+	-- Round 34: difficulty 35368.4
 	{
-		{ slimeType = "Rainbow", count = 70, spacingSeconds = 0.752, delay = 0 },
+		{ slimeType = "Rainbow", count = 70, spacingSeconds = 0.285, delay = 0 },
 	},
-	-- Round 35: difficulty 15328.4
+	-- Round 35: difficulty 43430.4
 	{
-		{ slimeType = "Black", count = 47, spacingSeconds = 0.595, delay = 0, camo = true },
-		{ slimeType = "Metal", count = 47, spacingSeconds = 0.595, delay = 16.779 },
-		{ slimeType = "Rainbow", count = 31, spacingSeconds = 0.595, delay = 33.558 },
+		{ slimeType = "Black", count = 47, spacingSeconds = 0.21, delay = 0, camo = true },
+		{ slimeType = "Metal", count = 47, spacingSeconds = 0.21, delay = 5.922 },
+		{ slimeType = "Rainbow", count = 31, spacingSeconds = 0.21, delay = 11.844 },
 	},
-	-- Round 36: difficulty 17527.0
+	-- Round 36: difficulty 53243.7
 	{
-		{ slimeType = "Rainbow", count = 35, spacingSeconds = 0.723, delay = 0, camo = true },
-		{ slimeType = "Rainbow", count = 53, spacingSeconds = 0.723, delay = 15.183 },
+		{ slimeType = "Rainbow", count = 35, spacingSeconds = 0.238, delay = 0, camo = true },
+		{ slimeType = "Rainbow", count = 53, spacingSeconds = 0.238, delay = 4.998 },
 	},
-	-- Round 37: difficulty 20065.4
+	-- Round 37: difficulty 65212.5
 	{
-		{ slimeType = "Metal", count = 79, spacingSeconds = 0.572, delay = 0 },
-		{ slimeType = "Rainbow", count = 59, spacingSeconds = 0.572, delay = 27.113 },
+		{ slimeType = "Metal", count = 79, spacingSeconds = 0.176, delay = 0 },
+		{ slimeType = "Rainbow", count = 59, spacingSeconds = 0.176, delay = 8.342 },
 	},
-	-- Round 38: difficulty 22945.6
+	-- Round 38: difficulty 79955.9
 	{
-		{ slimeType = "Pink", count = 66, spacingSeconds = 0.791, delay = 0, camo = true },
-		{ slimeType = "Black", count = 44, spacingSeconds = 0.791, delay = 31.324, camo = true },
-		{ slimeType = "Rainbow", count = 66, spacingSeconds = 0.791, delay = 52.206 },
+		{ slimeType = "Pink", count = 66, spacingSeconds = 0.227, delay = 0, camo = true },
+		{ slimeType = "Black", count = 44, spacingSeconds = 0.227, delay = 8.989, camo = true },
+		{ slimeType = "Rainbow", count = 66, spacingSeconds = 0.227, delay = 14.982 },
 	},
-	-- Round 39: difficulty 26220.3
+	-- Round 39: difficulty 98109.9
 	{
-		{ slimeType = "Rainbow", count = 62, spacingSeconds = 0.681, delay = 0, camo = true },
-		{ slimeType = "Rainbow", count = 62, spacingSeconds = 0.681, delay = 25.333 },
+		{ slimeType = "Rainbow", count = 62, spacingSeconds = 0.182, delay = 0, camo = true },
+		{ slimeType = "Rainbow", count = 62, spacingSeconds = 0.182, delay = 6.77 },
 	},
-	-- Round 40: difficulty 29985.6
+	-- Round 40: difficulty 119942.2
 	{
-		{ slimeType = "Rainbow", count = 42, spacingSeconds = 0.744, delay = 0, camo = true },
-		{ slimeType = "Rainbow", count = 97, spacingSeconds = 0.744, delay = 18.749 },
-		{ slimeType = "Boss", count = 1, spacingSeconds = 0.744, delay = 62.05 },
+		{ slimeType = "Rainbow", count = 42, spacingSeconds = 0.186, delay = 0, camo = true },
+		{ slimeType = "Rainbow", count = 97, spacingSeconds = 0.186, delay = 4.687 },
+		{ slimeType = "Boss", count = 1, spacingSeconds = 0.186, delay = 15.512 },
 	},
 }
 

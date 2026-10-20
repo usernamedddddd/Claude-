@@ -1,0 +1,49 @@
+name: Slime Siege
+
+on:
+  push:
+    paths: ["slime-siege/**", ".github/workflows/slime-siege.yml"]
+  pull_request:
+    paths: ["slime-siege/**", ".github/workflows/slime-siege.yml"]
+
+defaults:
+  run:
+    working-directory: slime-siege
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          mkdir -p "$HOME/bin" && cd "$HOME/bin"
+          curl -sSLo lune.zip https://github.com/lune-org/lune/releases/download/v0.8.9/lune-0.8.9-linux-x86_64.zip
+          curl -sSLo rojo.zip https://github.com/rojo-rbx/rojo/releases/download/v7.4.4/rojo-7.4.4-linux-x86_64.zip
+          curl -sSLo stylua.zip https://github.com/JohnnyMorganz/StyLua/releases/download/v0.20.0/stylua-linux-x86_64.zip
+          curl -sSLo lsp.zip https://github.com/JohnnyMorganz/luau-lsp/releases/download/1.53.0/luau-lsp-linux-x86_64.zip
+          curl -sSLo globalTypes.d.luau https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/1.53.0/scripts/globalTypes.None.d.luau
+          for z in *.zip; do unzip -oq "$z"; done
+          chmod +x lune rojo stylua luau-lsp
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Format
+        run: stylua --check src tests tools
+
+      - name: Type check (--!strict)
+        run: |
+          rojo sourcemap default.project.json -o sourcemap.json
+          luau-lsp analyze --sourcemap=sourcemap.json \
+            --definitions="$HOME/bin/globalTypes.d.luau" --definitions=tools/testez.d.luau src tests
+
+      - name: Rounds.luau is up to date with the generator
+        run: |
+          lune run tools/generate_rounds
+          git diff --exit-code -- src/shared/Data/Rounds.luau
+
+      - name: Unit tests + simulator acceptance (TestEZ specs)
+        run: lune run tools/test
+
+      - name: Build place file
+        run: rojo build default.project.json -o SlimeSiege.rbxl

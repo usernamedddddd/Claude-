@@ -21,7 +21,9 @@ local RoundGenerator = {}
 RoundGenerator.ROUNDS = 40
 RoundGenerator.BOSS_ROUNDS = { [20] = true, [40] = true }
 RoundGenerator.FIRST_TARGET = 160 -- difficulty of round 1 (20 greens, 1s apart)
-RoundGenerator.LAST_TARGET = 30000
+RoundGenerator.MID_ROUND = 20
+RoundGenerator.MID_TARGET = 2050 -- difficulty of round 20 (first boss)
+RoundGenerator.LAST_TARGET = 120000
 RoundGenerator.FIRST_BUDGET = 20 -- total layers in round 1 (excluding bosses)
 RoundGenerator.BUDGET_GROWTH = 1.12
 RoundGenerator.MIN_SPACING = 0.12
@@ -79,9 +81,15 @@ local function round3(n: number): number
 	return math.floor(n * 1000 + 0.5) / 1000
 end
 
+-- Two geometric segments: a gentle ramp to the first boss, then a steeper late game.
 function RoundGenerator.targetDifficulty(round: number): number
-	local growth = (RoundGenerator.LAST_TARGET / RoundGenerator.FIRST_TARGET) ^ (1 / (RoundGenerator.ROUNDS - 1))
-	return RoundGenerator.FIRST_TARGET * growth ^ (round - 1)
+	local mid, last = RoundGenerator.MID_ROUND, RoundGenerator.ROUNDS
+	if round <= mid then
+		local growth = (RoundGenerator.MID_TARGET / RoundGenerator.FIRST_TARGET) ^ (1 / (mid - 1))
+		return RoundGenerator.FIRST_TARGET * growth ^ (round - 1)
+	end
+	local growth = (RoundGenerator.LAST_TARGET / RoundGenerator.MID_TARGET) ^ (1 / (last - mid))
+	return RoundGenerator.MID_TARGET * growth ^ (round - mid)
 end
 
 function RoundGenerator.layerBudget(round: number): number

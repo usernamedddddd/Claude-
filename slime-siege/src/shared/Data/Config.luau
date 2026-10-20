@@ -37,6 +37,13 @@ local Config = {
 	XP_WIN_BONUS = 150,
 	XP_PER_LEVEL = 500,
 
+	-- Game pass perks (see Data/Products)
+	EXTRA_CASH_PASS_AMOUNT = 150,
+	DOUBLE_GOO_MULTIPLIER = 2,
+
+	-- Studio conveniences (never active in live servers)
+	STUDIO_UNLOCK_ALL = true,
+
 	-- Lobby
 	QUEUE_COUNTDOWN = 10,
 	RETURN_TO_LOBBY_SECONDS = 20,
