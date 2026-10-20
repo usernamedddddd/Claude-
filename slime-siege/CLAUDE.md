@@ -1,9 +1,9 @@
 # Slime Siege: working rules for Claude
 
-- **UI designs go through the Figma connector.** Design or redesign any UI (HUD, tower panel,
-  lobby, shop, results, menus) in Figma first using the Figma connector, then implement it in
-  `src/client/Controllers` from that design. If the Figma connector is unavailable, say so and
-  ask before falling back to designing in code.
+- **All design work goes through the Figma connector.** Any design (UI screens, HUD, menus,
+  icons, logos, thumbnails, store art, map layouts, tower/slime concept art, diagrams) is made
+  or iterated in Figma first, then implemented from that design. If the Figma connector is
+  unavailable, say so and ask before designing any other way.
 - **Do not update Google Drive.** Progress notes go in `README.md` in this repo instead.
 - Before pushing: `stylua src tests tools`, strict `luau-lsp analyze`, `lune run tools/test`,
   `lune run tools/smoke` (see README).
