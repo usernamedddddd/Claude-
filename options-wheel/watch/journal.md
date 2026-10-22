@@ -62,3 +62,24 @@ Observation for tuning: preferring standard monthly expiries (Nov 20, Dec 18) wo
 Others still blocked by earnings: SOFI (Oct 27), F (Oct 28 pm), PFE (Nov 3), NU (Nov 12 pm).
 
 Open positions: none · Realized premium: $0 · Collateral needed: $0
+
+### 2026-10-22 (Thu) 10:25 ET
+
+Prices: F 12.01 · SOFI 14.96 · T 22.60 (+3% rebound) · PFE 30.25 · NU 14.76
+
+T, 2026-11-27 expiry (36 DTE): no put passed again.
+
+| Strike | Δ | Bid/Ask | OI | Fails |
+|---|---|---|---|---|
+| 21P | 0.24 | 0.14/0.70 | 77 | OI, spread 133% |
+| 21.5P | 0.26 | 0.24/0.40 | 2368 | spread 50% |
+| 22P | 0.34 | 0.33/0.51 | 420 | delta > 0.30 |
+
+Observation: the 21.5P was otherwise a fit (Δ 0.26, OI 2368, ~15%/yr at the 0.32 mid), but the
+15%-of-mid spread limit is very hard to meet on cheap options: a $0.32 option needs a ≤ $0.05 spread.
+A cap like "15% of mid or $0.10, whichever is larger" would suit $10–30 stocks better.
+Not changed; the user decides.
+
+Others still blocked by earnings: SOFI (Oct 27), F (Oct 28 pm), PFE (Nov 3), NU (Nov 12 pm).
+
+Open positions: none · Realized premium: $0 · Collateral needed: $0
