@@ -105,8 +105,8 @@ Open positions: none · Realized premium: $0 · Collateral needed: $0
 - Premium: $0. Trades opened: 0, closed: 0. Open risk: none.
 - Why: earnings season blocked 4 of 5 tickers all week. T was eligible from Oct 21, but the
   spread filter rejected every candidate on all 3 days (50–133% vs the 15% max).
-- Notable: T swung −6%, +3%, −5% after earnings. A put sold on Oct 21 at the 21 strike would
-  now be about breakeven, so the filters spared nothing here, though they also earned nothing.
+- Notable: T swung −6%, +3%, −5% after earnings. Had the 21P been sold on Oct 21 at its 0.32 mid,
+  it would now be marked at 0.51, about a $19 paper loss, so the filters kept us out of a losing entry.
 - Main finding: as written, the spread rule effectively blocks options under ~$1 on these
   stocks. Unless it's loosened (e.g. 15% of mid or $0.10, whichever is larger), the test may
   produce few or no trades. Week 2 opens up SOFI (Oct 27) and F (Oct 29).
