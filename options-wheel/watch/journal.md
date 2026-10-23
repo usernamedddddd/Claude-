@@ -83,3 +83,30 @@ Not changed; the user decides.
 Others still blocked by earnings: SOFI (Oct 27), F (Oct 28 pm), PFE (Nov 3), NU (Nov 12 pm).
 
 Open positions: none · Realized premium: $0 · Collateral needed: $0
+
+### 2026-10-23 (Fri) 10:22 ET
+
+Prices: F 11.46 · SOFI 14.41 · T 21.57 (−5%) · PFE 29.86 · NU 14.61
+
+T, 2026-11-27 expiry (35 DTE): no put passed.
+
+| Strike | Δ | Bid/Ask | OI | Fails |
+|---|---|---|---|---|
+| 20P | 0.20 | 0.15/0.35 | 272 | spread 80% |
+| 20.5P | 0.26 | 0.22/0.40 | 51 | OI, spread 58% |
+| 21P | 0.36 | 0.35/0.66 | 98 | delta > 0.30 |
+
+Others still blocked by earnings: SOFI (Oct 27), F (Oct 28 pm), PFE (Nov 3), NU (Nov 12 pm).
+
+Open positions: none · Realized premium: $0 · Collateral needed: $0
+
+#### Week 1 summary (Oct 19–23)
+
+- Premium: $0. Trades opened: 0, closed: 0. Open risk: none.
+- Why: earnings season blocked 4 of 5 tickers all week. T was eligible from Oct 21, but the
+  spread filter rejected every candidate on all 3 days (50–133% vs the 15% max).
+- Notable: T swung −6%, +3%, −5% after earnings. A put sold on Oct 21 at the 21 strike would
+  now be about breakeven, so the filters spared nothing here, though they also earned nothing.
+- Main finding: as written, the spread rule effectively blocks options under ~$1 on these
+  stocks. Unless it's loosened (e.g. 15% of mid or $0.10, whichever is larger), the test may
+  produce few or no trades. Week 2 opens up SOFI (Oct 27) and F (Oct 29).
