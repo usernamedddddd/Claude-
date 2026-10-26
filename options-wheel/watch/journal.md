@@ -110,3 +110,23 @@ Open positions: none · Realized premium: $0 · Collateral needed: $0
 - Main finding: as written, the spread rule effectively blocks options under ~$1 on these
   stocks. Unless it's loosened (e.g. 15% of mid or $0.10, whichever is larger), the test may
   produce few or no trades. Week 2 opens up SOFI (Oct 27) and F (Oct 29).
+
+### 2026-10-26 (Mon) 10:24 ET
+
+Prices: F 11.69 · SOFI 14.60 · T 21.02 · PFE 30.06 · **NU 12.07 (−20.4%)**
+
+T, 2026-11-27 expiry (32 DTE; Dec 4 at 39 DTE is further from 35): no put passed.
+
+| Strike | Δ | Bid/Ask | OI | Fails |
+|---|---|---|---|---|
+| 19.5P | 0.16 | 0.04/0.28 | 249 | bid < 0.10, spread 150% |
+| 20P | 0.25 | 0.15/0.40 | 281 | spread 91% |
+| 20.5P | 0.34 | 0.21/0.50 | 57 | delta > 0.30 |
+
+Notable: NU gapped down 20% before its earnings date. It wasn't eligible (earnings Nov 12), so there
+was no paper position. Had a ~0.25Δ put been sold at about 14 strike, it would be ~$190 in the money
+per contract right now. That is the wheel's main risk: one bad gap wipes out many months of premium.
+
+Others still blocked by earnings: SOFI (tomorrow am), F (Oct 28 pm), PFE (Nov 3), NU (Nov 12 pm).
+
+Open positions: none · Realized premium: $0 · Collateral needed: $0
