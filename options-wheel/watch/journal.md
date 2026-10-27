@@ -7,15 +7,15 @@ Test window: 2026-10-19 → 2026-11-13, one run per trading day at ~10:22 ET.
 
 ## Open paper positions
 
-| Contract | Opened | Credit | Collateral |
-|---|---|---|---|
-| _none_ | | | |
+| Contract | Opened | Credit | Collateral | 50% target |
+|---|---|---|---|---|
+| SOFI 2026-12-04 15P ×1 (id 2b6afea8-14f4-436f-889e-158543f0b23b) | 2026-10-27 @ 0.39 | $39 | $1,500 | buy back ≤ 0.19 |
 
 ## Totals
 
 - Realized premium: $0.00
-- Collateral in use: $0
-- Trades closed: 0
+- Collateral in use: $1,500 (peak so far: $1,500)
+- Trades opened: 1 · closed: 0
 
 ## Log
 
@@ -130,3 +130,23 @@ per contract right now. That is the wheel's main risk: one bad gap wipes out man
 Others still blocked by earnings: SOFI (tomorrow am), F (Oct 28 pm), PFE (Nov 3), NU (Nov 12 pm).
 
 Open positions: none · Realized premium: $0 · Collateral needed: $0
+
+### 2026-10-27 (Tue) 10:50 ET
+
+Prices: F 11.78 · **SOFI 16.49 (+14% after earnings)** · T 21.08 · PFE 29.83 · NU 12.48
+
+Expiry picked: 2026-12-04 (38 DTE; nearer to 35 than Nov 27 at 31).
+
+**PAPER STO: SOFI 2026-12-04 15P ×1 @ 0.39** (mid of 0.37/0.41): Δ 0.24, OI 340, spread 10%,
+~25%/yr on $1,500 collateral. Credit $39 (≈ $38.95 after the $0.05 fee). Breakeven $14.61, 11% below the stock.
+
+| SOFI strike | Δ | Bid/Ask | OI | Result |
+|---|---|---|---|---|
+| 14.5P | 0.18 | 0.26/0.29 | 283 | passes (18%/yr) |
+| **15P** | **0.24** | **0.37/0.41** | **340** | **passes, closest to 0.25Δ → sold** |
+| 15.5P | 0.31 | 0.51/0.55 | 77 | delta > 0.30 |
+
+T, 2026-12-04: no put passed (20P Δ0.25 spread 52%; 19.5P OI 17; 20.5P Δ0.34).
+Still blocked by earnings: F (tomorrow pm), PFE (Nov 3), NU (Nov 12 pm).
+
+Open: SOFI 15P (mark 0.39, unrealized $0) · Realized premium: $0 · Collateral needed: $1,500
