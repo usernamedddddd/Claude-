@@ -150,3 +150,15 @@ T, 2026-12-04: no put passed (20P Δ0.25 spread 52%; 19.5P OI 17; 20.5P Δ0.34).
 Still blocked by earnings: F (tomorrow pm), PFE (Nov 3), NU (Nov 12 pm).
 
 Open: SOFI 15P (mark 0.39, unrealized $0) · Realized premium: $0 · Collateral needed: $1,500
+
+### 2026-10-28 (Wed) 10:29 ET
+
+Prices: F 11.75 · SOFI 16.88 · T 20.84 · PFE 29.60 · NU 12.10
+
+Manage: SOFI 12-04 15P marks at 0.285 (0.27/0.30) against 0.39 sold, so 27% of the credit is
+captured (+$10.50 unrealized). Below the 50% target, so hold.
+
+T, 2026-12-04 (37 DTE): no put passed (19.5P OI 20; 20P Δ0.28 spread 65%; 20.5P Δ0.37).
+Still blocked by earnings: F (reports tonight), PFE (Nov 3), NU (Nov 12 pm).
+
+Open: SOFI 15P (+$10.50) · Realized premium: $0 · Collateral needed: $1,500
