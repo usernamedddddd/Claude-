@@ -9,13 +9,13 @@ Test window: 2026-10-19 → 2026-11-13, one run per trading day at ~10:22 ET.
 
 | Contract | Opened | Credit | Collateral | 50% target |
 |---|---|---|---|---|
-| SOFI 2026-12-04 15P ×1 (id 2b6afea8-14f4-436f-889e-158543f0b23b) | 2026-10-27 @ 0.39 | $39 | $1,500 | buy back ≤ 0.19 |
+| SOFI 2026-12-04 16P ×1 (id 74f5e363-2b13-435a-97fd-fce993b0aebe) | 2026-10-29 @ 0.39 | $39 | $1,600 | buy back ≤ 0.19 |
 
 ## Totals
 
-- Realized premium: $0.00
-- Collateral in use: $1,500 (peak so far: $1,500)
-- Trades opened: 1 · closed: 0
+- Realized premium: $20.00 gross / $19.90 after fees
+- Collateral in use: $1,600 (peak so far: $1,600)
+- Trades opened: 2 · closed: 1 (1 win, 0 losses)
 
 ## Log
 
@@ -162,3 +162,33 @@ T, 2026-12-04 (37 DTE): no put passed (19.5P OI 20; 20P Δ0.28 spread 65%; 20.5P
 Still blocked by earnings: F (reports tonight), PFE (Nov 3), NU (Nov 12 pm).
 
 Open: SOFI 15P (+$10.50) · Realized premium: $0 · Collateral needed: $1,500
+
+### 2026-10-29 (Thu) 10:33 ET
+
+Prices: F 12.22 (+2% after earnings) · SOFI 17.43 · T 21.32 · PFE 29.76 · NU 12.05
+
+**PAPER BTC: SOFI 2026-12-04 15P ×1 @ 0.19** (mid of 0.18/0.20). Sold at 0.39 two days ago, so 51% of the
+credit was captured and the 50% rule hit. **Realized +$20.00** (+$19.90 after $0.10 fees), on $1,500 for 2 days.
+
+**PAPER STO: SOFI 2026-12-04 16P ×1 @ 0.39** (mid of 0.37/0.41): Δ 0.25, OI 785, spread 10%, ~25%/yr
+on $1,600. Breakeven $15.61, 10% below the stock.
+
+| SOFI strike | Δ | Bid/Ask | OI | Result |
+|---|---|---|---|---|
+| 15.5P | 0.18 | 0.26/0.28 | 236 | passes (18%/yr) |
+| **16P** | **0.25** | **0.37/0.41** | **785** | **passes, closest to 0.25Δ → sold** |
+| 16.5P | 0.32 | 0.52/0.56 | 666 | delta > 0.30 |
+
+F is now eligible, 2026-12-04 (36 DTE): no put passed.
+
+| F strike | Δ | Bid/Ask | OI | Fails |
+|---|---|---|---|---|
+| 10.5P | 0.12 | 0.06/0.16 | 89 | delta, bid, OI |
+| 11P | 0.17 | 0.09/0.20 | 81 | bid, OI, spread 76% |
+| 11.5P | 0.28 | 0.25/0.28 | 54 | OI 54 < 100 (otherwise a fit) |
+| 12P | 0.41 | 0.43/0.68 | 156 | delta > 0.30 |
+
+T, 2026-12-04: no put passed (20P Δ0.27 spread 174%; 20.5P Δ0.31; 21P Δ0.40).
+Still blocked by earnings: PFE (Nov 3), NU (Nov 12 pm).
+
+Open: SOFI 16P (mark 0.39, $0) · Realized premium: +$20.00 · Collateral needed: $1,600
