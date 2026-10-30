@@ -192,3 +192,28 @@ T, 2026-12-04: no put passed (20P Δ0.27 spread 174%; 20.5P Δ0.31; 21P Δ0.40).
 Still blocked by earnings: PFE (Nov 3), NU (Nov 12 pm).
 
 Open: SOFI 16P (mark 0.39, $0) · Realized premium: +$20.00 · Collateral needed: $1,600
+
+### 2026-10-30 (Fri) 10:40 ET
+
+Prices: F 12.24 · SOFI 16.94 (−3.8%) · T 21.38 · PFE 30.18 · NU 11.78
+
+Manage: SOFI 12-04 16P marks at 0.53 (0.52/0.54), against 0.39 sold, so **−$14 unrealized**. Δ is now 0.31.
+No stop loss in the rules, so hold. The stock is still 6% above the $16 strike.
+
+Dec 4 expiry (35 DTE), no new puts passed:
+- F: 11P Δ0.15 bid 0.09 < 0.10; 11.5P Δ0.26 OI 53 and spread 23%; 12P Δ0.40.
+- T: 20P Δ0.19 spread 124%; 20.5P Δ0.29 spread 148%; 21P Δ0.38.
+Still blocked by earnings: PFE (Nov 3), NU (Nov 12 pm).
+
+Open: SOFI 16P (−$14) · Realized premium: +$20.00 · Collateral needed: $1,600
+
+#### Week 2 summary (Oct 26–30)
+
+- Premium: +$20.00 realized (1 trade closed, 1 win: SOFI 15P, 0.39 → 0.19 in 2 days).
+- Open risk: 1 SOFI 16P Dec 4, $1,600 collateral, −$14 unrealized (worst drawdown so far).
+- Trades found: SOFI was the only ticker whose options passed the filters (tight 0.02–0.04 spreads,
+  OI in the hundreds). F and T failed every day on spread or open interest.
+- Notable: NU fell 20% on Oct 26 with no position. SOFI rose 14% on earnings, and the filters
+  only let us in after the move.
+- Takeaway so far: these rules really only trade SOFI. To get more trades without loosening risk,
+  swap F/T for tickers with tighter option markets, or relax the spread rule (still your call).
