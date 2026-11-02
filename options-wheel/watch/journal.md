@@ -217,3 +217,16 @@ Open: SOFI 16P (−$14) · Realized premium: +$20.00 · Collateral needed: $1,60
   only let us in after the move.
 - Takeaway so far: these rules really only trade SOFI. To get more trades without loosening risk,
   swap F/T for tickers with tighter option markets, or relax the spread rule (still your call).
+
+### 2026-11-02 (Mon) 10:36 ET
+
+Prices: F 12.43 · SOFI 17.45 (+4%) · T 21.47 · PFE 30.28 · NU 11.92
+
+Manage: SOFI 12-04 16P marks at 0.38 (0.37/0.39) against 0.39 sold, so +$1 unrealized (recovered from −$14). Hold.
+
+Dec 4 expiry (32 DTE), no new puts passed:
+- F: 11P Δ0.12; 11.5P Δ0.22 OI 60, spread 21%; 12P Δ0.35.
+- T: 20P Δ0.19 spread 29% (closest yet); 20.5P Δ0.28 spread 68%; 21P Δ0.36.
+Still blocked by earnings: PFE (reports tomorrow am), NU (Nov 12 pm).
+
+Open: SOFI 16P (+$1) · Realized premium: +$20.00 · Collateral needed: $1,600
