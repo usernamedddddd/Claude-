@@ -230,3 +230,28 @@ Dec 4 expiry (32 DTE), no new puts passed:
 Still blocked by earnings: PFE (reports tomorrow am), NU (Nov 12 pm).
 
 Open: SOFI 16P (+$1) · Realized premium: +$20.00 · Collateral needed: $1,600
+
+### 2026-11-03 (Tue) 10:23 ET
+
+Prices: F 12.36 · SOFI 16.60 (−4.8%) · T 21.21 · PFE 30.59 (after earnings, flat) · NU 11.56
+
+Manage: SOFI 12-04 16P marks at 0.67 (0.65/0.69) against 0.39 sold, so **−$28 unrealized** (worst so far). Δ 0.37.
+Hold: there's no stop loss, and the stock is still 3.8% above the strike. Assignment would mean buying
+100 SOFI at $16 (net $15.61 after premium).
+
+PFE is eligible now that its earnings are out. Expiry picked: 2026-12-11 (38 DTE; nearer to 35 than Dec 4 at 31).
+New weekly expiries have thin open interest, so no new puts passed:
+
+| Ticker | Strike | Δ | Bid/Ask | OI | Fails |
+|---|---|---|---|---|---|
+| PFE | 28P | 0.16 | 0.21/0.32 | 5 | OI, spread 42% |
+| PFE | 29P | 0.27 | 0.43/0.58 | 20 | OI, spread 30% |
+| F | 11.5P | 0.25 | 0.20/0.29 | 20 | OI, spread 37% |
+| T | 20P | 0.24 | 0.26/0.35 | 25 | OI, spread 30% |
+
+Observation: always taking the expiry closest to 35 DTE lands on newly listed weeklies with almost no
+open interest. Restricting to monthly expiries (3rd Friday, e.g. Dec 18) would likely find more liquid contracts.
+
+Still blocked by earnings: NU (Nov 12 pm).
+
+Open: SOFI 16P (−$28) · Realized premium: +$20.00 · Collateral needed: $1,600
