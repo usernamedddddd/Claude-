@@ -255,3 +255,18 @@ open interest. Restricting to monthly expiries (3rd Friday, e.g. Dec 18) would l
 Still blocked by earnings: NU (Nov 12 pm).
 
 Open: SOFI 16P (−$28) · Realized premium: +$20.00 · Collateral needed: $1,600
+
+### 2026-11-04 (Wed) 10:22 ET
+
+Prices: F 12.58 · SOFI 17.52 (+4.4%) · T 21.94 · PFE 30.15 · NU 12.09
+
+Manage: SOFI 12-04 16P marks at 0.345 (0.33/0.36) against 0.39 sold, so +$4.50 (12% captured). It swung from −$28 back to green
+in one day. Hold.
+
+Dec 11 expiry (37 DTE), no new puts passed:
+- PFE: 29P Δ0.30 OI 34, spread 64%; 30P Δ0.44.
+- F: 11.5P Δ0.19 OI 40; 12P Δ0.31 (just over 0.30; OI 1676, spread 20%).
+- T: 20.5P Δ0.21 OI 18; 21P Δ0.30 OI 13, spread 156%.
+Still blocked by earnings: NU (Nov 12 pm).
+
+Open: SOFI 16P (+$4.50) · Realized premium: +$20.00 · Collateral needed: $1,600
