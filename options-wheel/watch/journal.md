@@ -270,3 +270,19 @@ Dec 11 expiry (37 DTE), no new puts passed:
 Still blocked by earnings: NU (Nov 12 pm).
 
 Open: SOFI 16P (+$4.50) · Realized premium: +$20.00 · Collateral needed: $1,600
+
+### 2026-11-05 (Thu) 10:22 ET
+
+Prices: F 12.62 · **SOFI 15.96 (−8.2%)** · T 22.06 · PFE 31.30 · NU 11.51
+
+Manage: SOFI dropped below the $16 strike. The 12-04 16P marks at 0.945 (0.92/0.97) against 0.39 sold:
+**−$55.50 unrealized** (new worst). Δ 0.47, 29 DTE. No stop loss in the rules, so hold. If SOFI is still below $16
+on Dec 4, the paper account takes 100 shares at $16 (net cost $15.61 after the premium) and starts covered calls.
+
+Dec 11 expiry (36 DTE), no new puts passed:
+- PFE: 29P Δ0.19 OI 64, spread 39%; 30P Δ0.30 OI 32.
+- F: 11.5P Δ0.19 OI 43, spread 35%; 12P Δ0.30 (0.304, just over).
+- T: 20.5P Δ0.23 OI 18; 21P Δ0.25 OI 14, spread 125%.
+Still blocked by earnings: NU (Nov 12 pm).
+
+Open: SOFI 16P (−$55.50) · Realized premium: +$20.00 · Collateral needed: $1,600
