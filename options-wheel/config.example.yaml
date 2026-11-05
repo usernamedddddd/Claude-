@@ -1,0 +1,55 @@
+# Copy to config.yaml and tune. Any key you leave out uses the default in wheelbot/config.py.
+# Only list stocks you'd be happy to own at the put strike: assignment is part of the plan.
+tickers: [F, SOFI, KO]
+poll_seconds: 300
+state_file: state.json
+
+puts:                           # cash-secured puts
+  enabled: true
+  target_delta: 0.25            # ~25% chance of finishing in the money
+  min_delta: 0.15
+  max_delta: 0.30
+  min_dte: 21
+  target_dte: 35
+  max_dte: 45
+  min_annualized_yield_pct: 12  # credit / strike, annualized
+  min_bid: 0.10
+  min_open_interest: 100
+  max_spread_pct: 15
+
+calls:                          # covered calls, once you own 100+ shares
+  enabled: true
+  target_delta: 0.30
+  min_delta: 0.15
+  max_delta: 0.40
+  min_dte: 21
+  target_dte: 35
+  max_dte: 45
+  min_annualized_yield_pct: 8
+  min_bid: 0.10
+  min_open_interest: 100
+  max_spread_pct: 15
+
+manage:
+  take_profit_pct: 50           # buy back after capturing 50% of the credit
+  stop_loss_multiple: null      # e.g. 3 = buy back if the option costs 3x what you sold it for
+  close_at_dte: null            # e.g. 7 = always close a week before expiry (avoids pin/assignment risk)
+
+risk:
+  contracts_per_trade: 1
+  max_per_ticker_usd: 5000      # put collateral + stock cost basis, per ticker
+  max_total_collateral_usd: 10000
+  min_cash_reserve_usd: 500
+  min_call_strike_above_cost_pct: 0   # covered calls never strike below your cost basis
+  avoid_earnings: true
+
+market:
+  skip_first_minutes: 15
+  skip_last_minutes: 10
+
+execution:
+  mode: paper                   # set to "live" AND pass --live to place real orders
+  order_timeout_seconds: 60
+  paper_starting_cash: 10000
+  paper_fee_per_contract: 0.05
+  paper_state_file: paper_account.json

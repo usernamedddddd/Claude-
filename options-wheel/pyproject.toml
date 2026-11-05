@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wheelbot"
+version = "0.1.0"
+description = "Options wheel bot for Robinhood (paper trading by default)"
+requires-python = ">=3.10"
+dependencies = ["robin_stocks>=3.4", "pyotp>=2.9", "pyyaml>=6", "tzdata; sys_platform == 'win32'"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+wheelbot = "wheelbot.cli:main"
+
+[tool.setuptools]
+packages = ["wheelbot"]

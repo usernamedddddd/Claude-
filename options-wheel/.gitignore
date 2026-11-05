@@ -1,0 +1,5 @@
+config.yaml
+state*.json
+paper_account*.json
+*.tmp
+.env
