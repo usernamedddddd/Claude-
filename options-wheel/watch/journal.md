@@ -286,3 +286,28 @@ Dec 11 expiry (36 DTE), no new puts passed:
 Still blocked by earnings: NU (Nov 12 pm).
 
 Open: SOFI 16P (−$55.50) · Realized premium: +$20.00 · Collateral needed: $1,600
+
+### 2026-11-06 (Fri) 10:22 ET
+
+Prices: F 12.67 · SOFI 16.36 (+2%) · T 21.84 · PFE 29.20 (ex-dividend today; adjusted change −0.9%) · NU 12.19
+
+Manage: SOFI 12-04 16P marks at 0.76 (0.73/0.79) against 0.39 sold, so −$37 unrealized (from −$55.50). SOFI is back above
+the strike by 2%. Hold.
+
+Dec 11 expiry (35 DTE), no new puts passed:
+- PFE: 27P Δ0.15 spread 190%; 28P Δ0.29 OI 255, spread 30%; 29P Δ0.44.
+- F: 11.5P Δ0.21 spread 96%; 12P Δ0.31.
+- T: 20.5P Δ0.24 OI 21; 21P Δ0.32.
+Still blocked by earnings: NU (Nov 12 pm).
+
+Open: SOFI 16P (−$37) · Realized premium: +$20.00 · Collateral needed: $1,600
+
+#### Week 3 summary (Nov 2–6)
+
+- Premium: +$20.00 realized all test (no trades closed this week). Trades opened this week: 0.
+- Open risk: SOFI 16P Dec 4, $1,600 collateral. It swung +$1 → −$28 → +$4.50 → −$55.50 → −$37 as SOFI moved
+  ±4–8% a day. Worst unrealized drawdown so far: −$55.50 (Nov 5). Net test PnL today: +$20 − $37 = −$17.
+- Notable: SOFI traded below the strike on Nov 5. This is the first real test of the wheel's "accept assignment"
+  path; the Dec 4 expiry falls after the test ends, so the final review will show it still open.
+- The rules found nothing new all week: weekly expiries (Dec 11) have very low open interest, and F/T/PFE spreads
+  stay wide. Over 3 weeks only SOFI has passed the filters, so the test is running on one ticker.
