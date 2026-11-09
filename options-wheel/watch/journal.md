@@ -311,3 +311,17 @@ Open: SOFI 16P (−$37) · Realized premium: +$20.00 · Collateral needed: $1,60
   path; the Dec 4 expiry falls after the test ends, so the final review will show it still open.
 - The rules found nothing new all week: weekly expiries (Dec 11) have very low open interest, and F/T/PFE spreads
   stay wide. Over 3 weeks only SOFI has passed the filters, so the test is running on one ticker.
+
+### 2026-11-09 (Mon) 10:23 ET
+
+Prices: F 12.49 · SOFI 16.69 (+3%) · T 21.61 · PFE 29.16 · NU 12.21
+
+Manage: SOFI 12-04 16P marks at 0.58 (0.56/0.60) against 0.39 sold, so −$19 unrealized (25 DTE). Hold.
+
+Dec 11 expiry (32 DTE; Dec 18 at 39 is further from 35), no new puts passed:
+- PFE: 27P Δ0.17 OI 56; 28P Δ0.28 OI 449, spread 43%.
+- F: 11.5P Δ0.21 OI 124, spread 24% (closest F has come); 12P Δ0.33.
+- T: 20.5P Δ0.28 OI 24, spread 84%; 21P Δ0.34.
+Still blocked by earnings: NU (reports Thu Nov 12 pm).
+
+Open: SOFI 16P (−$19) · Realized premium: +$20.00 · Collateral needed: $1,600
