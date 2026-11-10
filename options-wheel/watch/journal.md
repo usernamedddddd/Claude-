@@ -10,12 +10,13 @@ Test window: 2026-10-19 → 2026-11-13, one run per trading day at ~10:22 ET.
 | Contract | Opened | Credit | Collateral | 50% target |
 |---|---|---|---|---|
 | SOFI 2026-12-04 16P ×1 (id 74f5e363-2b13-435a-97fd-fce993b0aebe) | 2026-10-29 @ 0.39 | $39 | $1,600 | buy back ≤ 0.19 |
+| PFE 2026-12-18 28P ×1 (id b9636795-3a3f-4a29-88aa-380c61d0a22f) | 2026-11-10 @ 0.46 | $46 | $2,800 | buy back ≤ 0.23 |
 
 ## Totals
 
 - Realized premium: $20.00 gross / $19.90 after fees
-- Collateral in use: $1,600 (peak so far: $1,600)
-- Trades opened: 2 · closed: 1 (1 win, 0 losses)
+- Collateral in use: $4,400 (peak so far: $4,400)
+- Trades opened: 3 · closed: 1 (1 win, 0 losses)
 
 ## Log
 
@@ -325,3 +326,28 @@ Dec 11 expiry (32 DTE; Dec 18 at 39 is further from 35), no new puts passed:
 Still blocked by earnings: NU (reports Thu Nov 12 pm).
 
 Open: SOFI 16P (−$19) · Realized premium: +$20.00 · Collateral needed: $1,600
+
+### 2026-11-10 (Tue) 10:23 ET
+
+Prices: F 12.32 (ex-dividend; adj −0.4%) · SOFI 16.29 (−2.8%) · T 21.73 · PFE 29.08 · NU 12.13
+
+Manage: SOFI 12-04 16P marks at 0.705 (0.69/0.72) against 0.39 sold, so −$31.50 unrealized (24 DTE). Hold.
+
+Expiry picked: **2026-12-18 (38 DTE), the standard monthly**. Open interest is in the thousands and spreads are 2–5¢,
+which confirms the earlier note that monthlies are far more liquid than the weeklies we kept landing on.
+
+**PAPER STO: PFE 2026-12-18 28P ×1 @ 0.46** (0.45/0.48): Δ 0.29, OI 33,494, spread 6.5%, ~16%/yr on $2,800.
+Breakeven $27.54, 5.3% below the stock.
+
+| Ticker | Strike | Δ | Bid/Ask | OI | Result |
+|---|---|---|---|---|---|
+| PFE | 27P | 0.17 | 0.22/0.24 | 22,357 | yield 8%/yr < 12% |
+| **PFE** | **28P** | **0.29** | **0.45/0.48** | **33,494** | **passes → sold** |
+| F | 11P | 0.14 | 0.10/0.12 | 9,509 | delta < 0.15 (no 11.5 strike in the monthly) |
+| F | 12P | 0.37 | 0.33/0.36 | 7,689 | delta > 0.30 |
+| T | 20P | 0.17 | 0.17/0.22 | 7,317 | spread 26% |
+| T | 21P | 0.32 | 0.41/0.44 | 8,631 | delta > 0.30 (no 20.5 strike in the monthly) |
+
+Still blocked by earnings: NU (Thu Nov 12 pm).
+
+Open: SOFI 16P (−$31.50), PFE 28P ($0) · Realized premium: +$20.00 · Collateral needed: $4,400
