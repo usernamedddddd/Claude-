@@ -351,3 +351,18 @@ Breakeven $27.54, 5.3% below the stock.
 Still blocked by earnings: NU (Thu Nov 12 pm).
 
 Open: SOFI 16P (−$31.50), PFE 28P ($0) · Realized premium: +$20.00 · Collateral needed: $4,400
+
+### 2026-11-11 (Wed) 10:22 ET
+
+Prices: F 12.16 · SOFI 16.41 · T 21.87 · PFE 29.19 · NU 12.15
+
+Manage:
+- SOFI 12-04 16P marks at 0.625 (0.61/0.64) against 0.39 sold, so −$23.50. Hold.
+- PFE 12-18 28P marks at 0.42 (0.41/0.43) against 0.46 sold, so +$4 (9% captured). Hold.
+
+Dec 18 expiry (37 DTE), no new puts passed:
+- F: 11P Δ0.16, 0.10/0.13, OI 9,816, spread 26%; 12P Δ0.42.
+- T: 20P Δ0.147 (just under 0.15); **21P Δ0.29, 0.33/0.39, OI 8,675, spread 16.7%: missed the 15% cap by 1.7 points**.
+Still blocked by earnings: NU (reports tomorrow pm).
+
+Open: SOFI 16P (−$23.50), PFE 28P (+$4) · Realized premium: +$20.00 · Collateral needed: $4,400
