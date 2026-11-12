@@ -366,3 +366,18 @@ Dec 18 expiry (37 DTE), no new puts passed:
 Still blocked by earnings: NU (reports tomorrow pm).
 
 Open: SOFI 16P (−$23.50), PFE 28P (+$4) · Realized premium: +$20.00 · Collateral needed: $4,400
+
+### 2026-11-12 (Thu) 10:22 ET
+
+Prices: F 12.01 · **SOFI 15.85 (−2.6%)** · T 22.30 · PFE 29.17 · NU 11.97
+
+Manage:
+- SOFI 12-04 16P marks at 0.825 (0.79/0.86) against 0.39 sold, so **−$43.50**. SOFI is below the strike again, Δ 0.50, 22 DTE. Hold.
+- PFE 12-18 28P marks at 0.41 (0.40/0.42) against 0.46 sold, so +$5. Hold.
+
+Dec 18 expiry (36 DTE), no new puts passed:
+- F: 11P Δ0.17, 0.10/0.14, spread 33%; 12P Δ0.46.
+- T: 20P Δ0.11; **21P Δ0.22, 0.23/0.26, OI 8,676, spread 12%, but yield 11.8%/yr misses the 12% floor by 0.2 points**.
+NU reports earnings tonight; it becomes eligible tomorrow (the last day of the test).
+
+Open: SOFI 16P (−$43.50), PFE 28P (+$5) · Realized premium: +$20.00 · Collateral needed: $4,400
