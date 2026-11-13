@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import re
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 
@@ -20,6 +23,15 @@ log = logging.getLogger(__name__)
 
 REDDIT_SEARCH = "https://www.reddit.com/search.json"
 GOOGLE_NEWS = "https://news.google.com/rss/search"
+BING_NEWS = "https://www.bing.com/news/search"
+
+
+@dataclass
+class SourceStatus:
+    name: str
+    ok: bool
+    count: int = 0
+    error: str = ""
 
 
 def _id(*parts: str) -> str:
@@ -109,20 +121,58 @@ class Sources:
                                                "hl": "en-US", "gl": "US", "ceid": "US:en"})
         return parse_feed(xml, "Google News")
 
-    def feed(self, url: str) -> list[Deal]:
-        return parse_feed(self.http.get_text(url), url.split("/")[2] if "//" in url else url)
+    def bing_news(self, query: str) -> list[Deal]:
+        xml = self.http.get_text(BING_NEWS, {"q": query, "format": "rss", "qft": 'interval="8"'})
+        return parse_feed(xml, "Bing News")
 
-    def fetch_all(self) -> list[Deal]:
-        jobs = ([(f"reddit '{q}'", self.reddit, q) for q in self.cfg.reddit_queries]
-                + [(f"news '{q}'", self.google_news, q) for q in self.cfg.google_news_queries]
-                + [(f"feed {u}", self.feed, u) for u in self.cfg.rss_feeds])
-        deals: dict[str, Deal] = {}
-        for label, fn, arg in jobs:
+    def feed(self, url: str) -> list[Deal]:
+        return parse_feed(self.http.get_text(url), feed_name(url))
+
+    def jobs(self) -> list[tuple[str, object, str]]:
+        return ([(f"Reddit: {q}", self.reddit, q) for q in self.cfg.reddit_queries]
+                + [(f"Google News: {q}", self.google_news, q) for q in self.cfg.google_news_queries]
+                + [(f"Bing News: {q}", self.bing_news, q) for q in self.cfg.bing_news_queries]
+                + [(feed_name(u), self.feed, u) for u in self.cfg.rss_feeds])
+
+    def fetch_all_with_status(self, workers: int = 6) -> tuple[list[Deal], list[SourceStatus]]:
+        """Fetch every source in parallel. A broken source is reported, never fatal."""
+        def run(job):
+            label, fn, arg = job
             try:
                 got = fn(arg)
                 log.info("%s: %d posts", label, len(got))
-                for d in got:
-                    deals.setdefault(d.id, d)
-            except Exception as e:  # one broken source shouldn't stop the others
+                return got, SourceStatus(label, True, len(got))
+            except Exception as e:
                 log.warning("%s failed: %s", label, e)
-        return list(deals.values())
+                return [], SourceStatus(label, False, 0, str(e)[:200])
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            results = list(pool.map(run, self.jobs()))
+        deals: dict[str, Deal] = {}
+        seen_titles: set[str] = set()
+        for got, _ in results:
+            for d in got:
+                key = title_key(d.title)
+                if d.id in deals or (key and key in seen_titles):
+                    continue        # same story from two places (e.g. Google and Bing News)
+                deals[d.id] = d
+                seen_titles.add(key)
+        return list(deals.values()), [st for _, st in results]
+
+    def fetch_all(self) -> list[Deal]:
+        return self.fetch_all_with_status()[0]
+
+
+def feed_name(url: str) -> str:
+    host = url.split("/")[2] if "//" in url else url
+    host = host.removeprefix("www.")
+    if host == "slickdeals.net":
+        q = re.search(r"[?&]q=([^&]+)", url)
+        return f"Slickdeals: {q.group(1).replace('+', ' ')}" if q else "Slickdeals"
+    return host
+
+
+def title_key(title: str) -> str:
+    # News titles often end with " - Publisher"; drop it so syndicated copies match.
+    t = re.sub(r"\s+[-|–]\s+[^-|–]{2,40}$", "", title.lower())
+    return re.sub(r"[^a-z0-9]+", "", t)[:80]

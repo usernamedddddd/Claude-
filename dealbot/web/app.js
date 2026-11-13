@@ -144,17 +144,35 @@ async function loadStores(force) {
   return cached?.key === key ? cached.stores : null;
 }
 
+// Deals come from two places:
+//  1. deals.json, published next to this app every hour by GitHub Actions. It collects
+//     Google News, Bing News, Slickdeals, deal blogs and Reddit, which a browser can't
+//     read directly (those sites block cross-site requests).
+//  2. A live Reddit search from the phone, for anything posted since the last hourly run.
+async function loadFeed() {
+  const data = await fetchJson(`deals.json?t=${Math.floor(Date.now() / 300000)}`, { cache: "no-store" });
+  return { deals: data.deals || [], sources: data.sources || [], at: data.generated_at };
+}
+
 async function loadDeals() {
-  const results = await Promise.allSettled(QUERIES.map((q) =>
-    fetchJson(`${REDDIT}?${new URLSearchParams({ q, sort: "new", t: "week", limit: "50", raw_json: "1" })}`)));
+  const [feed, ...reddit] = await Promise.allSettled([loadFeed(), ...QUERIES.map((q) =>
+    fetchJson(`${REDDIT}?${new URLSearchParams({ q, sort: "new", t: "week", limit: "50", raw_json: "1" })}`))]);
   const byId = new Map();
-  let ok = 0;
-  for (const r of results) {
-    if (r.status !== "fulfilled") continue;
-    ok++;
-    for (const d of parseReddit(r.value)) if (!byId.has(d.id)) byId.set(d.id, d);
-  }
-  return { deals: [...byId.values()], ok, total: QUERIES.length };
+  const add = (d) => { if (!byId.has(d.id)) byId.set(d.id, d); };
+  const redditOk = reddit.filter((r) => r.status === "fulfilled");
+  redditOk.forEach((r) => parseReddit(r.value).forEach(add));
+  const feedOk = feed.status === "fulfilled";
+  if (feedOk) feed.value.deals.forEach(add);
+  const feedSources = feedOk ? feed.value.sources : [];
+  const names = new Set(feedSources.filter((s) => s.ok).map((s) => s.name.split(":")[0]));
+  if (redditOk.length) names.add("Reddit");
+  return {
+    deals: [...byId.values()],
+    ok: (feedOk && feed.value.deals.length ? 1 : 0) + redditOk.length,
+    sourceCount: feedSources.filter((s) => s.ok).length + (redditOk.length ? 1 : 0),
+    sourceNames: [...names],
+    feedAt: feedOk ? feed.value.at : null,
+  };
 }
 
 async function refresh(force = false) {
@@ -168,7 +186,7 @@ async function refresh(force = false) {
       rawDeals = cached.deals;
       stores = await loadStores(false);
       status.className = "status";
-      status.textContent = `Updated ${ago(cached.at)} · pull ↻ to refresh`;
+      status.textContent = `${cached.summary || "Updated"} · ${ago(cached.at)} · tap ↻ to refresh`;
     } else {
       status.className = "status";
       status.innerHTML = '<span class="spin">↻</span> Finding deals near you…';
@@ -177,13 +195,14 @@ async function refresh(force = false) {
       if (d.ok === 0) {
         rawDeals = cached?.deals || [];
         status.className = "status warn";
-        status.innerHTML = `Couldn't reach Reddit (it sometimes blocks VPNs and some networks).
+        status.innerHTML = `Couldn't load deals. Check your connection and tap ↻.
           ${rawDeals.length ? "Showing your last results." : ""}
           <a href="https://www.reddit.com/search/?q=penny%20list&sort=new" target="_blank" rel="noopener">Search Reddit yourself →</a>`;
       } else {
         rawDeals = d.deals;
-        store.set("deals", { at: Date.now(), deals: rawDeals });
-        status.textContent = `Updated just now${d.ok < d.total ? ` · ${d.total - d.ok} search(es) failed` : ""}`;
+        const summary = `Checked ${d.sourceCount} sources (${d.sourceNames.slice(0, 5).join(", ")}${d.sourceNames.length > 5 ? ", …" : ""})`;
+        store.set("deals", { at: Date.now(), deals: rawDeals, summary });
+        status.textContent = `${summary} · just now`;
       }
     }
   } finally {

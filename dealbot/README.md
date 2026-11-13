@@ -33,9 +33,13 @@ You can also type a ZIP code instead. Pick the stores you shop at, and you're do
 Tap ↻ to refresh, use the 🪙 Penny filter, and tap a UPC to copy it for scanning
 in the store's app.
 
-The phone app reads deals from Reddit only. Google News can't be read from a browser.
-If Reddit is blocked on your network (some VPNs), the app tells you and offers a
-direct Reddit search link. Your settings stay on your phone.
+**Where the phone app's deals come from:** every hour, the GitHub job collects deals from
+Google News, Bing News, Slickdeals, deal blogs (Hip2Save, The Krazy Coupon Lady, The
+Freebie Guy, Money Saving Mom and others) and Reddit. It publishes them as `deals.json` next
+to the app. Your phone combines that feed with its own live Reddit search, then keeps only
+deals for stores near you. Phone browsers can't read those other sites directly, which is
+why the hourly job exists. The feed is the same for everyone and holds no location. Your
+settings stay on your phone. The status line shows how many sources answered.
 
 ### Hourly alerts on your phone, with no computer running
 
@@ -110,8 +114,10 @@ Pass `--alert-backlog` to get everything.
    Nominatim. You can also set `lat`/`lon` directly.
 2. **Nearby stores.** It queries OpenStreetMap's Overpass API for your chains within
    `radius_miles` and caches the result for a week.
-3. **Deals.** Stores don't publish penny lists, so `dealbot` reads where shoppers share them:
-   Reddit search, Google News and any RSS/Atom feeds you add.
+3. **Deals.** Stores don't publish penny lists, so `dealbot` reads where shoppers and deal
+   sites share them: Reddit, Google News, Bing News, Slickdeals and deal blogs, all in
+   parallel. Add any RSS/Atom feed under `rss_feeds`. `dealbot export` writes them all to one
+   JSON file, which the phone app uses.
 4. **Extraction.** From each post it pulls out the store, prices, % off and UPCs, and
    decides whether the deal is a penny item, clearance or a sale.
    Prices are decoded with each chain's clearance code.

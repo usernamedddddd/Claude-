@@ -118,6 +118,16 @@ def cmd_test_alert(args) -> None:
     print("Test alert sent.")
 
 
+def cmd_export(args) -> None:
+    from .export import export
+    cfg = load_config(args.config or ("config.toml" if Path("config.toml").exists() else None))
+    data = export(cfg, args.output)
+    ok = [s for s in data["sources"] if s["ok"]]
+    print(f"Wrote {len(data['deals'])} deals to {args.output} from {len(ok)}/{len(data['sources'])} sources.")
+    for s in data["sources"]:
+        print(f"  {'ok  ' if s['ok'] else 'FAIL'} {s['count']:>4}  {s['name']}" + (f"  ({s['error'][:90]})" if s["error"] else ""))
+
+
 def cmd_decode(args) -> None:
     chain = _resolve_chain(args.store)
     try:
@@ -173,6 +183,10 @@ def main(argv: list[str] | None = None) -> None:
             sp.add_argument("--alert-backlog", action="store_true",
                             help="on the first check, alert every match, not just penny items")
         sp.set_defaults(fn=fn)
+
+    sp = sub.add_parser("export", help="collect deals from every source into a JSON file (for the phone app)")
+    sp.add_argument("-o", "--output", default="deals.json")
+    sp.set_defaults(fn=cmd_export)
 
     sp = sub.add_parser("test-alert", help="send a test notification to your phone")
     sp.set_defaults(fn=cmd_test_alert, location=None, radius=None)
