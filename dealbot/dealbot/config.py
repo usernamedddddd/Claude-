@@ -54,7 +54,6 @@ class Config:
         "https://slickdeals.net/newsearch.php?searcharea=deals&searchin=first&rss=1&q=in-store",
         # deal blogs
         "https://hip2save.com/feed/",
-        "https://thekrazycouponlady.com/feed",
         "https://www.thefreebieguy.com/feed/",
         "https://www.moneysavingmom.com/feed/",
     ])

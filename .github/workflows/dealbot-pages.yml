@@ -7,7 +7,7 @@ name: Deploy deal finder app
 on:
   push:
     branches: [memecoin-bot, claude/wizardly-mayer-1el2vl]
-    paths: ["dealbot/web/**", ".github/workflows/dealbot-pages.yml"]
+    paths: ["dealbot/web/**", "dealbot/dealbot/**", "dealbot/pyproject.toml", ".github/workflows/dealbot-pages.yml"]
   schedule:
     - cron: "41 * * * *"        # refresh deals.json every hour, at :41
   workflow_dispatch:

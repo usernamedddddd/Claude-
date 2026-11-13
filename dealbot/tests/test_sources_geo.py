@@ -131,3 +131,10 @@ def test_parse_feed_scans_badly_broken_xml():
     assert deals[0].published.day == 12
     with pytest.raises(Exception):
         parse_feed("<html>not a feed <b></html>", "x")      # junk with no items still fails loudly
+
+
+def test_parse_feed_reports_blocked_site():
+    import pytest
+    page = "<!DOCTYPE html><html><head><title>Just a moment...</title></head><body><p>Verify you are human</body></html>"
+    with pytest.raises(ValueError, match="blocked"):
+        parse_feed(page, "x")

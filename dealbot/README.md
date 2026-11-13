@@ -34,8 +34,8 @@ Tap ↻ to refresh, use the 🪙 Penny filter, and tap a UPC to copy it for scan
 in the store's app.
 
 **Where the phone app's deals come from:** every hour, the GitHub job collects deals from
-Google News, Bing News, Slickdeals, deal blogs (Hip2Save, The Krazy Coupon Lady, The
-Freebie Guy, Money Saving Mom and others) and Reddit. It publishes them as `deals.json` next
+Google News, Bing News, Slickdeals, deal blogs (Hip2Save, The Freebie Guy, Money Saving
+Mom) and Reddit. It publishes them as `deals.json` next
 to the app. Your phone combines that feed with its own live Reddit search, then keeps only
 deals for stores near you. Phone browsers can't read those other sites directly, which is
 why the hourly job exists. The feed is the same for everyone and holds no location. Your
