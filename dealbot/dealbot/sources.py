@@ -126,6 +126,8 @@ def parse_feed(xml_text: str, source: str) -> list[Deal]:
             # Too broken for an XML parser: pull the items out directly.
             deals = _scan_feed(xml_text, source)
             if not deals:
+                if re.search(r"<html|<!doctype html", xml_text[:2000], re.I):
+                    raise ValueError("blocked: the site sent a web page instead of a feed") from None
                 raise
             return deals
     atom = "{http://www.w3.org/2005/Atom}"
