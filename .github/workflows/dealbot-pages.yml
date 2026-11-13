@@ -51,7 +51,7 @@ jobs:
       - name: Collect deals from every source
         run: |
           pip install --quiet ./dealbot
-          dealbot export -o _site/deals.json || echo '{"generated_at":null,"sources":[],"deals":[]}' > _site/deals.json
+          dealbot export --no-reddit -o _site/deals.json || echo '{"generated_at":null,"sources":[],"deals":[]}' > _site/deals.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

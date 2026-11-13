@@ -121,6 +121,8 @@ def cmd_test_alert(args) -> None:
 def cmd_export(args) -> None:
     from .export import export
     cfg = load_config(args.config or ("config.toml" if Path("config.toml").exists() else None))
+    if args.no_reddit:
+        cfg.reddit_queries = []
     data = export(cfg, args.output)
     ok = [s for s in data["sources"] if s["ok"]]
     print(f"Wrote {len(data['deals'])} deals to {args.output} from {len(ok)}/{len(data['sources'])} sources.")
@@ -186,6 +188,8 @@ def main(argv: list[str] | None = None) -> None:
 
     sp = sub.add_parser("export", help="collect deals from every source into a JSON file (for the phone app)")
     sp.add_argument("-o", "--output", default="deals.json")
+    sp.add_argument("--no-reddit", action="store_true",
+                    help="skip Reddit (it blocks cloud servers; the phone app searches it live)")
     sp.set_defaults(fn=cmd_export)
 
     sp = sub.add_parser("test-alert", help="send a test notification to your phone")

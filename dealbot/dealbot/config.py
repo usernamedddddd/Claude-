@@ -57,7 +57,6 @@ class Config:
         "https://thekrazycouponlady.com/feed",
         "https://www.thefreebieguy.com/feed/",
         "https://www.moneysavingmom.com/feed/",
-        "https://www.dollargeneralcouponer.com/feed/",
     ])
     max_age_days: int = 7
 
