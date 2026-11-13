@@ -87,12 +87,47 @@ def _repair_xml(text: str) -> str:
     return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)   # control characters XML forbids
 
 
+def _tag(block: str, name: str) -> str:
+    m = re.search(rf"<{name}(?:\s[^>]*)?>(.*?)</{name}\s*>", block, re.S | re.I)
+    if not m:
+        return ""
+    value = m.group(1).strip()
+    cdata = re.fullmatch(r"<!\[CDATA\[(.*?)\]\]>", value, re.S)
+    return cdata.group(1) if cdata else value
+
+
+def _scan_feed(text: str, source: str) -> list[Deal]:
+    """Last-resort reader for feeds with broken XML: find each <item>/<entry> with regexes."""
+    out = []
+    for block in re.findall(r"<(?:item|entry)(?:\s[^>]*)?>(.*?)</(?:item|entry)\s*>", text, re.S | re.I):
+        title = clean_text(_tag(block, "title"))
+        link = _tag(block, "link")
+        if not link:   # Atom: <link href="..."/>
+            m = re.search(r"<link[^>]*\bhref=[\"']([^\"']+)", block, re.I)
+            link = m.group(1) if m else ""
+        link = clean_text(link)
+        if not (title or link):
+            continue
+        body = _tag(block, "description") or _tag(block, "summary") or _tag(block, "content")
+        date = _tag(block, "pubDate") or _tag(block, "updated") or _tag(block, "published")
+        out.append(Deal(id=f"feed:{_id(link or title)}", title=title, url=link, source=source,
+                        text=clean_text(body)[:4000], published=_parse_date(clean_text(date))))
+    return out
+
+
 def parse_feed(xml_text: str, source: str) -> list[Deal]:
     """Parse RSS 2.0 or Atom into deals."""
     try:
         root = ET.fromstring(xml_text)
     except ET.ParseError:
-        root = ET.fromstring(_repair_xml(xml_text))
+        try:
+            root = ET.fromstring(_repair_xml(xml_text))
+        except ET.ParseError:
+            # Too broken for an XML parser: pull the items out directly.
+            deals = _scan_feed(xml_text, source)
+            if not deals:
+                raise
+            return deals
     atom = "{http://www.w3.org/2005/Atom}"
     out = []
     items = root.findall(".//item")
