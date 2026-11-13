@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -60,7 +61,37 @@ class Config:
 _SECTIONS = ("location", "stores", "sources", "filters", "alerts", "general")
 
 
-def load_config(path: str | Path | None) -> Config:
+# Environment variables override the file, so secrets (like your location and alert
+# topic) can stay out of files, e.g. in GitHub Actions secrets.
+ENV_OVERRIDES = {
+    "DEALBOT_LOCATION": ("location", str),
+    "DEALBOT_RADIUS_MILES": ("radius_miles", float),
+    "DEALBOT_CHAINS": ("chains", lambda v: [c.strip() for c in v.split(",") if c.strip()]),
+    "DEALBOT_NTFY_TOPIC": ("ntfy_topic", str),
+    "DEALBOT_DISCORD_WEBHOOK": ("discord_webhook", str),
+    "DEALBOT_ALERT_MIN_SCORE": ("alert_min_score", float),
+    "DEALBOT_STATE_FILE": ("state_file", str),
+    "DEALBOT_STORE_CACHE_DAYS": ("store_cache_days", int),
+}
+
+
+def load_config(path: str | Path | None, env: dict[str, str] | None = None) -> Config:
+    cfg = _load_file(path)
+    env = os.environ if env is None else env
+    for var, (attr, conv) in ENV_OVERRIDES.items():
+        value = (env.get(var) or "").strip()
+        if value:
+            try:
+                setattr(cfg, attr, conv(value))
+            except ValueError:
+                raise ValueError(f"{var} has an invalid value") from None
+    bad = [c for c in cfg.chains if c not in CHAINS]
+    if bad:
+        raise ValueError(f"Unknown chains {bad}. Choose from: {', '.join(CHAINS)}")
+    return cfg
+
+
+def _load_file(path: str | Path | None) -> Config:
     cfg = Config()
     if not path:
         return cfg
@@ -83,7 +114,4 @@ def load_config(path: str | Path | None) -> Config:
         raise ValueError(f"Unknown config keys: {', '.join(unknown)}")
     for key, value in flat.items():
         setattr(cfg, key, value)
-    bad = [c for c in cfg.chains if c not in CHAINS]
-    if bad:
-        raise ValueError(f"Unknown chains {bad}. Choose from: {', '.join(CHAINS)}")
     return cfg

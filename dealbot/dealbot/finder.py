@@ -108,8 +108,9 @@ class DealFinder:
         except Exception as e:
             log.warning("Store lookup failed (%s); showing deals for all chains.", e)
             return None
-        self.state.cache_stores(key, found)
-        self.state.save()
+        if self.cfg.store_cache_days > 0:   # 0 = never write store locations to disk
+            self.state.cache_stores(key, found)
+            self.state.save()
         return found
 
     def find(self) -> tuple[list[Deal], list[Store] | None]:

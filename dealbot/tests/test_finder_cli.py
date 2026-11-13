@@ -107,3 +107,67 @@ def test_cli_decode(capsys):
     assert "clearance" in capsys.readouterr().out
     cli.main(["tips", "target"])
     assert "30%" in capsys.readouterr().out
+
+
+def test_env_overrides(tmp_path):
+    cfg = load_config(None, env={"DEALBOT_LOCATION": "37201", "DEALBOT_NTFY_TOPIC": "t",
+                                 "DEALBOT_CHAINS": "target, walmart", "DEALBOT_RADIUS_MILES": "15",
+                                 "DEALBOT_STORE_CACHE_DAYS": "0"})
+    assert (cfg.location, cfg.ntfy_topic, cfg.chains, cfg.radius_miles, cfg.store_cache_days) == \
+        ("37201", "t", ["target", "walmart"], 15.0, 0)
+    try:
+        load_config(None, env={"DEALBOT_RADIUS_MILES": "far"})
+        raise AssertionError("expected ValueError")
+    except ValueError as e:
+        assert "DEALBOT_RADIUS_MILES" in str(e)
+
+
+def _watch_env(tmp_path, monkeypatch, fake_http, posts):
+    reddit = {"data": {"children": [{"data": {
+        "id": pid, "title": title, "selftext": "", "permalink": f"/r/x/{pid}", "subreddit": "x",
+        "created_utc": __import__("time").time()}} for pid, title in posts]}}
+    http = fake_http({"https://nominatim": [{"lat": "36.16", "lon": "-86.78", "display_name": "Secretville",
+                                             "address": {"city": "Secretville", "state": "Tennessee"}}],
+                      "https://overpass": {"elements": [
+                          {"lat": 36.17, "lon": -86.78, "tags": {"brand": "Dollar General", "addr:street": "Hidden Rd"}},
+                          {"lat": 36.17, "lon": -86.78, "tags": {"brand": "Target"}}]},
+                      "https://www.reddit.com": reddit, "https://news.google.com": RuntimeError("off")})
+    monkeypatch.setattr("dealbot.cli.DealFinder", lambda cfg: DealFinder(cfg, http=http, state=State(cfg.state_file)))
+    monkeypatch.setenv("DEALBOT_STATE_FILE", str(tmp_path / "s.json"))
+    monkeypatch.setenv("DEALBOT_LOCATION", "Secretville, TN")
+    monkeypatch.setenv("DEALBOT_NTFY_TOPIC", "topic")
+    monkeypatch.setenv("DEALBOT_STORE_CACHE_DAYS", "0")
+    monkeypatch.chdir(tmp_path)
+    return http
+
+
+def test_watch_once_across_runs(tmp_path, monkeypatch, fake_http, capsys):
+    http = _watch_env(tmp_path, monkeypatch, fake_http,
+                      [("a", "Dollar General penny list"), ("b", "Target toys 70% off clearance")])
+    cli.main(["watch", "--once", "--quiet"])
+    alerts = [s for s in http.sent if s[1] == "https://ntfy.sh/topic"]
+    assert len(alerts) == 1                      # first run: penny only, no backlog flood
+    out = capsys.readouterr()
+    assert "Secretville" not in out.out + out.err and "Hidden Rd" not in out.out + out.err
+    assert "store_cache" not in (tmp_path / "s.json").read_text() or '"store_cache": {}' in (tmp_path / "s.json").read_text()
+
+    http2 = _watch_env(tmp_path, monkeypatch, fake_http,
+                       [("a", "Dollar General penny list"), ("b", "Target toys 70% off clearance"),
+                        ("c", "Target clearance 70% off lego")])
+    cli.main(["watch", "--once", "--quiet"])
+    alerts = [s for s in http2.sent if s[1] == "https://ntfy.sh/topic"]
+    assert len(alerts) == 1 and "lego" in alerts[0][2]   # later runs: only the new deal, any kind
+
+
+def test_watch_quiet_hides_location_in_errors(tmp_path, monkeypatch, fake_http, capsys, caplog):
+    http = _watch_env(tmp_path, monkeypatch, fake_http, [])
+    http.routes["https://nominatim"] = []                 # location not found
+    cli.main(["watch", "--once", "--quiet"])
+    logged = capsys.readouterr().err + caplog.text
+    assert "Secretville" not in logged and "DEALBOT_LOCATION" in logged
+
+
+def test_test_alert(tmp_path, monkeypatch, fake_http, capsys):
+    http = _watch_env(tmp_path, monkeypatch, fake_http, [])
+    cli.main(["test-alert"])
+    assert http.sent[-1][1] == "https://ntfy.sh/topic"

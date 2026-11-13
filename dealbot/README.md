@@ -37,6 +37,30 @@ The phone app reads deals from Reddit only. Google News can't be read from a bro
 If Reddit is blocked on your network (some VPNs), the app tells you and offers a
 direct Reddit search link. Your settings stay on your phone.
 
+### Hourly alerts on your phone, with no computer running
+
+`.github/workflows/dealbot-alerts.yml` runs the bot on GitHub every hour for free and
+sends each new deal to your phone.
+
+1. Install the free **ntfy** app (App Store / Google Play). Tap **+** and subscribe to a
+   topic with a long, hard-to-guess name, e.g. `penny-hunt-7f3kq9x2`. Anyone who knows the
+   name can read your alerts.
+2. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**. Add:
+   - `DEALBOT_LOCATION`: your ZIP code or `City, ST`
+   - `NTFY_TOPIC`: the topic name from step 1
+3. Optional: on the **Variables** tab of the same page, add `DEALBOT_RADIUS_MILES` (default 10),
+   `DEALBOT_CHAINS` (e.g. `dollar_general,home_depot,target`), or `DEALBOT_ALERT_MIN_SCORE`
+   (default 50; lower means more alerts).
+4. Merge this branch into the default branch. GitHub only runs scheduled jobs from there.
+5. Test it: **Actions → Deal alerts → Run workflow**, tick **Just send a test notification**.
+   Your phone should buzz within a minute.
+
+The first check only alerts penny items, so a backlog of older posts doesn't flood you.
+After that you get every new deal scoring above `DEALBOT_ALERT_MIN_SCORE`. The repo is
+public, so the job never prints deals, your location or nearby stores in its logs. Your
+location stays in the secret. GitHub pauses scheduled jobs after 60 days with no repository
+activity. If alerts stop, re-enable the job on the Actions page.
+
 **Run the full Python bot on Android instead:** install [Termux](https://termux.dev)
 from F-Droid, then run `pkg install python git`, `git clone` this repo, and
 `cd dealbot && pip install -e .`. All the `dealbot` commands below then work on your phone.

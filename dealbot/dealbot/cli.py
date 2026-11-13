@@ -78,26 +78,44 @@ def cmd_watch(args) -> None:
     if not notifier.enabled:
         print("No ntfy_topic or discord_webhook set; new deals will only be printed here.")
     interval = args.interval or f.cfg.watch_interval_minutes
-    first = True
     while True:
+        # Nothing remembered yet means this is the very first check (also across --once runs):
+        # only alert penny items then, so a backlog of older posts doesn't flood your phone.
+        first = not f.state.seen
         try:
             deals, _ = f.find()
             fresh = [d for d in deals if f.state.is_new(d.id)]
+            alerted = 0
             for d in fresh:
                 f.state.mark_seen(d.id)
-                if d.score >= f.cfg.alert_min_score:
-                    # On the first run, only alert penny items so you aren't flooded with old posts.
-                    if not first or d.kind == "penny" or args.alert_backlog:
+                if d.score >= f.cfg.alert_min_score and (not first or d.kind == "penny" or args.alert_backlog):
+                    alerted += 1
+                    if not args.quiet:
                         print(format_deal(d), end="\n\n", flush=True)
-                        notifier.send(d)
+                    notifier.send(d)
             f.state.save()
-            logging.info("checked %d deals, %d new", len(deals), len(fresh))
+            print(f"Checked {len(deals)} deals: {len(fresh)} new, {alerted} alerted.", flush=True)
         except Exception as e:
-            logging.warning("check failed: %s", e)
-        first = False
+            if args.quiet:   # error text can contain your location; keep public logs clean
+                hint = " (location not found: check DEALBOT_LOCATION)" if isinstance(e, ValueError) else ""
+                logging.warning("check failed: %s%s", type(e).__name__, hint)
+            else:
+                logging.warning("check failed: %s", e)
         if args.once:
             return
         time.sleep(interval * 60)
+
+
+def cmd_test_alert(args) -> None:
+    from .models import Deal
+    f = _finder(args)
+    notifier = Notifier(f.http, f.cfg)
+    if not notifier.enabled:
+        sys.exit("Set ntfy_topic or discord_webhook first (config.toml or DEALBOT_NTFY_TOPIC).")
+    d = Deal("test", "Test alert: dealbot can reach your phone 🎉", "https://ntfy.sh", "dealbot",
+             kind="penny", chains=["dollar_general"], score=100)
+    notifier.send(d)
+    print("Test alert sent.")
 
 
 def cmd_decode(args) -> None:
@@ -150,9 +168,14 @@ def main(argv: list[str] | None = None) -> None:
         else:
             sp.add_argument("--interval", type=int, help="minutes between checks")
             sp.add_argument("--once", action="store_true", help="check once and exit (for cron)")
+            sp.add_argument("-q", "--quiet", action="store_true",
+                            help="don't print deal details (for public logs, e.g. GitHub Actions)")
             sp.add_argument("--alert-backlog", action="store_true",
                             help="on the first check, alert every match, not just penny items")
         sp.set_defaults(fn=fn)
+
+    sp = sub.add_parser("test-alert", help="send a test notification to your phone")
+    sp.set_defaults(fn=cmd_test_alert, location=None, radius=None)
 
     sp = sub.add_parser("decode", help="what does this price tag mean? e.g. decode 'home depot' 12.03")
     sp.add_argument("store")
