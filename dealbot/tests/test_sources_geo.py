@@ -115,3 +115,19 @@ def test_parse_feed_repairs_sloppy_xml():
     [d] = parse_feed(sloppy, "blog")
     assert d.title == "Tide & Gain\xa0penny list – B&M finds © 2026".replace("\xa0", " ") or "B&M" in d.title
     assert d.url == "https://x/1?a=1&b=2" and d.text == "Save… now"
+
+
+def test_parse_feed_scans_badly_broken_xml():
+    import pytest
+    broken = """<?xml version="1.0"?><rss><channel><title>KCL</title>
+      <item><title><![CDATA[Dollar General Penny List <3 & more]]></title>
+        <link>https://kcl.example/dg-penny</link><pubDate>Thu, 12 Nov 2026 08:00:00 GMT</pubDate>
+        <description><![CDATA[<p>Items ring up 1¢</p>]]></description><bad attr=unquoted></item>
+      <item><title>Target 70% off</title><link>https://kcl.example/t</link></item>
+    </channel></rss>"""
+    deals = parse_feed(broken, "kcl.example")
+    assert [d.title for d in deals] == ["Dollar General Penny List <3 & more", "Target 70% off"]
+    assert deals[0].url == "https://kcl.example/dg-penny" and deals[0].text == "Items ring up 1¢"
+    assert deals[0].published.day == 12
+    with pytest.raises(Exception):
+        parse_feed("<html>not a feed <b></html>", "x")      # junk with no items still fails loudly
