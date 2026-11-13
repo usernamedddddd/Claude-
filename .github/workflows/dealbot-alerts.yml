@@ -6,6 +6,7 @@
 #   DISCORD_WEBHOOK     a Discord channel webhook URL           (optional)
 # Optional repository *variables* (same page, Variables tab):
 #   DEALBOT_RADIUS_MILES (default 10), DEALBOT_CHAINS (e.g. "dollar_general,home_depot,target"),
+#   DEALBOT_CATEGORIES (e.g. "toys,holiday"; only alert for these),
 #   DEALBOT_ALERT_MIN_SCORE (default 50; lower = more alerts)
 #
 # This repository is public, so its Actions logs are public: the job runs with --quiet and
@@ -40,6 +41,7 @@ jobs:
       DEALBOT_DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       DEALBOT_RADIUS_MILES: ${{ vars.DEALBOT_RADIUS_MILES }}
       DEALBOT_CHAINS: ${{ vars.DEALBOT_CHAINS }}
+      DEALBOT_CATEGORIES: ${{ vars.DEALBOT_CATEGORIES }}
       DEALBOT_ALERT_MIN_SCORE: ${{ vars.DEALBOT_ALERT_MIN_SCORE }}
       DEALBOT_STATE_FILE: ${{ github.workspace }}/.dealbot-state/state.json
       DEALBOT_STORE_CACHE_DAYS: "0"   # never save nearby-store locations in the shared cache

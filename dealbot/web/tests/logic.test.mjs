@@ -84,3 +84,12 @@ test("parses API responses", () => {
   assert.equal(r.title, "HD & penny");
   assert.equal(placeFromNominatim({ lat: "1", lon: "2", address: { town: "Franklin", state: "Tennessee" } }).label, "Franklin, TN");
 });
+
+test("categories", async () => {
+  const { categorize, CATEGORIES } = await import("../logic.js");
+  assert.equal(CATEGORIES.length, 12);
+  assert.deepEqual(categorize("LEGO Christmas ornaments and Tide pods"), ["holiday", "toys", "cleaning"]);
+  assert.deepEqual(categorize("Stockholm news"), []);
+  const d = enrich(deal(9, "DG penny list", "Halloween decor 1¢"), ALL);
+  assert.deepEqual(d.categories, ["holiday", "home"]);
+});

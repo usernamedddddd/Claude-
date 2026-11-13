@@ -17,6 +17,8 @@ def format_deal(d: Deal) -> str:
     if d.nearest_store:
         s = d.nearest_store
         lines.append(f"Nearest: {s.name} {s.address} ({s.distance_miles:.1f} mi)".replace("  ", " "))
+    if d.categories:
+        lines.append("Category: " + ", ".join(c.replace("_", " ").title() for c in d.categories))
     if d.upcs:
         lines.append("UPC: " + ", ".join(d.upcs[:5]))
     lines += d.price_notes[:2]

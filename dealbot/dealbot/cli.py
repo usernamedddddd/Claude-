@@ -34,6 +34,8 @@ def _finder(args) -> DealFinder:
         cfg.radius_miles = args.radius
     if getattr(args, "penny_only", False):
         cfg.penny_only = True
+    if getattr(args, "category", None):
+        cfg.categories = args.category
     if getattr(args, "keyword", None):
         cfg.keywords = args.keyword
     if getattr(args, "min_score", None) is not None:
@@ -174,6 +176,9 @@ def main(argv: list[str] | None = None) -> None:
         loc_args(sp)
         sp.add_argument("--penny-only", action="store_true", help="only penny items")
         sp.add_argument("-k", "--keyword", action="append", help="only deals mentioning this (repeatable)")
+        sp.add_argument("--category", action="append", metavar="NAME",
+                        help="only this category (repeatable): toys, holiday, home, cleaning, beauty, "
+                             "health, food, baby, pet, clothing, electronics, tools, other")
         sp.add_argument("--min-score", type=float)
         if name == "deals":
             sp.add_argument("-n", "--top", type=int, default=15)

@@ -68,3 +68,22 @@ def test_enrich_percent():
     assert d.percent_off == 70 and d.kind == "clearance"
     d = enrich(Deal("4", "Walmart 20% off coffee", "u", "r/x"), ALL)
     assert d.kind == "sale"
+
+
+def test_categorize():
+    from dealbot.extract import categorize
+    assert categorize("LEGO Christmas ornaments and Tide pods") == ["holiday", "toys", "cleaning"]
+    assert categorize("DeWalt drill kit") == ["tools"]
+    assert categorize("Dog food and cat litter") == ["pet"]
+    assert categorize("Penny list this week") == []
+    assert categorize("Stockholm news") == []          # word boundaries: no "stock..." / "cat" inside words
+
+
+def test_categories_match_phone_app():
+    import re
+    from pathlib import Path
+    from dealbot.extract import CATEGORIES
+    js = (Path(__file__).parent.parent / "web" / "logic.js").read_text()
+    js_cats = re.findall(r'\{ key: "(\w+)", label: "([^"]+)", icon: "([^"]+)", words: \[([^\]]+)\] \}', js)
+    as_py = [(k, label, icon, [w.strip()[1:-1] for w in words.split(",")]) for k, label, icon, words in js_cats]
+    assert as_py == [(k, label, icon, list(words)) for k, label, icon, words in CATEGORIES]

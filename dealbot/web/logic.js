@@ -136,6 +136,7 @@ export function enrich(deal, enabled = CHAIN_KEYS, loc = null) {
   deal.percentOff = pcts.length ? Math.max(...pcts) : null;
   deal.upcs = [...new Set([...blob.matchAll(UPC_RE)].map((m) => m[2]))].sort();
   deal.localMention = mentionsLocation(blob, loc);
+  deal.categories = categorize(blob);
   let strongest = 0;
   deal.priceNotes = [];
   for (const chain of deal.chains) for (const price of deal.prices) for (const s of decodePrice(chain, price)) {
@@ -148,6 +149,28 @@ export function enrich(deal, enabled = CHAIN_KEYS, loc = null) {
   else if (deal.percentOff || deal.priceNotes.length) deal.kind = "sale";
   else deal.kind = "other";
   return deal;
+}
+
+// ---- product categories --------------------------------------------------------
+// Keyword lists; a deal can be in several categories. Keep in step with extract.py.
+export const CATEGORIES = [
+  { key: "holiday", label: "Holiday", icon: "🎄", words: ["christmas", "xmas", "halloween", "thanksgiving", "easter", "valentine", "valentines", "holiday", "ornaments?", "wreaths?", "inflatables?", "seasonal", "stocking stuffers?", "gift sets?"] },
+  { key: "toys", label: "Toys", icon: "🧸", words: ["toys?", "lego", "barbie", "hot wheels", "dolls?", "puzzles?", "nerf", "play-?doh", "board games?", "plush", "squishmallows?", "action figures?"] },
+  { key: "home", label: "Home", icon: "🏠", words: ["home decor", "decor", "kitchen", "bedding", "towels?", "pillows?", "curtains?", "rugs?", "candles?", "furniture", "cookware", "dishes", "storage", "vases?", "blankets?", "mugs?", "frames?"] },
+  { key: "cleaning", label: "Cleaning", icon: "🧼", words: ["cleaning", "cleaners?", "detergent", "tide", "bleach", "clorox", "lysol", "dish soap", "paper towels?", "toilet paper", "trash bags?", "dawn", "swiffer", "febreze", "laundry"] },
+  { key: "beauty", label: "Beauty", icon: "💄", words: ["beauty", "makeup", "cosmetics?", "lipstick", "mascara", "skincare", "skin care", "lotion", "shampoo", "conditioner", "nail polish", "perfume", "fragrance", "body wash", "deodorant", "hair care"] },
+  { key: "health", label: "Health", icon: "💊", words: ["vitamins?", "medicine", "pain relief", "tylenol", "advil", "first aid", "toothpaste", "toothbrush(es)?", "razors?", "allergy", "cold & flu", "supplements?"] },
+  { key: "food", label: "Food", icon: "🍫", words: ["groceries?", "snacks?", "candy", "chocolate", "cereal", "coffee", "soda", "drinks?", "chips", "cookies", "pasta", "frozen food"] },
+  { key: "baby", label: "Baby", icon: "👶", words: ["baby", "diapers?", "wipes", "formula", "toddlers?", "infant", "pampers", "huggies"] },
+  { key: "pet", label: "Pet", icon: "🐶", words: ["pets?", "dogs?", "cats?", "puppy", "kitten", "litter", "pet treats?", "dog food", "cat food"] },
+  { key: "clothing", label: "Clothing", icon: "👕", words: ["clothing", "clothes", "shirts?", "shoes", "socks", "jackets?", "jeans", "apparel", "pajamas?", "hoodies?", "dresses", "boots"] },
+  { key: "electronics", label: "Electronics", icon: "🔌", words: ["electronics", "tvs?", "headphones", "earbuds", "chargers?", "phones?", "tablets?", "laptops?", "speakers?", "bluetooth", "batteries", "airpods", "smart watch", "video games?", "nintendo", "playstation", "xbox"] },
+  { key: "tools", label: "Tools & Garden", icon: "🔨", words: ["tools?", "drills?", "saws?", "wrench(es)?", "dewalt", "milwaukee", "ryobi", "craftsman", "hardware", "ladders?", "lumber", "paint", "garden", "lawn", "mowers?", "plants?", "light bulbs?", "outdoor"] },
+];
+const CATEGORY_RES = CATEGORIES.map((c) => [c.key, new RegExp(`\\b(?:${c.words.join("|")})\\b`, "i")]);
+
+export function categorize(text) {
+  return CATEGORY_RES.filter(([, re]) => re.test(text)).map(([k]) => k);
 }
 
 // ---- scoring & ranking -------------------------------------------------------
