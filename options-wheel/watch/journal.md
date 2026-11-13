@@ -11,12 +11,15 @@ Test window: 2026-10-19 → 2026-11-13, one run per trading day at ~10:22 ET.
 |---|---|---|---|---|
 | SOFI 2026-12-04 16P ×1 (id 74f5e363-2b13-435a-97fd-fce993b0aebe) | 2026-10-29 @ 0.39 | $39 | $1,600 | buy back ≤ 0.19 |
 | PFE 2026-12-18 28P ×1 (id b9636795-3a3f-4a29-88aa-380c61d0a22f) | 2026-11-10 @ 0.46 | $46 | $2,800 | buy back ≤ 0.23 |
+| NU 2026-12-18 12P ×1 (id 92022b3c-3a4e-498a-b974-14ce618d0bbf) | 2026-11-13 @ 0.30 | $30 | $1,200 | buy back ≤ 0.15 |
+| F 2026-12-18 11P ×1 (id 37c66063-0740-4034-a3a5-ea4f08bff277) | 2026-11-13 @ 0.13 | $13 | $1,100 | buy back ≤ 0.06 |
+| T 2026-12-18 21P ×1 (id 6d40d61d-934f-4767-bc84-42dfdd8b4588) | 2026-11-13 @ 0.25 | $25 | $2,100 | buy back ≤ 0.12 |
 
 ## Totals
 
 - Realized premium: $20.00 gross / $19.90 after fees
-- Collateral in use: $4,400 (peak so far: $4,400)
-- Trades opened: 3 · closed: 1 (1 win, 0 losses)
+- Collateral in use: $8,800 (peak: $8,800)
+- Trades opened: 6 · closed: 1 (1 win, 0 losses)
 
 ## Log
 
@@ -381,3 +384,57 @@ Dec 18 expiry (36 DTE), no new puts passed:
 NU reports earnings tonight; it becomes eligible tomorrow (the last day of the test).
 
 Open: SOFI 16P (−$43.50), PFE 28P (+$5) · Realized premium: +$20.00 · Collateral needed: $4,400
+
+### 2026-11-13 (Fri) 11:08 ET: last run
+
+Prices: F 11.94 · **SOFI 15.33 (−1.9%)** · T 22.28 · PFE 28.69 · **NU 13.06 (+10.4% after earnings)**
+
+Manage:
+- SOFI 12-04 16P marks at 1.095 (1.08/1.11) against 0.39 sold, so **−$70.50** (worst yet). In the money, Δ 0.62, 21 DTE. Hold.
+- PFE 12-18 28P marks at 0.555 (0.55/0.56) against 0.46 sold, so −$9.50. Hold.
+
+Dec 18 expiry (35 DTE). Three puts passed today:
+
+| Trade | Δ | Bid/Ask | OI | Spread | Yield | Collateral |
+|---|---|---|---|---|---|---|
+| **STO NU 12P @ 0.30** | 0.25 | 0.30/0.31 | 25,087 | 3% | 26%/yr | $1,200 |
+| **STO F 11P @ 0.13** | 0.19 | 0.13/0.14 | 10,413 | 7% | 12%/yr | $1,100 |
+| **STO T 21P @ 0.25** | 0.22 | 0.24/0.26 | 8,713 | 8% | 12%/yr | $2,100 |
+
+Rejected: NU 11P Δ0.12; F 12P Δ0.49; T 20P Δ0.11.
+
+Open: 5 puts (SOFI −$70.50, PFE −$9.50, NU/F/T $0) · Realized +$20.00 · Collateral $8,800
+
+## Final review (Oct 19 – Nov 13, 2026)
+
+| Metric | Result |
+|---|---|
+| Puts sold | 6 (SOFI 15P, SOFI 16P, PFE 28P, NU 12P, F 11P, T 21P), $192 of premium in total |
+| Trades closed | 1. SOFI 15P bought back at 50% in 2 days: **+$20.00** (+$19.90 after fees) |
+| Win rate | 1 of 1 closed (100%), but a sample of one proves nothing |
+| Unrealized on open puts | −$80.00 (SOFI −$70.50, PFE −$9.50, three new puts $0) |
+| **Net paper PnL** | **−$60** (+$20 realized, −$80 open) |
+| Max collateral needed | $8,800 (today); $1,500–$4,400 before the last day |
+| Worst unrealized drawdown | −$80 (today); the SOFI 16P alone swung between +$4.50 and −$70.50 |
+| Assignments | None yet. **SOFI 16P is in the money** ($15.33 vs $16, expires Dec 4), so assignment is likely unless SOFI recovers. That would buy 100 shares at $16 (net $15.61) and start the covered-call phase. |
+
+**Not finished:** every put still open (SOFI 16P from week 2; PFE, NU, F and T from weeks 3–4) has
+3–5 weeks left. The test captured mostly entries, not outcomes, so the PnL above is a snapshot, not a result.
+
+**What we learned**
+1. **The plumbing works.** Selection, delta targeting, the 50% take-profit and the earnings blackout all behaved as designed.
+2. **Earnings season stalled the first 2 weeks.** All five tickers report in late Oct to mid Nov.
+3. **Weekly expiries are a trap for these stocks.** Picking "closest to 35 DTE" kept landing on weeklies with
+   5–100 open interest and 30–150% spreads. The day it landed on a **monthly** (Dec 18), contracts had
+   8,000–33,000 OI and 2–5¢ spreads, and 4 of 5 tickers produced trades.
+4. **The wheel's real risk showed up.** SOFI swung ±4–8% a day and sits below the strike. One assignment wipes
+   out many 50% wins: the one win (+$20) is far smaller than SOFI's open loss (−$70).
+
+**Verdict: not ready to go live as-is.** The rules are sound, but the test is too short to judge, and net PnL is
+slightly negative. Before risking money:
+- Change expiry selection to **standard monthlies only**. This is a one-line rule change; I can make it if you want.
+- Optionally keep paper-watching until **Dec 18** to see the SOFI assignment and covered-call phase play out.
+
+**Deposit recommendation, if you go live:** start with **~$2,000** and wheel **one** ticker at one contract, e.g. NU
+or F, where puts need $1,100–1,200 of collateral and leave a cash reserve for an assignment. Running all five tickers
+the way this test did needs **~$10,000**. Turn **trade approvals on** in the Robinhood app either way.
