@@ -7,7 +7,41 @@ alert your phone when a new one appears. It also decodes clearance price tags
 
 Uses only the Python standard library. You need no API keys or accounts.
 
-## Quick start
+## On your phone (iPhone or Android)
+
+`web/` is a phone app version that runs in your browser. It uses your phone's GPS
+to find nearby stores, then shows ranked deals with directions. It also has the
+price-tag checker and the tips. Nothing to install, and no account needed.
+
+**One-time setup (about 2 minutes, on a computer or in the GitHub app):**
+
+1. On GitHub, open this repository → **Settings** → **Pages**. Under
+   **Build and deployment → Source**, choose **GitHub Actions**.
+2. Open **Actions** → **Deploy deal finder app** → **Run workflow**.
+   If it fails with "Branch … is not allowed to deploy", go to **Settings → Environments →
+   github-pages**, add this branch under deployment branches, and run it again. Merging into
+   the default branch also works.
+3. Your app is then live at **`https://<your-username>.github.io/<repo-name>/`**.
+   The workflow run's summary shows the exact link.
+
+**Add it to your home screen** so it opens like a regular app:
+- **iPhone (Safari):** open the link → Share button → **Add to Home Screen**.
+- **Android (Chrome):** open the link → ⋮ menu → **Add to Home screen** / **Install app**.
+
+When you first open it, tap **Use my current location** and allow location access.
+You can also type a ZIP code instead. Pick the stores you shop at, and you're done.
+Tap ↻ to refresh, use the 🪙 Penny filter, and tap a UPC to copy it for scanning
+in the store's app.
+
+The phone app reads deals from Reddit only. Google News can't be read from a browser.
+If Reddit is blocked on your network (some VPNs), the app tells you and offers a
+direct Reddit search link. Your settings stay on your phone.
+
+**Run the full Python bot on Android instead:** install [Termux](https://termux.dev)
+from F-Droid, then run `pkg install python git`, `git clone` this repo, and
+`cd dealbot && pip install -e .`. All the `dealbot` commands below then work on your phone.
+
+## Quick start (computer)
 
 ```bash
 cd dealbot
@@ -100,3 +134,5 @@ These codes are shared by deal hunters. Stores don't publish them, and they chan
 | `dealbot/finder.py` | scoring, filtering and ranking |
 | `dealbot/notify.py` | ntfy and Discord alerts |
 | `dealbot/cli.py` | the `dealbot` command |
+| `web/` | phone app (`logic.js` mirrors the Python logic; tests: `node --test web/tests/*.test.mjs`) |
+| `../.github/workflows/dealbot-pages.yml` | tests and publishes the phone app to GitHub Pages |
