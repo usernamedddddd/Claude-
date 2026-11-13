@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Penny Deal Finder</title>
+<meta name="description" content="Find penny items and clearance deals at stores near you.">
+<meta name="theme-color" content="#0f7a4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Deals">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root {
+  --bg: #f4f6f4; --card: #ffffff; --text: #17201b; --muted: #5d6b63; --line: #dfe5e1;
+  --brand: #0f7a4a; --brand-ink: #ffffff; --penny: #b45309; --penny-bg: #fff3e0;
+  --clear: #0f7a4a; --clear-bg: #e5f5ec; --sale: #1d4ed8; --sale-bg: #e8eefc;
+  --other-bg: #eef0ef; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1411; --card: #17201b; --text: #e8eee9; --muted: #9aa8a0; --line: #2a362f;
+    --brand: #34c47c; --brand-ink: #06140c; --penny: #fbbf24; --penny-bg: #3a2a0c;
+    --clear: #34c47c; --clear-bg: #11301f; --sale: #8fb0ff; --sale-bg: #1a2442;
+    --other-bg: #222c26; --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1411; --card: #17201b; --text: #e8eee9; --muted: #9aa8a0; --line: #2a362f;
+  --brand: #34c47c; --brand-ink: #06140c; --penny: #fbbf24; --penny-bg: #3a2a0c;
+  --clear: #34c47c; --clear-bg: #11301f; --sale: #8fb0ff; --sale-bg: #1a2442;
+  --other-bg: #222c26; --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%; overflow-x: hidden;
+}
+button, input, select { font: inherit; color: inherit; }
+a { color: var(--brand); }
+header {
+  position: sticky; top: 0; z-index: 5; background: var(--bg);
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 8px;
+  display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line);
+}
+header h1 { font-size: 20px; margin: 0; flex: 1; letter-spacing: -.01em; }
+.chip-btn {
+  border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+  padding: 6px 12px; font-size: 14px; max-width: 60vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.icon-btn { border: 0; background: none; padding: 6px; font-size: 20px; line-height: 1; }
+main { padding: 12px 16px calc(env(safe-area-inset-bottom) + 84px); max-width: 640px; margin: 0 auto; }
+nav.tabs {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 5; display: flex;
+  background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom);
+}
+nav.tabs button {
+  flex: 1; border: 0; background: none; padding: 8px 0 10px; font-size: 12px; color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+nav.tabs button span { font-size: 21px; line-height: 1.1; }
+nav.tabs button[aria-selected="true"] { color: var(--brand); font-weight: 600; }
+.view[hidden] { display: none; }
+.filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+.filters::-webkit-scrollbar { display: none; }
+.pill {
+  border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 14px;
+  font-size: 14px; white-space: nowrap;
+}
+.pill[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.search { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); margin-bottom: 10px; }
+.status { color: var(--muted); font-size: 14px; margin: 4px 0 10px; }
+.status.warn { color: var(--penny); }
+.card {
+  background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 10px;
+  box-shadow: var(--shadow); border: 1px solid var(--line);
+}
+.card h3 { font-size: 16px; margin: 6px 0 6px; line-height: 1.3; overflow-wrap: anywhere; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; letter-spacing: .02em; }
+.badge.penny { color: var(--penny); background: var(--penny-bg); }
+.badge.clearance { color: var(--clear); background: var(--clear-bg); }
+.badge.sale { color: var(--sale); background: var(--sale-bg); }
+.badge.other { color: var(--muted); background: var(--other-bg); }
+.badge.new { color: var(--brand-ink); background: var(--brand); }
+.meta { color: var(--muted); font-size: 13px; }
+.score { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.note { font-size: 13px; color: var(--muted); margin: 4px 0; }
+.upc {
+  border: 1px dashed var(--line); background: none; border-radius: 6px; padding: 2px 8px;
+  font: 13px ui-monospace, Menlo, monospace;
+}
+.actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn {
+  flex: 1; text-align: center; text-decoration: none; padding: 10px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 15px;
+}
+.btn:focus:not(:focus-visible), .pill:focus:not(:focus-visible) { outline: none; }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); font-weight: 600; }
+.empty { text-align: center; color: var(--muted); padding: 32px 8px; }
+.store { display: flex; gap: 12px; align-items: center; }
+.store .dist { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 56px; }
+.store .info { flex: 1; min-width: 0; }
+.store .info div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.store a { flex: 0 0 auto; }
+label.field { display: block; margin: 12px 0 6px; font-weight: 600; font-size: 14px; }
+.input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+.decode-out { margin-top: 12px; }
+.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.checks label { display: flex; gap: 8px; align-items: center; font-size: 15px; }
+input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--brand); }
+input[type="range"] { width: 100%; accent-color: var(--brand); }
+.tips h3 { margin: 0 0 6px; font-size: 16px; }
+.tips ul { margin: 0; padding-left: 20px; }
+.tips li { margin: 4px 0; }
+dialog {
+  border: 0; border-radius: 18px 18px 0 0; padding: 0; width: 100%; max-width: 640px;
+  margin: auto auto 0; background: var(--bg); color: var(--text); max-height: 92vh;
+}
+dialog::backdrop { background: rgba(0,0,0,.4); }
+.sheet { padding: 18px 16px calc(env(safe-area-inset-bottom) + 18px); overflow-y: auto; max-height: 92vh; }
+.sheet h2 { margin: 0 0 4px; font-size: 20px; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 80px); transform: translateX(-50%);
+  background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: 14px;
+  opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20;
+}
+.toast.show { opacity: 1; }
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.small { font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Deals</h1>
+  <button class="chip-btn" id="locBtn" aria-label="Change location">📍 Set location</button>
+  <button class="icon-btn" id="refreshBtn" aria-label="Refresh">↻</button>
+</header>
+
+<main>
+  <section class="view" id="view-deals">
+    <div class="filters" role="group" aria-label="Deal type">
+      <button class="pill" data-kind="all" aria-pressed="true">All</button>
+      <button class="pill" data-kind="penny" aria-pressed="false">🪙 Penny</button>
+      <button class="pill" data-kind="clearance" aria-pressed="false">Clearance</button>
+      <button class="pill" data-kind="sale" aria-pressed="false">Sale</button>
+    </div>
+    <input class="search" id="search" type="search" placeholder="Filter: tide, lego, toys…" autocomplete="off">
+    <div class="status" id="dealStatus"></div>
+    <div id="dealList"></div>
+  </section>
+
+  <section class="view" id="view-stores" hidden>
+    <div class="status" id="storeStatus"></div>
+    <div id="storeList"></div>
+  </section>
+
+  <section class="view" id="view-decode" hidden>
+    <div class="card">
+      <h3 style="margin-top:0">What does this price tag mean?</h3>
+      <label class="field" for="decStore">Store</label>
+      <select class="input" id="decStore"></select>
+      <label class="field" for="decPrice">Price on the tag</label>
+      <input class="input" id="decPrice" inputmode="decimal" placeholder="e.g. 12.03" autocomplete="off">
+      <div class="decode-out" id="decOut"></div>
+      <p class="small">These codes come from deal hunters, not the stores, and can change. Scan the item in the store's app to be sure.</p>
+    </div>
+  </section>
+
+  <section class="view tips" id="view-tips" hidden></section>
+</main>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-view="deals" aria-selected="true"><span>🏷️</span>Deals</button>
+  <button role="tab" data-view="stores" aria-selected="false"><span>🏬</span>Stores</button>
+  <button role="tab" data-view="decode" aria-selected="false"><span>🔍</span>Price check</button>
+  <button role="tab" data-view="tips" aria-selected="false"><span>💡</span>Tips</button>
+</nav>
+
+<dialog id="settings">
+  <form class="sheet" method="dialog" id="settingsForm">
+    <h2>Location &amp; settings</h2>
+    <button type="button" class="btn primary" id="gpsBtn" style="width:100%;margin-top:10px">📍 Use my current location</button>
+    <label class="field" for="placeInput">Or enter a ZIP code or city</label>
+    <div class="row" style="flex-wrap:nowrap">
+      <input class="input" id="placeInput" placeholder="37201 or Nashville, TN" autocomplete="postal-code">
+      <button type="button" class="btn" id="placeBtn" style="flex:0 0 auto">Set</button>
+    </div>
+    <div class="small" id="locMsg" style="margin-top:6px"></div>
+
+    <label class="field" for="radius">Search radius: <span id="radiusVal"></span> miles</label>
+    <input type="range" id="radius" min="2" max="40" step="1">
+
+    <label class="field">Stores I shop at</label>
+    <div class="checks" id="chainChecks"></div>
+
+    <label class="field">Options</label>
+    <div class="checks" style="grid-template-columns:1fr">
+      <label><input type="checkbox" id="hideFar"> Hide deals for stores not near me</label>
+    </div>
+
+    <div class="actions" style="margin-top:18px">
+      <button class="btn primary" value="done">Done</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+# Copy to config.toml and edit. Anything you leave out uses the default in dealbot/config.py.
+
+[location]
+location = "Nashville, TN"     # "City, ST", street address, or 5-digit ZIP
+# lat = 36.1627                # or give exact coordinates instead
+# lon = -86.7816
+# city = "Nashville"           # used to boost posts that mention your area
+# state = "Tennessee"
+radius_miles = 10
+
+[stores]
+# Remove chains you don't shop at. Options: dollar_general, home_depot, walmart, target,
+# costco, lowes, family_dollar, dollar_tree, cvs, walgreens
+chains = ["dollar_general", "home_depot", "walmart", "target", "costco", "lowes",
+          "family_dollar", "dollar_tree"]
+
+[sources]
+reddit_queries = [
+  "dollar general penny list",
+  "dollar general penny",
+  "home depot penny",
+  "penny shopping",
+  "hidden clearance",
+  "target clearance 70%",
+  "walmart clearance",
+]
+google_news_queries = ["dollar general penny list", "home depot penny items"]
+rss_feeds = []                 # any RSS/Atom feed URL, e.g. a deal blog you follow
+max_age_days = 7
+
+[filters]
+min_score = 25
+penny_only = false
+keywords = []                  # e.g. ["tide", "lego", "christmas"]: only show matching deals
+exclude_keywords = ["penny stock", "penny stocks", "crypto"]
+require_nearby_store = true    # hide deals for chains with no store in your radius
+
+[alerts]
+ntfy_topic = ""                # install the ntfy app, subscribe to a hard-to-guess topic name
+discord_webhook = ""           # or paste a Discord channel webhook URL
+alert_min_score = 50
+watch_interval_minutes = 60
+
+[general]
+state_file = "dealbot_state.json"
+store_cache_days = 7

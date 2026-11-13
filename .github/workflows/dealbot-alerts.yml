@@ -1,0 +1,89 @@
+# Checks for new penny/clearance deals every hour and pushes them to your phone (ntfy app).
+#
+# One-time setup (repo Settings → Secrets and variables → Actions → New repository secret):
+#   DEALBOT_LOCATION    your ZIP code or "City, ST"            (required)
+#   NTFY_TOPIC          the ntfy topic your phone subscribes to (required unless DISCORD_WEBHOOK is set)
+#   DISCORD_WEBHOOK     a Discord channel webhook URL           (optional)
+# Optional repository *variables* (same page, Variables tab):
+#   DEALBOT_RADIUS_MILES (default 10), DEALBOT_CHAINS (e.g. "dollar_general,home_depot,target"),
+#   DEALBOT_ALERT_MIN_SCORE (default 50; lower = more alerts)
+#
+# This repository is public, so its Actions logs are public: the job runs with --quiet and
+# never prints deal details, your location or nearby stores. Scheduled runs only happen on
+# the repository's default branch.
+name: Deal alerts
+
+on:
+  schedule:
+    - cron: "23 * * * *"        # every hour, at :23
+  workflow_dispatch:
+    inputs:
+      test_alert:
+        description: "Just send a test notification to my phone"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dealbot-alerts
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DEALBOT_LOCATION: ${{ secrets.DEALBOT_LOCATION }}
+      DEALBOT_NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      DEALBOT_DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      DEALBOT_RADIUS_MILES: ${{ vars.DEALBOT_RADIUS_MILES }}
+      DEALBOT_CHAINS: ${{ vars.DEALBOT_CHAINS }}
+      DEALBOT_ALERT_MIN_SCORE: ${{ vars.DEALBOT_ALERT_MIN_SCORE }}
+      DEALBOT_STATE_FILE: ${{ github.workspace }}/.dealbot-state/state.json
+      DEALBOT_STORE_CACHE_DAYS: "0"   # never save nearby-store locations in the shared cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check secrets
+        run: |
+          if [ -z "$DEALBOT_LOCATION" ]; then
+            echo "::error::Add a DEALBOT_LOCATION repository secret (your ZIP code or 'City, ST')."; exit 1
+          fi
+          if [ -z "$DEALBOT_NTFY_TOPIC" ] && [ -z "$DEALBOT_DISCORD_WEBHOOK" ]; then
+            echo "::error::Add an NTFY_TOPIC (or DISCORD_WEBHOOK) repository secret."; exit 1
+          fi
+
+      - name: Install dealbot
+        run: pip install --quiet ./dealbot
+
+      - name: Send test alert
+        if: ${{ inputs.test_alert }}
+        run: dealbot test-alert
+
+      # Remember which deals were already sent, so you're only alerted about new ones.
+      - name: Restore memory of sent deals
+        if: ${{ !inputs.test_alert }}
+        uses: actions/cache/restore@v4
+        with:
+          path: .dealbot-state
+          key: dealbot-state-${{ github.run_id }}
+          restore-keys: dealbot-state-
+
+      - name: Check for new deals
+        if: ${{ !inputs.test_alert }}
+        run: |
+          mkdir -p .dealbot-state
+          dealbot -v watch --once --quiet
+
+      - name: Save memory of sent deals
+        if: ${{ !inputs.test_alert && always() }}
+        uses: actions/cache/save@v4
+        with:
+          path: .dealbot-state
+          key: dealbot-state-${{ github.run_id }}

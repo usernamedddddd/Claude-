@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0f7a4a"/>
+  <g transform="translate(256 262) rotate(-20)">
+    <path d="M-150 -90 H70 L150 0 L70 90 H-150 Z" fill="#ffffff"/>
+    <circle cx="80" cy="0" r="18" fill="#0f7a4a"/>
+  </g>
+  <circle cx="200" cy="292" r="74" fill="#d9822b" stroke="#a85d15" stroke-width="12"/>
+  <text x="200" y="320" text-anchor="middle" font-family="Georgia, serif" font-size="84" font-weight="700" fill="#ffffff">1¢</text>
+</svg>

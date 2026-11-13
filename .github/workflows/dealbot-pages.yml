@@ -1,0 +1,47 @@
+# Publishes the phone app in dealbot/web to GitHub Pages.
+# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
+name: Deploy deal finder app
+
+on:
+  push:
+    branches: [memecoin-bot, claude/wizardly-mayer-1el2vl]
+    paths: ["dealbot/web/**", ".github/workflows/dealbot-pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test dealbot/web/tests/*.test.mjs
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package the app (without tests)
+        run: |
+          mkdir -p _site
+          cp dealbot/web/*.html dealbot/web/*.js dealbot/web/*.webmanifest dealbot/web/*.svg dealbot/web/*.png _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
