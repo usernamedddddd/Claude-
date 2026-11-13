@@ -24,8 +24,11 @@ reddit_queries = [
   "target clearance 70%",
   "walmart clearance",
 ]
-google_news_queries = ["dollar general penny list", "home depot penny items"]
-rss_feeds = []                 # any RSS/Atom feed URL, e.g. a deal blog you follow
+# Google News, Bing News and the RSS feeds below default to a broad built-in list
+# (see dealbot/config.py). Uncomment a line only to replace that list with your own.
+# google_news_queries = ["dollar general penny list", "home depot penny items", "target clearance"]
+# bing_news_queries = ["dollar general penny list", "home depot penny"]
+# rss_feeds = ["https://hip2save.com/feed/", "https://slickdeals.net/newsearch.php?searcharea=deals&searchin=first&rss=1&q=clearance"]
 max_age_days = 7
 
 [filters]

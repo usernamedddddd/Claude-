@@ -64,3 +64,46 @@ def test_overpass_query_and_parse():
     assert [s.chain for s in stores] == ["dollar_general", "lowes"]
     assert stores[0].address == "12 Main St"
     assert stores[0].distance_miles < stores[1].distance_miles
+
+
+def test_feed_name_and_title_key():
+    from dealbot.sources import feed_name, title_key
+    assert feed_name("https://slickdeals.net/newsearch.php?rss=1&q=in-store") == "Slickdeals: in-store"
+    assert feed_name("https://www.hip2save.com/feed/") == "hip2save.com"
+    assert title_key("Dollar General Penny List - The Krazy Coupon Lady") == title_key("Dollar General penny list")
+
+
+def test_fetch_all_reports_status_and_dedupes(fake_http):
+    from dealbot.config import Config
+    from dealbot.sources import Sources
+    google = RSS.replace("Dollar General penny list: 50 items &amp; more", "DG penny list this week - WSB")
+    bing = RSS.replace("Dollar General penny list: 50 items &amp; more", "DG penny list this week - Other Paper") \
+              .replace("https://example.com/a", "https://example.com/b")
+    http = fake_http({"https://news.google.com": google, "https://www.bing.com": bing,
+                      "https://www.reddit.com": RuntimeError("403 Blocked"), "https://blog.example": ATOM})
+    cfg = Config(reddit_queries=["q"], google_news_queries=["q"], bing_news_queries=["q"],
+                 rss_feeds=["https://blog.example/feed"])
+    deals, statuses = Sources(http, cfg).fetch_all_with_status()
+    assert sorted(d.title for d in deals) == ["DG penny list this week - WSB", "Target 70% off toys"]
+    assert [(s.name, s.ok) for s in statuses] == [("Reddit: q", False), ("Google News: q", True),
+                                                  ("Bing News: q", True), ("blog.example", True)]
+    assert "403" in statuses[0].error
+
+
+def test_export_keeps_store_deals_only(tmp_path, fake_http):
+    import json
+    from datetime import datetime, timezone
+    from dealbot.config import Config
+    from dealbot.export import export
+    rss = """<rss><channel>
+      <item><title>Hidden clearance at Walmart</title><link>https://x/1</link><pubDate>Thu, 12 Nov 2026 08:00:00 GMT</pubDate></item>
+      <item><title>Amazon Echo deal</title><link>https://x/2</link><pubDate>Thu, 12 Nov 2026 08:00:00 GMT</pubDate></item>
+      <item><title>Old DG penny list</title><link>https://x/3</link><pubDate>Thu, 01 Oct 2026 08:00:00 GMT</pubDate></item>
+    </channel></rss>"""
+    http = fake_http({"https://feed.example": rss})
+    cfg = Config(reddit_queries=[], google_news_queries=[], bing_news_queries=[], rss_feeds=["https://feed.example/rss"])
+    out = tmp_path / "site" / "deals.json"
+    export(cfg, out, http=http, now=datetime(2026, 11, 13, tzinfo=timezone.utc))
+    data = json.loads(out.read_text())
+    assert [d["title"] for d in data["deals"]] == ["Hidden clearance at Walmart"]
+    assert data["sources"][0] == {"name": "feed.example", "ok": True, "count": 3, "error": ""}

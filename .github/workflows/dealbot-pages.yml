@@ -1,4 +1,6 @@
-# Publishes the phone app in dealbot/web to GitHub Pages.
+# Publishes the phone app in dealbot/web to GitHub Pages, plus deals.json: deals collected
+# every hour from Google News, Bing News, Slickdeals, deal blogs and Reddit (sites a phone
+# browser can't read directly). deals.json is the same for everyone and holds no location.
 # One-time setup: repo Settings → Pages → Source: "GitHub Actions".
 name: Deploy deal finder app
 
@@ -6,6 +8,8 @@ on:
   push:
     branches: [memecoin-bot, claude/wizardly-mayer-1el2vl]
     paths: ["dealbot/web/**", ".github/workflows/dealbot-pages.yml"]
+  schedule:
+    - cron: "41 * * * *"        # refresh deals.json every hour, at :41
   workflow_dispatch:
 
 permissions:
@@ -29,6 +33,8 @@ jobs:
 
   deploy:
     needs: test
+    # GitHub only lets the default branch publish Pages; other branches just run the tests.
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/memecoin-bot'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -39,6 +45,13 @@ jobs:
         run: |
           mkdir -p _site
           cp dealbot/web/*.html dealbot/web/*.js dealbot/web/*.webmanifest dealbot/web/*.svg dealbot/web/*.png _site/
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Collect deals from every source
+        run: |
+          pip install --quiet ./dealbot
+          dealbot export -o _site/deals.json || echo '{"generated_at":null,"sources":[],"deals":[]}' > _site/deals.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -36,8 +36,29 @@ class Config:
     google_news_queries: list[str] = field(default_factory=lambda: [
         "dollar general penny list",
         "home depot penny items",
+        "target clearance",
+        "walmart clearance",
+        "lowe's clearance",
+        "costco clearance markdown",
+        "dollar tree deals",
     ])
-    rss_feeds: list[str] = field(default_factory=list)
+    bing_news_queries: list[str] = field(default_factory=lambda: [
+        "dollar general penny list",
+        "home depot penny",
+        "clearance deals walmart target",
+    ])
+    rss_feeds: list[str] = field(default_factory=lambda: [
+        # Slickdeals searches (in-store and online deals; online-only ones score low)
+        "https://slickdeals.net/newsearch.php?searcharea=deals&searchin=first&rss=1&q=clearance",
+        "https://slickdeals.net/newsearch.php?searcharea=deals&searchin=first&rss=1&q=penny",
+        "https://slickdeals.net/newsearch.php?searcharea=deals&searchin=first&rss=1&q=in-store",
+        # deal blogs
+        "https://hip2save.com/feed/",
+        "https://thekrazycouponlady.com/feed",
+        "https://www.thefreebieguy.com/feed/",
+        "https://www.moneysavingmom.com/feed/",
+        "https://www.dollargeneralcouponer.com/feed/",
+    ])
     max_age_days: int = 7
 
     # what counts as worth showing
