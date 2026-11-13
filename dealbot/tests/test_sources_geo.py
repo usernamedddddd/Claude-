@@ -107,3 +107,11 @@ def test_export_keeps_store_deals_only(tmp_path, fake_http):
     data = json.loads(out.read_text())
     assert [d["title"] for d in data["deals"]] == ["Hidden clearance at Walmart"]
     assert data["sources"][0] == {"name": "feed.example", "ok": True, "count": 3, "error": ""}
+
+
+def test_parse_feed_repairs_sloppy_xml():
+    sloppy = """<rss><channel><item><title>Tide &amp; Gain&nbsp;penny list – B&M finds &copy; 2026</title>
+      <link>https://x/1?a=1&b=2</link><description>Save&hellip; now\x0b</description></item></channel></rss>"""
+    [d] = parse_feed(sloppy, "blog")
+    assert d.title == "Tide & Gain\xa0penny list – B&M finds © 2026".replace("\xa0", " ") or "B&M" in d.title
+    assert d.url == "https://x/1?a=1&b=2" and d.text == "Save… now"

@@ -70,9 +70,29 @@ def _parse_date(value: str | None) -> datetime | None:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
+_XML_ENTITIES = {"amp", "lt", "gt", "quot", "apos"}
+
+
+def _repair_xml(text: str) -> str:
+    """Fix the usual mistakes in real-world feeds: HTML entities like &nbsp; and bare '&'."""
+    import html.entities
+    def entity(m):
+        name = m.group(1)
+        if name in _XML_ENTITIES:
+            return m.group(0)
+        cp = html.entities.name2codepoint.get(name)
+        return f"&#{cp};" if cp else f"&amp;{name};"
+    text = re.sub(r"&([A-Za-z][A-Za-z0-9]*);", entity, text)
+    text = re.sub(r"&(?!#\d+;|#x[0-9A-Fa-f]+;|[A-Za-z][A-Za-z0-9]*;)", "&amp;", text)
+    return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)   # control characters XML forbids
+
+
 def parse_feed(xml_text: str, source: str) -> list[Deal]:
     """Parse RSS 2.0 or Atom into deals."""
-    root = ET.fromstring(xml_text)
+    try:
+        root = ET.fromstring(xml_text)
+    except ET.ParseError:
+        root = ET.fromstring(_repair_xml(xml_text))
     atom = "{http://www.w3.org/2005/Atom}"
     out = []
     items = root.findall(".//item")
