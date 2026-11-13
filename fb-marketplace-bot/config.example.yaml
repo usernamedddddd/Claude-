@@ -1,0 +1,40 @@
+# Copy to config.yaml and edit. Any key you leave out uses the default in fbmarket/config.py.
+poll_minutes: 10              # minimum 5; faster polling gets accounts checkpointed
+jitter_pct: 30                # each wait varies by ±30%
+state_file: seen.json
+alert_on_first_run: false     # first pass of each search only records existing listings
+alert_price_drops: true       # alert again when a listing you've seen gets cheaper
+
+browser:
+  headless: true
+  user_data_dir: .fb-profile  # your logged-in session; never share or commit it
+  scrolls: 3
+  min_delay_s: 8              # random pause between searches
+  max_delay_s: 20
+
+notify:
+  console: true
+  telegram:
+    enabled: false            # export TELEGRAM_BOT_TOKEN=...  (from @BotFather)
+    chat_id: ""               # or export TELEGRAM_CHAT_ID=...
+  discord:
+    enabled: false            # export DISCORD_WEBHOOK_URL=...
+  ntfy:
+    enabled: false            # install the ntfy app and subscribe to the same topic
+    topic: ""                 # make it long and random, e.g. deals-7f3k9q2x
+
+searches:
+  - name: road bike
+    query: road bike
+    location: nyc             # slug from facebook.com/marketplace/<slug>/; omit for your account's location
+    radius_km: 40
+    min_price: 150
+    max_price: 600
+    days_since_listed: 1      # 1, 7, 30 or null
+    exclude: [kids, child, "for parts", broken, wanted]
+
+  - name: cheap 4k tv
+    query: 4k tv
+    max_price: 200
+    include_any: [55, 65, "55in", "65in", '55"', '65"']
+    exclude: [stand, mount, remote, cracked]

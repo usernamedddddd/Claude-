@@ -1,5 +1,8 @@
 # memebot — Solana memecoin scanner & trading bot
 
+> This repo also contains [`fb-marketplace-bot/`](fb-marketplace-bot/README.md), a
+> Facebook Marketplace deal watcher that alerts you about new matching listings.
+
 Finds momentum memecoins on Solana, screens them for rug risk, and trades them with
 strict exits and risk limits. **Runs in paper-trading mode by default.**
 
