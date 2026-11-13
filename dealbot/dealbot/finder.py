@@ -63,6 +63,8 @@ def rank_deals(deals: list[Deal], cfg: Config, loc: Location | None, stores: lis
             continue
         if cfg.penny_only and d.kind != "penny":
             continue
+        if cfg.categories and not any(c in cfg.categories for c in (d.categories or ["other"])):
+            continue
         if d.chains and stores is not None:
             near = [nearest[c] for c in d.chains if c in nearest]
             if not near and cfg.require_nearby_store:

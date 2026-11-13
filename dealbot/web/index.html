@@ -74,6 +74,12 @@ nav.tabs button[aria-selected="true"] { color: var(--brand); font-weight: 600; }
   font-size: 14px; white-space: nowrap;
 }
 .pill[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.cats .pill { font-size: 13px; padding: 5px 12px; }
+.cats .pill .n { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 2px; }
+.cats .pill[aria-pressed="true"] .n { color: inherit; opacity: .8; }
+.cats .pill:disabled { opacity: .45; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.tag { font-size: 12px; color: var(--muted); background: var(--other-bg); border-radius: 6px; padding: 1px 7px; }
 .search { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); margin-bottom: 10px; }
 .status { color: var(--muted); font-size: 14px; margin: 4px 0 10px; }
 .status.warn { color: var(--penny); }
@@ -152,6 +158,7 @@ dialog::backdrop { background: rgba(0,0,0,.4); }
       <button class="pill" data-kind="clearance" aria-pressed="false">Clearance</button>
       <button class="pill" data-kind="sale" aria-pressed="false">Sale</button>
     </div>
+    <div class="filters cats" id="catFilters" role="group" aria-label="Category"></div>
     <input class="search" id="search" type="search" placeholder="Filter: tide, lego, toys…" autocomplete="off">
     <div class="status" id="dealStatus"></div>
     <div id="dealList"></div>

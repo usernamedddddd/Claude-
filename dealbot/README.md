@@ -31,7 +31,10 @@ price-tag checker and the tips. Nothing to install, and no account needed.
 When you first open it, tap **Use my current location** and allow location access.
 You can also type a ZIP code instead. Pick the stores you shop at, and you're done.
 Tap ↻ to refresh, use the 🪙 Penny filter, and tap a UPC to copy it for scanning
-in the store's app.
+in the store's app. The second row of chips filters by **category**: Holiday, Toys, Home,
+Cleaning, Beauty, Health, Food, Baby, Pet, Clothing, Electronics, Tools & Garden, or Other.
+Each chip shows how many current deals it has. Tap a chip again to clear it, and the app
+remembers your choice.
 
 **Where the phone app's deals come from:** every hour, the GitHub job collects deals from
 Google News, Bing News, Slickdeals, deal blogs (Hip2Save, The Freebie Guy, Money Saving
@@ -54,7 +57,8 @@ sends each new deal to your phone.
    - `NTFY_TOPIC`: the topic name from step 1
 3. Optional: on the **Variables** tab of the same page, add `DEALBOT_RADIUS_MILES` (default 10),
    `DEALBOT_CHAINS` (e.g. `dollar_general,home_depot,target`), or `DEALBOT_ALERT_MIN_SCORE`
-   (default 50; lower means more alerts).
+   (default 50; lower means more alerts), or `DEALBOT_CATEGORIES` (e.g. `toys,holiday`) to
+   only be alerted about those categories.
 4. Merge this branch into the default branch. GitHub only runs scheduled jobs from there.
 5. Test it: **Actions → Deal alerts → Run workflow**, tick **Just send a test notification**.
    Your phone should buzz within a minute.
@@ -80,6 +84,7 @@ dealbot stores -l "Nashville, TN"     # which stores are within 10 miles
 dealbot deals  -l 37201               # best current deals near a ZIP code
 dealbot deals --penny-only            # penny items only
 dealbot deals -k tide -k lego         # only deals mentioning these words
+dealbot deals --category toys         # only one category (repeat for more)
 dealbot decode "home depot" 12.03     # what does this price tag mean?
 dealbot tips dollar_general           # how penny shopping works at a chain
 dealbot watch                         # check every hour, alert on new deals

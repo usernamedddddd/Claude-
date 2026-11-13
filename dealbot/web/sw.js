@@ -1,6 +1,6 @@
 // Caches the app itself so it opens instantly and offline. Deal and store data
 // always comes from the network (the app keeps its own last results).
-const CACHE = "dealbot-v2";
+const CACHE = "dealbot-v3";
 const SHELL = ["./", "index.html", "app.js", "logic.js", "manifest.webmanifest", "icon.svg", "icon-180.png", "icon-192.png"];
 
 self.addEventListener("install", (e) => {

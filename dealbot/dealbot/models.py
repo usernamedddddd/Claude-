@@ -37,6 +37,7 @@ class Deal:
     percent_off: float | None = None
     upcs: list[str] = field(default_factory=list)
     price_notes: list[str] = field(default_factory=list)
+    categories: list[str] = field(default_factory=list)
     local_mention: bool = False
     nearest_store: Store | None = None
     score: float = 0.0

@@ -62,6 +62,7 @@ class Config:
     # what counts as worth showing
     min_score: float = 25.0
     penny_only: bool = False
+    categories: list[str] = field(default_factory=list)  # e.g. ["toys", "holiday"]: only these
     keywords: list[str] = field(default_factory=list)   # e.g. ["tide", "lego"]: only matching deals
     exclude_keywords: list[str] = field(default_factory=lambda: ["penny stock", "penny stocks", "crypto"])
     require_nearby_store: bool = True  # drop deals for chains with no store in your radius
@@ -86,6 +87,7 @@ ENV_OVERRIDES = {
     "DEALBOT_LOCATION": ("location", str),
     "DEALBOT_RADIUS_MILES": ("radius_miles", float),
     "DEALBOT_CHAINS": ("chains", lambda v: [c.strip() for c in v.split(",") if c.strip()]),
+    "DEALBOT_CATEGORIES": ("categories", lambda v: [c.strip().lower() for c in v.split(",") if c.strip()]),
     "DEALBOT_NTFY_TOPIC": ("ntfy_topic", str),
     "DEALBOT_DISCORD_WEBHOOK": ("discord_webhook", str),
     "DEALBOT_ALERT_MIN_SCORE": ("alert_min_score", float),
@@ -107,6 +109,10 @@ def load_config(path: str | Path | None, env: dict[str, str] | None = None) -> C
     bad = [c for c in cfg.chains if c not in CHAINS]
     if bad:
         raise ValueError(f"Unknown chains {bad}. Choose from: {', '.join(CHAINS)}")
+    from .extract import CATEGORY_KEYS
+    bad = [c for c in cfg.categories if c not in CATEGORY_KEYS and c != "other"]
+    if bad:
+        raise ValueError(f"Unknown categories {bad}. Choose from: {', '.join(CATEGORY_KEYS)}, other")
     return cfg
 
 

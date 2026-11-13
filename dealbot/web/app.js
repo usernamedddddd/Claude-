@@ -1,5 +1,5 @@
 import {
-  CHAINS, CHAIN_KEYS, DEFAULTS, TIPS, decodePrice, overpassQuery, parseOverpass,
+  CATEGORIES, CHAINS, CHAIN_KEYS, DEFAULTS, TIPS, decodePrice, overpassQuery, parseOverpass,
   parseReddit, placeFromNominatim, rankDeals,
 } from "./logic.js";
 
@@ -29,6 +29,9 @@ const saveSettings = () => store.set("settings", settings);
 let stores = null;            // nearby stores, or null if unknown
 let rawDeals = [];            // posts as fetched
 let kindFilter = "all";
+let catFilter = store.get("category", "all");   // remembered between visits
+const CAT = Object.fromEntries(CATEGORIES.map((c) => [c.key, c]));
+if (catFilter !== "all" && catFilter !== "other" && !CAT[catFilter]) catFilter = "all";
 let loading = false;
 
 const $ = (s) => document.querySelector(s);
@@ -200,7 +203,7 @@ async function refresh(force = false) {
           <a href="https://www.reddit.com/search/?q=penny%20list&sort=new" target="_blank" rel="noopener">Search Reddit yourself →</a>`;
       } else {
         rawDeals = d.deals;
-        const summary = `Checked ${d.sourceCount} sources (${d.sourceNames.slice(0, 5).join(", ")}${d.sourceNames.length > 5 ? ", …" : ""})`;
+        const summary = `Checked ${d.sourceCount} source${d.sourceCount === 1 ? "" : "s"} (${d.sourceNames.slice(0, 5).join(", ")}${d.sourceNames.length > 5 ? ", …" : ""})`;
         store.set("deals", { at: Date.now(), deals: rawDeals, summary });
         status.textContent = `${summary} · just now`;
       }
@@ -219,8 +222,11 @@ function renderDeals() {
   const words = $("#search").value.split(/[,\s]+/).filter(Boolean);
   const cfg = { ...DEFAULTS, radiusMiles: settings.radiusMiles, chains: settings.chains, keywords: words,
     requireNearbyStore: settings.hideFar, minScore: 20 };
-  const deals = rankDeals(rawDeals.map((d) => ({ ...d })), cfg, settings.loc, stores)
+  const byKind = rankDeals(rawDeals.map((d) => ({ ...d })), cfg, settings.loc, stores)
     .filter((d) => kindFilter === "all" || d.kind === kindFilter);
+  renderCategoryChips(byKind);
+  const deals = byKind.filter((d) => catFilter === "all"
+    || (catFilter === "other" ? !d.categories.length : d.categories.includes(catFilter)));
 
   const seen = store.get("seen", {});
   const now = Date.now();
@@ -230,7 +236,8 @@ function renderDeals() {
     list.innerHTML = `<div class="card empty">Set your location to see deals at stores near you.<div class="actions">
       <button class="btn primary" data-open-settings>📍 Set location</button></div></div>`;
   } else if (!deals.length) {
-    list.innerHTML = loading ? "" : `<div class="empty">No deals match right now.<br>Try “All”, clear the filter, or widen your radius.</div>`;
+    const what = catFilter !== "all" ? `in ${catFilter === "other" ? "Other" : CAT[catFilter].label} ` : "";
+    list.innerHTML = loading ? "" : `<div class="empty">No deals ${what}match right now.<br>Try “All”, clear the filter, or widen your radius.</div>`;
   } else {
     list.innerHTML = deals.slice(0, 60).map((d) => {
       const isNew = !seen[d.id];
@@ -247,6 +254,7 @@ function renderDeals() {
         <div class="meta">${esc(chains)}${s ? ` · ${s.distanceMiles.toFixed(1)} mi` : ""}${d.localMention ? " · mentions your area" : ""}</div>
         ${d.priceNotes.slice(0, 2).map((n) => `<div class="note">💡 ${esc(n)}</div>`).join("")}
         ${d.upcs.length ? `<div class="row" style="margin-top:6px">${d.upcs.slice(0, 6).map((u) => `<button class="upc" data-upc="${u}">${u}</button>`).join("")}</div>` : ""}
+        ${d.categories.length ? `<div class="tags">${d.categories.map((c) => `<span class="tag">${CAT[c].icon} ${CAT[c].label}</span>`).join("")}</div>` : ""}
         <div class="meta" style="margin-top:6px">${esc(d.source)} · ${ago(d.published)}</div>
         <div class="actions">
           <a class="btn primary" href="${esc(d.url)}" target="_blank" rel="noopener">Open post</a>
@@ -259,6 +267,25 @@ function renderDeals() {
   // Remember as seen after a short delay so "NEW" stays visible during this visit.
   clearTimeout(renderDeals.t);
   renderDeals.t = setTimeout(() => store.set("seen", seen), 3000);
+}
+
+// Category chips show how many current deals fall in each, so empty ones are easy to skip.
+function renderCategoryChips(deals) {
+  const counts = { all: deals.length, other: 0 };
+  for (const d of deals) {
+    if (!d.categories.length) counts.other++;
+    for (const c of d.categories) counts[c] = (counts[c] || 0) + 1;
+  }
+  const all = [...CATEGORIES, { key: "other", label: "Other", icon: "📦" }];
+  // Categories with deals first (in their usual order), empty ones at the end of the row.
+  const chips = [{ key: "all", label: "All categories", icon: "" },
+    ...all.filter((c) => counts[c.key] || c.key === catFilter), ...all.filter((c) => !counts[c.key] && c.key !== catFilter)];
+  $("#catFilters").innerHTML = chips.map((c) => {
+    const n = counts[c.key] || 0;
+    const on = c.key === catFilter;
+    return `<button class="pill" data-cat="${c.key}" aria-pressed="${on}" ${!n && !on ? "disabled" : ""}>`
+      + `${c.icon ? c.icon + " " : ""}${c.label}${settings.loc ? ` <span class="n">${n}</span>` : ""}</button>`;
+  }).join("");
 }
 
 function renderStores() {
@@ -320,6 +347,14 @@ function init() {
     document.querySelectorAll(".pill[data-kind]").forEach((x) => x.setAttribute("aria-pressed", x === p));
     renderDeals();
   }));
+  $("#catFilters").addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-cat]");
+    if (!chip) return;
+    catFilter = chip.dataset.cat === catFilter ? "all" : chip.dataset.cat;   // tap again to clear
+    store.set("category", catFilter);
+    renderDeals();
+    chip.scrollIntoView?.({ inline: "nearest", block: "nearest" });
+  });
   $("#search").addEventListener("input", () => { clearTimeout(init.t); init.t = setTimeout(renderDeals, 200); });
   $("#locBtn").addEventListener("click", openSettings);
   $("#refreshBtn").addEventListener("click", () => refresh(true));

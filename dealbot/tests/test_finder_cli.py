@@ -171,3 +171,19 @@ def test_test_alert(tmp_path, monkeypatch, fake_http, capsys):
     http = _watch_env(tmp_path, monkeypatch, fake_http, [])
     cli.main(["test-alert"])
     assert http.sent[-1][1] == "https://ntfy.sh/topic"
+
+
+def test_category_filter():
+    deals = [deal(1, "DG penny list", "LEGO sets"), deal(2, "DG penny list", "Tide pods"),
+             deal(3, "DG penny list", "mystery items")]
+    got = rank_deals(deals, Config(min_score=0, categories=["toys"]), LOC, STORES, NOW)
+    assert [d.id for d in got] == ["1"]
+    deals = [deal(1, "DG penny list", "LEGO sets"), deal(3, "DG penny list", "mystery items")]
+    got = rank_deals(deals, Config(min_score=0, categories=["other"]), LOC, STORES, NOW)
+    assert [d.id for d in got] == ["3"]
+    assert load_config(None, env={"DEALBOT_CATEGORIES": "Toys, holiday"}).categories == ["toys", "holiday"]
+    try:
+        load_config(None, env={"DEALBOT_CATEGORIES": "spaceships"})
+        raise AssertionError("expected ValueError")
+    except ValueError as e:
+        assert "spaceships" in str(e)
